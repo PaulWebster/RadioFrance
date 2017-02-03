@@ -1,0 +1,11 @@
+[% PROCESS settings/header.html %]
+
+	[% WRAPPER setting title="PLUGIN_RADIOFRANCE_DISABLEALBUMNAME" desc="PLUGIN_RADIOFRANCE_DISABLEALBUMNAME_DESC" %] &nbsp;
+
+		<div class="prefDesc">[% "ENABLE" | string %]
+			<input name="pref_disablealbumname" type="checkbox" [% IF prefs.pref_disablealbumname %] checked [% END %]>
+		</div>
+
+	[% END %]
+	
+[% PROCESS settings/footer.html %]
