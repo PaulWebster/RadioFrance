@@ -619,12 +619,15 @@ sub parseContent {
 			my $nowplaying = $perl_data->{'current'}->{'song'};
 			
 			if (exists $perl_data->{'current'}->{'emission'}->{'titre'} && $perl_data->{'current'}->{'emission'}->{'titre'} ne ''){
-				# Station / Programme name provided so use that - e.g. gives real current name for FIP Evenement
-				$info->{remote_title} = $perl_data->{'current'}->{'emission'}->{'titre'};
-				$info->{remotetitle} = $info->{remote_title};
-				# Also set it at the track title for now - since the others above do not have any visible effect on device displays
-				# Will be overwritten if there is a real song available
-				$info->{title} = $info->{remote_title};
+				# Station / Programme name provided so use that if it is on now - e.g. gives real current name for FIP Evenement
+				if (exists $perl_data->{'current'}->{'emission'}->{'startTime'} && exists $perl_data->{'current'}->{'emission'}->{'endTime'} &&
+					$hiResTime >= $perl_data->{'current'}->{'emission'}->{'startTime'} && $hiResTime <= $perl_data->{'current'}->{'emission'}->{'endTime'}+30) {
+					$info->{remote_title} = $perl_data->{'current'}->{'emission'}->{'titre'};
+					$info->{remotetitle} = $info->{remote_title};
+					# Also set it at the track title for now - since the others above do not have any visible effect on device displays
+					# Will be overwritten if there is a real song available
+					$info->{title} = $info->{remote_title};
+				}
 			}
 
 			if (exists $perl_data->{'current'}->{'visuel'}->{'small'}){

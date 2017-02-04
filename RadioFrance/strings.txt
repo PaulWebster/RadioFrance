@@ -4,7 +4,7 @@ PLUGIN_RADIOFRANCE
 	
 PLUGIN_RADIOFRANCE_DESC
 	EN	Display artist, track, cover and, optionally, album name for Radio France (http://www.radiofrance.fr) stations - France Musique (web radios only), FIP (including webradios) and Mouv'
-	FR	Affichez artiste, titre, couverture de l'album et, en options, le nom de l'album pour les stations de Radio France (http://www.radiofrance.fr) - France Musique (webradios seulement), FIP (webradios inclues) et Mouv'
+	FR	Affichez artiste, titre, couverture de l'album et, en option, le nom de l'album pour les stations de Radio France (http://www.radiofrance.fr) - France Musique (webradios seulement), FIP (webradios inclues) et Mouv'
 
 PLUGIN_RADIOFRANCE_DISABLEALBUMNAME
 	EN	Select if you do not want the album name to appear
