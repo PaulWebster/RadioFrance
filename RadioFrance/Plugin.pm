@@ -55,15 +55,22 @@ use constant cacheTTL => 15;
 # URL for remote web site that is polled to get the information about what is playing
 my $urls = {
 	fipradio => 'http://www.fipradio.fr/sites/default/files/import_si/si_titre_antenne/FIP_player_current.json',
+	fipradio_alt => 'http://www.fipradio.fr/livemeta/7',
 	fipbordeaux => 'http://www.fipradio.fr/sites/default/files/import_si/si_titre_antenne/FIP_player_current.json',
 	fipnantes => 'http://www.fipradio.fr/sites/default/files/import_si/si_titre_antenne/FIP_player_current.json',
 	fipstrasbourg => 'http://www.fipradio.fr/sites/default/files/import_si/si_titre_antenne/FIP_player_current.json',
 	fiprock => 'http://www.fipradio.fr/sites/default/files/import_si_webradio_1/si_titre_antenne/FIP_player_current.json',
+	fiprock_alt => 'http://www.fipradio.fr/livemeta/64',
 	fipjazz => 'http://www.fipradio.fr/sites/default/files/import_si_webradio_2/si_titre_antenne/FIP_player_current.json',
+	fipjazz_alt => 'http://www.fipradio.fr/livemeta/65',
 	fipgroove => 'http://www.fipradio.fr/sites/default/files/import_si_webradio_3/si_titre_antenne/FIP_player_current.json',
+	fipgroove_alt => 'http://www.fipradio.fr/livemeta/66',
 	fipmonde => 'http://www.fipradio.fr/sites/default/files/import_si_webradio_4/si_titre_antenne/FIP_player_current.json',
+	fipmonde_alt => 'http://www.fipradio.fr/livemeta/69',
 	fipnouveau => 'http://www.fipradio.fr/sites/default/files/import_si_webradio_5/si_titre_antenne/FIP_player_current.json',
+	fipnouveau_alt => 'http://www.fipradio.fr/livemeta/70',
 	fipevenement => 'http://www.fipradio.fr/sites/default/files/import_si_webradio_6/si_titre_antenne/FIP_player_current.json',
+	fipevenement_alt => 'http://www.fipradio.fr/livemeta/71',
 	fmclassiqueeasy => 'https://www.francemusique.fr/livemeta/pull/401',
 	fmclassiqueplus => 'https://www.francemusique.fr/livemeta/pull/402',
 	fmconcertsradiofrance => 'https://www.francemusique.fr/livemeta/pull/403',
@@ -201,6 +208,7 @@ sub initPlugin {
 	$VERSION = $class->_pluginDataFor('version');
 
 	$prefs->init({ disablealbumname => 0 });
+	$prefs->init({ tryalternateurl => 0 });
 	
 	Slim::Formats::RemoteMetadata->registerParser(
 		match => $urlRegex2,
@@ -331,6 +339,8 @@ sub getmeta {
 	
 	my ( $client, $url, $fromProvider) = @_;
 	
+	$prefs = preferences('plugin.radiofrance');
+	
 	my $deviceName = "";
 
 	my $station = &matchStation( $url );
@@ -350,8 +360,7 @@ sub getmeta {
 		
 		# don't query the remote meta data every time we're called
 		if ( $client->isPlaying && (!$meta->{$station} || $meta->{$station}->{ttl} <= $hiResTime) && !$meta->{$station}->{busy} ) {
-			main::DEBUGLOG && $log->is_debug && $log->debug("$station - Fetching data");
-
+			
 			$meta->{$station}->{busy} = 1;
 
 			my $http = Slim::Networking::SimpleAsyncHTTP->new(
@@ -363,7 +372,15 @@ sub getmeta {
 					$meta->{ $station } = parseContent($client, '', $station, $url);
 				},
 			);
-			$http->get($urls->{$station});
+			
+			my $sourceUrl = $urls->{$station};
+			
+			if ($prefs->get('tryalternateurl') && exists $urls->{$station."_alt"}){
+				# Been configured to try alternate URL and there is one
+				$sourceUrl = ($urls->{$station."_alt"});
+			}
+			main::DEBUGLOG && $log->is_debug && $log->debug("$station - Fetching data from $sourceUrl");
+			$http->get($sourceUrl);
 		}
 
 		# Get information about what this device is playing
@@ -497,7 +514,7 @@ sub parseContent {
 	};
 	
 	my $dumped;
-
+	
 	# main::DEBUGLOG && $log->is_debug && $log->debug("About to parseContent");
 	
 
@@ -511,7 +528,8 @@ sub parseContent {
 		# $dumped =~ s/\n {44}/\n/g;   
 		# print $dumped;
 
-		if ($meta->{$station}->{dataType} == 1){
+		# if ($meta->{$station}->{dataType} == 1){
+		if (exists $perl_data->{'current'}->{'song'}){
 			# FIP type
 			# Get the data from FIP json (dataType=1)
 			# curl "http://www.fipradio.fr/sites/default/files/import_si/si_titre_antenne/FIP_player_current.json?_=1430663616447" -H "Cookie: xtvrn=$539041$; has_js=1; xtidc=150221104626734282; xtan=-; xtant=1" -H "Accept-Encoding: gzip, deflate, sdch" -H "Accept-Language: en-US,en;q=0.8" -H "User-Agent: Mozilla/5.0 (Windows NT 6.3; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/42.0.2311.90 Safari/537.36" -H "Accept: application/json, text/javascript, */*; q=0.01" -H"Referer: http://www.fipradio.fr/" -H "X-Requested-With: XMLHttpRequest" -H "Connection: keep-alive" --compressed
@@ -711,7 +729,8 @@ sub parseContent {
 				# print("Did not find Current Song in retrieved data");
 
 			}
-		} elsif ($meta->{$station}->{dataType} == 2){
+		# } elsif ($meta->{$station}->{dataType} == 2){
+		} elsif (exists $perl_data->{'levels'}){
 			# France Musique type
 				# France Musique json (dataType=2)
 			# curl "https://www.francemusique.fr/livemeta/pull/407"

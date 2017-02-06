@@ -55,3 +55,12 @@ Note: Radio France does not always provide track information in a timely manner 
 
 * This plugin relies on the time on your local LMS server to be roughly correct - timezone and time - because the local time is compared with the scheduled time for each track at Radio France
 * If things are not working then enable Debug logging for this plugin via LMS/Settings/Advanced/Logging interface, repeat the problem and then check the LMS logs.
+
+Version History
+---------------
+
+ 1.5 06-Feb-2016
+ Add alternate URLs for FIP stations and make them (all in one) selectable.
+ Makes more tracks have images but updates might not be as timely.
+
+ 

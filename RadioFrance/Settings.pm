@@ -22,7 +22,7 @@ sub page {
 }
 
 sub prefs {
-	return ($prefs, qw(disablealbumname) );
+	return ($prefs, qw(disablealbumname tryalternateurl) );
 }
 
 # Always end with a 1 to make Perl happy

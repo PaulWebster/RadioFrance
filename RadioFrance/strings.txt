@@ -13,3 +13,11 @@ PLUGIN_RADIOFRANCE_DISABLEALBUMNAME
 PLUGIN_RADIOFRANCE_DISABLEALBUMNAME_DESC
 	EN	Select (Enable) if you want to hide the album name (where available) so that the station name can appear. Should take effect on next song name change.
 	FR	Sélectionnez (Activer) si vous voulez masquer le nom de l'album (si disponible) afin que le nom de la station puisse apparaître. Doit prendre effet lors du changement du nom du morceau suivant.
+
+PLUGIN_RADIOFRANCE_TRYALTERNATEURL
+	EN	Select if you want to try using a preconfigured alternate URL for the data source
+	FR	Sélectionnez cette option si vous souhaitez essayer d'utiliser une autre URL préconfigurée pour la source de données
+
+PLUGIN_RADIOFRANCE_TRYALTERNATEURL_DESC
+	EN	Select (Enable) if you want to experiment with a preconfigured alternate URL for the data source. It might help if no song information is appearing when using the primary URL. Should take effect on next song name change.
+	FR	Sélectionnez (Activer) si vous souhaitez expérimenter une autre URL préconfigurée pour la source de données. Il pourrait être utile si aucune information de morceau n'apparaît lors de l'utilisation de l'URL principale. Doit prendre effet lors du changement du nom du morceau suivant.
