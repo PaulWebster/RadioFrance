@@ -49,7 +49,7 @@ but not France Musique itself as they only make the programme name available and
 
 Mouv' stations supported:
 Mouv'
-but not Mouv'Xtra as there are no track details presented by the station
+Mouv'Xtra
 	
 Note: Radio France does not always provide track information in a timely manner - so if you find that sometimes no new details arrive then check on the FIP site or teir mobile app to see if they have the same problem.
 
@@ -61,7 +61,8 @@ Version History
 
 1.6 07-Feb-2017
 Add radio station Mouv' Xtra
-Add setting to allow programme image to replace station logo - note will not have any effect for many stations because many do not provide the data
+Add setting to allow programme image to replace station logo
+ - note will not have any effect for many stations because many do not provide the data
  
 1.5 06-Feb-2016
 Add alternate URLs for FIP stations and make them (all in one) selectable.
