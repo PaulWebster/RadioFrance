@@ -49,7 +49,7 @@ but not France Musique itself as they only make the programme name available and
 
 Mouv' stations supported:
 Mouv'
-but not Mouv'Xtra as there are no track details presented by the station
+Mouv'Xtra
 	
 Note: Radio France does not always provide track information in a timely manner - so if you find that sometimes no new details arrive then check on the FIP site or teir mobile app to see if they have the same problem.
 
