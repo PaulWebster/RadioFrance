@@ -79,6 +79,7 @@ my $urls = {
 	fmocoramonde => 'https://www.francemusique.fr/livemeta/pull/404',
 	fmevenementielle => 'https://www.francemusique.fr/livemeta/pull/407',
 	mouv => 'http://www.mouv.fr/sites/default/files/import_si/si_titre_antenne/leMouv_player_current.json',
+	mouvxtra => 'https://api.radiofrance.fr/livemeta/pull/75',
 };
 
 my $icons = {
@@ -100,6 +101,7 @@ my $icons = {
 	fmocoramonde => 'https://s3-eu-west-1.amazonaws.com/cruiser-production/2016/12/22b8b3d6-e848-4090-8b24-141c25225861/fmwebradiosnormalocora.jpg',
 	fmevenementielle => 'https://s3-eu-west-1.amazonaws.com/cruiser-production/2016/12/c3ca5137-44d4-45fd-b23f-62957d7f52e3/fmwebradiosnormalkids.jpg',
 	mouv => 'http://www.mouv.fr/sites/all/themes/mouv/images/LeMouv-logo-215x215.png',
+	mouvxtra => 'http://www.mouv.fr/sites/all/modules/rf/rf_lecteur_commun/lecteur_rf/img/logo_mouv_xtra.png',
 };
 
 my $iconsIgnoreRegex = {
@@ -120,7 +122,8 @@ my $iconsIgnoreRegex = {
 	fmlacontemporaine => '(dummy)',
 	fmocoramonde => '(dummy)',
 	fmevenementielle => '(dummy)',
-	mouv => '(dummy)',
+	mouv => '(image_default_player.jpg)',
+	mouvxtra => '(image_default_player.jpg)',
 };
 
 # Uses match group 1 from regex call to try to find station
@@ -142,7 +145,8 @@ my %stationMatches = (
 	"id=s283179&", "fmlacontemporaine",
 	"id=s283177&", "fmocoramonde",
 	"id=s285660&", "fmevenementielle",
-	"id=s6597&","mouv",
+	"id=s6597&", "mouv",
+	"id=s244069&", "mouvxtra",
 	"fip-", "fipradio",
 	"fipbordeaux-", "fipbordeaux",
 	"fipnantes-", "fipnantes",
@@ -161,30 +165,32 @@ my %stationMatches = (
 	"francemusiqueocoramonde-", "fmocoramonde",
 	"francemusiquelevenementielle-", "fmevenementielle",
 	"mouv-", "mouv",
+	"mouvxtra-", "mouvxtra",
 );
 
 # $meta holds info about station that is playing - note - the structure is returned to others parts of LMS where particular field names are expected
 # If you add fields to this then you probably will have to preserve it in parseContent
 my $meta = {
     dummy => { title => '' },
-	fipradio => { busy => 0, title => 'FIP', icon => $icons->{fipradio}, cover => $icons->{fipradio}, ttl => 0, endTime => 0, dataType => 1 },
-	fipbordeaux => { busy => 0, title => 'FIP Bordeaux', icon => $icons->{fipbordeaux}, cover => $icons->{fipbordeaux}, ttl => 0, endTime => 0, dataType => 1 },
-	fipnantes => { busy => 0, title => 'FIP Nantes', icon => $icons->{fipnantes}, cover => $icons->{fipnantes}, ttl => 0, endTime => 0, dataType => 1 },
-	fipstrasbourg => { busy => 0, title => 'FIP Strasbourg', icon => $icons->{fipstrasbourg}, cover => $icons->{fipstrasbourg}, ttl => 0, endTime => 0, dataType => 1 },
-	fiprock => { busy => 0, title => 'FIP autour du rock', icon => $icons->{fiprock}, cover => $icons->{fiprock}, ttl => 0, endTime => 0, dataType => 1 },
-	fipjazz => { busy => 0, title => 'FIP autour du jazz', icon => $icons->{fipjazz}, cover => $icons->{fipjazz}, ttl => 0, endTime => 0, dataType => 1 },
-	fipgroove => { busy => 0, title => 'FIP autour du groove', icon => $icons->{fipgroove}, cover => $icons->{fipgroove}, ttl => 0, endTime => 0, dataType => 1 },
-	fipmonde => { busy => 0, title => 'FIP autour du monde', icon => $icons->{fipmonde}, cover => $icons->{fipmonde}, ttl => 0, endTime => 0, dataType => 1 },
-	fipnouveau => { busy => 0, title => 'Tout nouveau, tout Fip', icon => $icons->{fipnouveau}, cover => $icons->{fipnouveau}, ttl => 0, endTime => 0, dataType => 1 },
-	fipevenement => { busy => 0, title => 'FIP Evenement', icon => $icons->{fipevenement}, cover => $icons->{fipevenement}, ttl => 0, endTime => 0, dataType => 1 },
-	fmclassiqueeasy => { busy => 0, title => 'France Musique Classique Easy', icon => $icons->{fmclassiqueeasy}, cover => $icons->{fmclassiqueeasy}, ttl => 0, endTime => 0, dataType => 2 },
-	fmclassiqueplus => { busy => 0, title => 'France Musique Classique Plus', icon => $icons->{fmclassiqueplus}, cover => $icons->{fmclassiqueplus}, ttl => 0, endTime => 0, dataType => 2 },
-	fmconcertsradiofrance => { busy => 0, title => 'France Musique Concerts', icon => $icons->{fmconcertsradiofrance}, cover => $icons->{fmconcertsradiofrance}, ttl => 0, endTime => 0, dataType => 2 },
-	fmlajazz => { busy => 0, title => 'France Musique La Jazz', icon => $icons->{fmlajazz}, cover => $icons->{fmlajazz}, ttl => 0, endTime => 0, dataType => 2 },
-	fmlacontemporaine => { busy => 0, title => 'France Musique La Contemporaine', icon => $icons->{fmlacontemporaine}, cover => $icons->{fmlacontemporaine}, ttl => 0, endTime => 0, dataType => 2 },
-	fmocoramonde => { busy => 0, title => 'France Musique Ocora Monde', icon => $icons->{fmocoramonde}, cover => $icons->{fmocoramonde}, ttl => 0, endTime => 0, dataType => 2 },
-	fmevenementielle => { busy => 0, title => 'France Musique Classique Kids', icon => $icons->{fmevenementielle}, cover => $icons->{fmevenementielle}, ttl => 0, endTime => 0, dataType => 2 },
-	mouv => { busy => 0, title => 'Mouv\'', icon => $icons->{mouv}, cover => $icons->{mouv}, ttl => 0, endTime => 0, dataType => 1 },
+	fipradio => { busy => 0, title => 'FIP', icon => $icons->{fipradio}, cover => $icons->{fipradio}, ttl => 0, endTime => 0 },
+	fipbordeaux => { busy => 0, title => 'FIP Bordeaux', icon => $icons->{fipbordeaux}, cover => $icons->{fipbordeaux}, ttl => 0, endTime => 0 },
+	fipnantes => { busy => 0, title => 'FIP Nantes', icon => $icons->{fipnantes}, cover => $icons->{fipnantes}, ttl => 0, endTime => 0 },
+	fipstrasbourg => { busy => 0, title => 'FIP Strasbourg', icon => $icons->{fipstrasbourg}, cover => $icons->{fipstrasbourg}, ttl => 0, endTime => 0 },
+	fiprock => { busy => 0, title => 'FIP autour du rock', icon => $icons->{fiprock}, cover => $icons->{fiprock}, ttl => 0, endTime => 0 },
+	fipjazz => { busy => 0, title => 'FIP autour du jazz', icon => $icons->{fipjazz}, cover => $icons->{fipjazz}, ttl => 0, endTime => 0 },
+	fipgroove => { busy => 0, title => 'FIP autour du groove', icon => $icons->{fipgroove}, cover => $icons->{fipgroove}, ttl => 0, endTime => 0 },
+	fipmonde => { busy => 0, title => 'FIP autour du monde', icon => $icons->{fipmonde}, cover => $icons->{fipmonde}, ttl => 0, endTime => 0 },
+	fipnouveau => { busy => 0, title => 'Tout nouveau, tout Fip', icon => $icons->{fipnouveau}, cover => $icons->{fipnouveau}, ttl => 0, endTime => 0 },
+	fipevenement => { busy => 0, title => 'FIP Evenement', icon => $icons->{fipevenement}, cover => $icons->{fipevenement}, ttl => 0, endTime => 0 },
+	fmclassiqueeasy => { busy => 0, title => 'France Musique Classique Easy', icon => $icons->{fmclassiqueeasy}, cover => $icons->{fmclassiqueeasy}, ttl => 0, endTime => 0 },
+	fmclassiqueplus => { busy => 0, title => 'France Musique Classique Plus', icon => $icons->{fmclassiqueplus}, cover => $icons->{fmclassiqueplus}, ttl => 0, endTime => 0 },
+	fmconcertsradiofrance => { busy => 0, title => 'France Musique Concerts', icon => $icons->{fmconcertsradiofrance}, cover => $icons->{fmconcertsradiofrance}, ttl => 0, endTime => 0 },
+	fmlajazz => { busy => 0, title => 'France Musique La Jazz', icon => $icons->{fmlajazz}, cover => $icons->{fmlajazz}, ttl => 0, endTime => 0 },
+	fmlacontemporaine => { busy => 0, title => 'France Musique La Contemporaine', icon => $icons->{fmlacontemporaine}, cover => $icons->{fmlacontemporaine}, ttl => 0, endTime => 0 },
+	fmocoramonde => { busy => 0, title => 'France Musique Ocora Monde', icon => $icons->{fmocoramonde}, cover => $icons->{fmocoramonde}, ttl => 0, endTime => 0 },
+	fmevenementielle => { busy => 0, title => 'France Musique Classique Kids', icon => $icons->{fmevenementielle}, cover => $icons->{fmevenementielle}, ttl => 0, endTime => 0 },
+	mouv => { busy => 0, title => 'Mouv\'', icon => $icons->{mouv}, cover => $icons->{mouv}, ttl => 0, endTime => 0 },
+	mouvxtra => { busy => 0, title => 'Mouv\' Xtra', icon => $icons->{mouvxtra}, cover => $icons->{mouvxtra}, ttl => 0, endTime => 0 },
 };
 
 # $myClientInfo holds data about the clients/devices using this plugin - used to schedule next poll
@@ -194,9 +200,9 @@ my $myClientInfo = {};
 # http://opml.radiotime.com/Tune.ashx?id=s15200&formats=aac,ogg,mp3,wmpro,wma,wmvoice&partnerId=16
 # Played via direct URL like ... http://direct.fipradio.fr/live/fip-midfi.mp3 which redirects to something with same suffix
 # Match group 1 is used to find station id in %stationMatches - "fip-" last because it is a substring of others
-my $urlRegex1 = qr/(?:\/)(fipbordeaux-|fipnantes-|fipstrasbourg-|fip-webradio1\.|fip-webradio2\.|fip-webradio3\.|fip-webradio4\.|fip-webradio5\.|fip-webradio6\.|fip-|francemusiqueeasyclassique-|francemusiqueclassiqueplus-|francemusiqueconcertsradiofrance-|francemusiquelajazz-|francemusiquelacontemporaine-|francemusiqueocoramonde-|francemusiquelevenementielle-|mouv-)(?:midfi|lofi|hifi|)/i;
-# Selected via TuneIn base|bordeaux|nantes|strasbourg|rock|jazz|groove|monde|nouveau|evenement FranceMusique - ClassicEasy|ClassicPlus|Concerts|Contemporaine|OcoraMonde|ClassiqueKids/Evenementielle - Mouv
-my $urlRegex2 = qr/(?:radiotime|tunein)\.com.*(id=s15200&|id=s50706&|id=s50770&|id=s111944&|id=s262528&|id=s262533&|id=s262537&|id=s262538&|id=s262540&|id=s283680&|id=s283174&|id=s283175&|id=s283176&|id=s283178&|id=s283179&|id=s283177&|id=s285660&|id=s6597&)/i;
+my $urlRegex1 = qr/(?:\/)(fipbordeaux-|fipnantes-|fipstrasbourg-|fip-webradio1\.|fip-webradio2\.|fip-webradio3\.|fip-webradio4\.|fip-webradio5\.|fip-webradio6\.|fip-|francemusiqueeasyclassique-|francemusiqueclassiqueplus-|francemusiqueconcertsradiofrance-|francemusiquelajazz-|francemusiquelacontemporaine-|francemusiqueocoramonde-|francemusiquelevenementielle-|mouv-|mouvxtra-)(?:midfi|lofi|hifi|)/i;
+# Selected via TuneIn base|bordeaux|nantes|strasbourg|rock|jazz|groove|monde|nouveau|evenement FranceMusique - ClassicEasy|ClassicPlus|Concerts|Contemporaine|OcoraMonde|ClassiqueKids/Evenementielle - Mouv|MouvXtra
+my $urlRegex2 = qr/(?:radiotime|tunein)\.com.*(id=s15200&|id=s50706&|id=s50770&|id=s111944&|id=s262528&|id=s262533&|id=s262537&|id=s262538&|id=s262540&|id=s283680&|id=s283174&|id=s283175&|id=s283176&|id=s283178&|id=s283179&|id=s283177&|id=s285660&|id=s6597&|id=s244069&)/i;
 
 sub getDisplayName {
 	return 'PLUGIN_RADIOFRANCE';
@@ -209,6 +215,7 @@ sub initPlugin {
 
 	$prefs->init({ disablealbumname => 0 });
 	$prefs->init({ tryalternateurl => 0 });
+	$prefs->init({ showprogimage => 0 });
 	
 	Slim::Formats::RemoteMetadata->registerParser(
 		match => $urlRegex2,
@@ -501,7 +508,6 @@ sub parseContent {
 		title  => undef,
 		ttl    => $hiResTime + cacheTTL,
 		endTime => $hiResTime + cacheTTL,
-		dataType => $meta->{$station}->{dataType},
 	};
 	
 	my $deviceName = "";
@@ -528,10 +534,9 @@ sub parseContent {
 		# $dumped =~ s/\n {44}/\n/g;   
 		# print $dumped;
 
-		# if ($meta->{$station}->{dataType} == 1){
-		if (exists $perl_data->{'current'}->{'song'}){
+		if (exists $perl_data->{'current'}->{'song'} || $perl_data->{'current'}->{'emission'}){
 			# FIP type
-			# Get the data from FIP json (dataType=1)
+			# Get the data from FIP-style json
 			# curl "http://www.fipradio.fr/sites/default/files/import_si/si_titre_antenne/FIP_player_current.json?_=1430663616447" -H "Cookie: xtvrn=$539041$; has_js=1; xtidc=150221104626734282; xtan=-; xtant=1" -H "Accept-Encoding: gzip, deflate, sdch" -H "Accept-Language: en-US,en;q=0.8" -H "User-Agent: Mozilla/5.0 (Windows NT 6.3; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/42.0.2311.90 Safari/537.36" -H "Accept: application/json, text/javascript, */*; q=0.01" -H"Referer: http://www.fipradio.fr/" -H "X-Requested-With: XMLHttpRequest" -H "Connection: keep-alive" --compressed
 			# Sample Response
 			# {
@@ -635,22 +640,34 @@ sub parseContent {
 			
 			
 			my $nowplaying = $perl_data->{'current'}->{'song'};
-			
-			if (exists $perl_data->{'current'}->{'emission'}->{'titre'} && $perl_data->{'current'}->{'emission'}->{'titre'} ne ''){
+
+			if (exists $perl_data->{'current'}->{'emission'}->{'startTime'} && exists $perl_data->{'current'}->{'emission'}->{'endTime'} &&
+				$hiResTime >= $perl_data->{'current'}->{'emission'}->{'startTime'} && $hiResTime <= $perl_data->{'current'}->{'emission'}->{'endTime'}+30) {
 				# Station / Programme name provided so use that if it is on now - e.g. gives real current name for FIP Evenement
-				if (exists $perl_data->{'current'}->{'emission'}->{'startTime'} && exists $perl_data->{'current'}->{'emission'}->{'endTime'} &&
-					$hiResTime >= $perl_data->{'current'}->{'emission'}->{'startTime'} && $hiResTime <= $perl_data->{'current'}->{'emission'}->{'endTime'}+30) {
+			
+				if (exists $perl_data->{'current'}->{'emission'}->{'titre'} && $perl_data->{'current'}->{'emission'}->{'titre'} ne ''){
 					$info->{remote_title} = $perl_data->{'current'}->{'emission'}->{'titre'};
 					$info->{remotetitle} = $info->{remote_title};
 					# Also set it at the track title for now - since the others above do not have any visible effect on device displays
 					# Will be overwritten if there is a real song available
 					$info->{title} = $info->{remote_title};
 				}
-			}
+				
+				if ($prefs->get('showprogimage')){
+					my $progIcon = '';
 
-			if (exists $perl_data->{'current'}->{'visuel'}->{'small'}){
-				# Station / Programme icon provided so use that - e.g. gives real current icon for FIP Evenement
-				$info->{icon} = $perl_data->{'current'}->{'visuel'}->{'small'};
+					if (exists $perl_data->{'current'}->{'emission'}->{'visuel'}->{'medium'}){
+						# Station / Programme icon provided so use that - e.g. gives real current icon for FIP Evenement
+						$progIcon = $perl_data->{'current'}->{'emission'}->{'visuel'}->{'medium'};
+					}
+				
+					if ($progIcon eq '' && exists $perl_data->{'current'}->{'emission'}->{'visuel'}->{'small'}){
+						# Station / Programme icon provided so use that - e.g. gives real current icon for FIP Evenement
+						$progIcon = $perl_data->{'current'}->{'emission'}->{'visuel'}->{'small'};
+					}
+				
+					if ($progIcon ne '') {$info->{cover} = $progIcon};
+				}
 			}
 			
 			if (defined($nowplaying) ) {
@@ -729,10 +746,9 @@ sub parseContent {
 				# print("Did not find Current Song in retrieved data");
 
 			}
-		# } elsif ($meta->{$station}->{dataType} == 2){
 		} elsif (exists $perl_data->{'levels'}){
 			# France Musique type
-				# France Musique json (dataType=2)
+				# France Musique-style json
 			# curl "https://www.francemusique.fr/livemeta/pull/407"
 			# Sample Response
 			  # {
@@ -1080,7 +1096,7 @@ sub deviceTimer {
 	
 	if ($deviceNextPoll >= $nextPoll){
 		# If there is already a poll outstanding then skip setting up a new one
-		main::DEBUGLOG && $log->is_debug && $log->debug("$station - Client: $deviceName - Skipping setting next poll $nextPoll because already one ".$myClientInfo->{$deviceName}->{nextpoll});
+		main::DEBUGLOG && $log->is_debug && $log->debug("$station - Client: $deviceName - Skipping setting next poll $nextPoll because already one ".$myClientInfo->{$deviceName}->{nextpoll}," Interval: $deviceNextPoll-$hiResTime");
 	} else {
 		main::DEBUGLOG && $log->is_debug && $log->debug("$station - Client: $deviceName - Setting next poll to fire at $nextPoll Interval: $nextPollInt");
 

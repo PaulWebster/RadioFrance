@@ -59,8 +59,11 @@ Note: Radio France does not always provide track information in a timely manner 
 Version History
 ---------------
 
- 1.5 06-Feb-2016
- Add alternate URLs for FIP stations and make them (all in one) selectable.
- Makes more tracks have images but updates might not be as timely.
-
+1.6 07-Feb-2017
+Add radio station Mouv' Xtra
+Add setting to allow programme image to replace station logo - note will not have any effect for many stations because many do not provide the data
  
+1.5 06-Feb-2016
+Add alternate URLs for FIP stations and make them (all in one) selectable.
+Makes more tracks have images but updates might not be as timely.
+

@@ -16,4 +16,12 @@
 
 	[% END %]
 	
+	[% WRAPPER setting title="PLUGIN_RADIOFRANCE_SHOWPROGIMAGE" desc="PLUGIN_RADIOFRANCE_SHOWPROGIMAGE_DESC" %]
+
+		<div class="prefDesc">[% "ENABLE" | string %]
+			<input name="pref_showprogimage" type="checkbox" [% IF prefs.pref_showprogimage %] checked [% END %]>
+		</div>
+
+	[% END %]
+	
 [% PROCESS settings/footer.html %]
