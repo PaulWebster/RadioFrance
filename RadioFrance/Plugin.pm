@@ -79,6 +79,7 @@ my $urls = {
 	fmocoramonde => 'https://www.francemusique.fr/livemeta/pull/404',
 	fmevenementielle => 'https://www.francemusique.fr/livemeta/pull/407',
 	mouv => 'http://www.mouv.fr/sites/default/files/import_si/si_titre_antenne/leMouv_player_current.json',
+	mouv_alt => 'https://api.radiofrance.fr/livemeta/pull/6',
 	mouvxtra => 'https://api.radiofrance.fr/livemeta/pull/75',
 };
 
@@ -1096,7 +1097,8 @@ sub deviceTimer {
 	
 	if ($deviceNextPoll >= $nextPoll){
 		# If there is already a poll outstanding then skip setting up a new one
-		main::DEBUGLOG && $log->is_debug && $log->debug("$station - Client: $deviceName - Skipping setting next poll $nextPoll because already one ".$myClientInfo->{$deviceName}->{nextpoll}," Interval: $deviceNextPoll-$hiResTime");
+		$nextPollInt = $deviceNextPoll-$hiResTime;
+		main::DEBUGLOG && $log->is_debug && $log->debug("$station - Client: $deviceName - Skipping setting poll $nextPoll - already one ".$myClientInfo->{$deviceName}->{nextpoll}." Due in: $nextPollInt");
 	} else {
 		main::DEBUGLOG && $log->is_debug && $log->debug("$station - Client: $deviceName - Setting next poll to fire at $nextPoll Interval: $nextPollInt");
 
