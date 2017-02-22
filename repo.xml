@@ -7,14 +7,14 @@
 	
 	<plugins>
 		
-		<plugin name="RadioFrance" version="0.1.7" minTarget="7.4" maxTarget="*">
+		<plugin name="RadioFrance" version="0.1.8" minTarget="7.4" maxTarget="*">
 			<title lang="EN">Radio France</title>
 			<desc  lang="EN">Radio France track information</desc>
 			<desc  lang="FR">Radio France - info sur le morceau de musique</desc>
 			<creator>Paul Webster</creator>
 			<email></email>
-			<url>https://paulwebster.github.io/RadioFrance/RadioFrance-0.1.7.zip</url>
-			<sha>f4659f99aae317706f5fed1b3a7381c771ac9cb3</sha>
+			<url>https://paulwebster.github.io/RadioFrance/RadioFrance-0.1.8.zip</url>
+			<sha>fe92e71d36d975540cad7c302b2e3aa401c5cb81</sha>
 		</plugin>
 
 	</plugins>
