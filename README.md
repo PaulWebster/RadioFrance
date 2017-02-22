@@ -58,6 +58,8 @@ Note: Radio France does not always provide track information in a timely manner 
 
 Version History
 ---------------
+1.8 22-Feb-2017
+Modify the alternate fetch mechanism to get from both sources to improve chances of getting cover art
 
 1.7 07-Feb-2017
 Add alternative URL for Mouv'

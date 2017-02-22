@@ -50,7 +50,7 @@ my $log = Slim::Utils::Log->addLogCategory({
 
 my $prefs = preferences('plugin.radiofrance');
 
-use constant cacheTTL => 15;
+use constant cacheTTL => 20;
 
 # URL for remote web site that is polled to get the information about what is playing
 my $urls = {
@@ -337,7 +337,7 @@ sub provider {
 	my ( $client, $url ) = @_;
 	# This tiny routine is to help tracing / debugging - it should only be called through the provider registration
 	# Internal calls go direct to getmeta to help spot the difference between a timer expiry and LMS core call
-	main::DEBUGLOG && $log->is_debug && $log->debug("provider - device ".$client->name." called with URL ".$url);
+	# main::DEBUGLOG && $log->is_debug && $log->debug("provider - device ".$client->name." called with URL ".$url);
 	
 	return &getmeta( $client, $url, true );
 }
@@ -369,7 +369,7 @@ sub getmeta {
 		# don't query the remote meta data every time we're called
 		if ( $client->isPlaying && (!$meta->{$station} || $meta->{$station}->{ttl} <= $hiResTime) && !$meta->{$station}->{busy} ) {
 			
-			$meta->{$station}->{busy} = 1;
+			$meta->{$station}->{busy} = $meta->{$station}->{busy}+1;
 
 			my $http = Slim::Networking::SimpleAsyncHTTP->new(
 				sub {
@@ -383,12 +383,32 @@ sub getmeta {
 			
 			my $sourceUrl = $urls->{$station};
 			
-			if ($prefs->get('tryalternateurl') && exists $urls->{$station."_alt"}){
-				# Been configured to try alternate URL and there is one
-				$sourceUrl = ($urls->{$station."_alt"});
-			}
+			# if ($prefs->get('tryalternateurl') && exists $urls->{$station."_alt"}){
+				# # Been configured to try alternate URL and there is one
+				# $sourceUrl = ($urls->{$station."_alt"});
+			# }
 			main::DEBUGLOG && $log->is_debug && $log->debug("$station - Fetching data from $sourceUrl");
 			$http->get($sourceUrl);
+			
+			if ($prefs->get('tryalternateurl') && exists $urls->{$station."_alt"}){
+				# Been configured to try alternate URL and there is one - so do an additional fetch for it
+				
+				my $httpalt = Slim::Networking::SimpleAsyncHTTP->new(
+					sub {
+						$meta->{ $station } = parseContent($client, shift->content, $station, $url);
+					},
+					sub {
+						# in case of an error, don't try too hard...
+						$meta->{ $station } = parseContent($client, '', $station, $url);
+					},
+				);
+			
+				$sourceUrl = ($urls->{$station."_alt"});
+				$meta->{$station}->{busy} = $meta->{$station}->{busy}+1;	# Increment busy counter - might be possible that the one above already finished so increment rather than set to 2
+				main::DEBUGLOG && $log->is_debug && $log->debug("$station - Fetching alternate data from $sourceUrl");
+				$httpalt->get($sourceUrl);
+			}
+
 		}
 
 		# Get information about what this device is playing
@@ -666,8 +686,13 @@ sub parseContent {
 						# Station / Programme icon provided so use that - e.g. gives real current icon for FIP Evenement
 						$progIcon = $perl_data->{'current'}->{'emission'}->{'visuel'}->{'small'};
 					}
-				
-					if ($progIcon ne '') {$info->{cover} = $progIcon};
+
+					if ($progIcon ne '' && $progIcon !~ /$iconsIgnoreRegex->{$station}/ ){
+						$info->{cover} = $progIcon;
+					} else {
+						# Icon not present or matches one to be ignored
+						# if ($progIcon ne ''){main::DEBUGLOG && $log->is_debug && $log->debug("Prog Image skipped: $progIcon");}
+					}
 				}
 			}
 			
@@ -737,6 +762,11 @@ sub parseContent {
 					
 					# Try to update the predicted end time to give better chance for timely display of next song
 					$info->{endTime} = $expectedEndTime;
+					
+					$dumped =  Dumper $info;
+					$dumped =~ s/\n {44}/\n/g;   
+					main::DEBUGLOG && $log->is_debug && $log->debug("Type1:$dumped");
+
 				} else {
 					# This song that is playing should have already finished so returning largely blank data should reset what is displayed
 					main::DEBUGLOG && $log->is_debug && $log->debug("$station - Song already finished - expected end $expectedEndTime and now $hiResTime");
@@ -862,29 +892,48 @@ sub parseContent {
 				# print $dumped;
 
 				if (exists $levels[0]{items}) {
-					my $items = $levels[0]{items};
+				
+					foreach my $levelentry (@levels){
+						# $dumped = Dumper $levelentry->{items};
+						# print $dumped;
 					
-					#  Try to match the time rather than use the "position" pointer just in case it is out of date
-					foreach my $item ( @$items ){
-						# Array of "items" contains id of objects that contain more data
-						# main::DEBUGLOG && $log->is_debug && $log->debug("item: $item");
-						
-						if (exists $perl_data->{steps}->{$item}){
-							# the step exists so check the start / end to see if this is now
+						if (exists $levelentry->{items}) {
+							my $items = $levelentry->{items};
 							
-							# main::DEBUGLOG && $log->is_debug && $log->debug("Now: $hiResTime Start: ".$perl_data->{steps}->{$item}->{'start'}." End: $perl_data->{steps}->{$item}->{'end'}");
-							
-							if ( exists $perl_data->{steps}->{$item}->{'start'} && $perl_data->{steps}->{$item}->{'start'} <= $hiResTime && 
-								exists $perl_data->{steps}->{$item}->{'end'} && $perl_data->{steps}->{$item}->{'end'} >= $hiResTime ) {
-								# This one is in range
-								# main::DEBUGLOG && $log->is_debug && $log->debug("Current playing $item");
-								$nowplaying = $perl_data->{steps}->{$item};
-								$foundSong = true;
+							#  Try to match the time rather than use the "position" pointer just in case it is out of date
+							foreach my $item ( @$items ){
+								# Array of "items" contains id of objects that contain more data
+								# main::DEBUGLOG && $log->is_debug && $log->debug("item: $item");
+								
+								if (exists $perl_data->{steps}->{$item}){
+									# the step exists so check the start / end to see if this is now
+									
+									# main::DEBUGLOG && $log->is_debug && $log->debug("Now: $hiResTime Start: ".$perl_data->{steps}->{$item}->{'start'}." End: $perl_data->{steps}->{$item}->{'end'}");
+									
+									if ( exists $perl_data->{steps}->{$item}->{'start'} && $perl_data->{steps}->{$item}->{'start'} <= $hiResTime && 
+										exists $perl_data->{steps}->{$item}->{'end'} && $perl_data->{steps}->{$item}->{'end'} >= $hiResTime ) {
+										# This one is in range
+										# main::DEBUGLOG && $log->is_debug && $log->debug("Current playing $item");
+										if (exists $perl_data->{steps}->{$item}->{'title'} && $perl_data->{steps}->{$item}->{'title'} ne '' && 
+											!exists $perl_data->{steps}->{$item}->{'authors'} && !exists $perl_data->{steps}->{$item}->{'performers'})
+										{	# If there is a title but no performers/authors then this is a show not a song
+											$info->{remote_title} = $perl_data->{steps}->{$item}->{'title'};
+											$info->{remotetitle} = $info->{remote_title};
+											# Also set it at the track title for now - since the others above do not have any visible effect on device displays
+											# Will be overwritten if there is a real song available
+											$info->{title} = $info->{remote_title};
+											main::DEBUGLOG && $log->is_debug && $log->debug("Found show name in Type2: $info->{title}\n");
+										} else {
+											$nowplaying = $perl_data->{steps}->{$item};
+											$foundSong = true;
+										}
+									}
+								} else {
+									# Unexpected - so log it
+									main::INFOLOG && $log->is_info && $log->info("$station - Failed to find $item in 'steps'");
+									undef $nowplaying;
+								}
 							}
-						} else {
-							# Unexpected - so log it
-							main::INFOLOG && $log->is_info && $log->info("$station - Failed to find $item in 'steps'");
-							undef $nowplaying;
 						}
 					}
 				} else {
@@ -953,6 +1002,10 @@ sub parseContent {
 					
 					# Try to update the predicted end time to give better chance for timely display of next song
 					$info->{endTime} = $expectedEndTime;
+					
+					$dumped =  Dumper $info;
+					$dumped =~ s/\n {44}/\n/g;   
+					main::DEBUGLOG && $log->is_debug && $log->debug("Type2:$dumped");
 				} else {
 					# This song that is playing should have already finished so returning largely blank data should reset what is displayed
 					main::DEBUGLOG && $log->is_debug && $log->debug("$station - Song already finished - expected end $expectedEndTime and now $hiResTime");
@@ -975,16 +1028,69 @@ sub parseContent {
 	}
 
 	# Beyond this point should not use data from the data that was pulled because the code below is generic
+
+	my $dataChanged = false;
 	
-	$info->{busy} = 0;
+	if ($meta->{$station}->{busy} > 0){
+		$info->{busy} = $meta->{$station}->{busy}-1;
+	} else {$info->{busy} = 0;}
+	
+	if ($info->{busy} < 0 || $info->{busy} > 2){
+		# Busy counter gone too low or too high - something odd happening - so log it
+		main::DEBUGLOG && $log->is_debug && $log->debug("$station - Client: $deviceName - Busy counter has unexpected value ".$info->{busy});
+		$info->{busy} = 0;	
+	}
 
 	# Get information about what this device is playing
 	my $controller = $client->controller()->songStreamController();
 	my $song = $controller->song() if $controller;
 	
-	if ( (defined $info->{title} && (!defined $meta->{$station}->{title} || $info->{title} ne $meta->{$station}->{title}))
-		|| (defined $info->{artist} && (!defined $meta->{$station}->{artist} || $info->{artist} ne $meta->{$station}->{artist})) 
-		|| (!defined $info->{title} && defined $meta->{$station}->{title}) 
+	if (defined $info->{title} && defined $info->{artist} && defined $meta->{$station}->{title} && defined $meta->{$station}->{artist}){
+		# Have found something this time - if same as playing then check for additional info available
+		if (($info->{title} eq $meta->{$station}->{title} && $info->{artist} eq $meta->{$station}->{artist}) ||
+			$info->{endTime} eq $meta->{$station}->{endTime}) {
+			# Seems to be the same song - so check for new (or now missing) data
+			# Have seen occasions when same song has slightly different artist names - so also say match if endTime is the same
+			if ($meta->{$station}->{cover} eq $icons->{$station} && $info->{cover} ne $meta->{$station}->{cover}){
+				# looks like we have artwork and before was the default
+				main::DEBUGLOG && $log->is_debug && $log->debug("$station - Client: $deviceName - Enriching with extra artwork: ".$info->{cover});
+				$dataChanged = true;
+			} elsif ($info->{cover} eq $icons->{$station} && $meta->{$station}->{cover} ne $icons->{$station}){
+				# Had artwork before but do not now - so preserve old
+				$info->{cover} = $meta->{$station}->{cover};
+				main::DEBUGLOG && $log->is_debug && $log->debug("$station - Client: $deviceName - Preserving previously collected artwork: ".$info->{cover});
+			}
+		} 
+	}
+	
+	if (!defined $info->{title} || !defined $info->{artist}){
+		# Looks like nothing much was found - but might have had info from a different metadata fetch that is still valid
+		# if (!defined $info->{title}){main::DEBUGLOG && $log->is_debug && $log->debug("$station - Client: $deviceName - title not defined");}
+		# if (!defined $info->{artist}){main::DEBUGLOG && $log->is_debug && $log->debug("$station - Client: $deviceName - artist not defined");}
+		
+		if ((!defined $meta->{$station}->{artist} || $meta->{$station}->{artist} eq '') && 
+			defined $meta->{$station}->{title} && $meta->{$station}->{title} ne '' ){
+			# Not much track details found BUT previously had a programme name (no artist) so keep old programme name - with danger that it is out of date
+			if (!defined $info->{title}){
+				$info->{title} = $meta->{$station}->{title};
+				main::DEBUGLOG && $log->is_debug && $log->debug("$station - Client: $deviceName - Preserving previously collected programme name: ".$info->{title});
+			}
+		} elsif (defined $meta->{$station}->{endTime} && $meta->{$station}->{endTime} >= $hiResTime+cacheTTL){
+			# If the stored data is still within time range then keep it
+			main::DEBUGLOG && $log->is_debug && $log->debug("$station - Client: $deviceName - Preserving previously collected artist and title");
+			if (defined $meta->{$station}->{artist}){$info->{artist} = $meta->{$station}->{artist};}
+			if (defined $meta->{$station}->{title}){$info->{title} = $meta->{$station}->{title};}
+			if (defined $meta->{$station}->{cover}) {$info->{cover} = $meta->{$station}->{cover}};
+			if (defined $meta->{$station}->{icon}) {$info->{icon} = $meta->{$station}->{icon}};
+			if (defined $meta->{$station}->{album}) {$info->{album} = $meta->{$station}->{album}};
+			if (defined $meta->{$station}->{year}) {$info->{year} = $meta->{$station}->{year}};
+		}
+	}
+		
+	if ( (defined $info->{title} && (!defined $meta->{$station}->{title} || ($info->{title} ne $meta->{$station}->{title} && $info->{endTime} ne $meta->{$station}->{endTime})))
+		|| (defined $info->{artist} && (!defined $meta->{$station}->{artist} || ($info->{artist} ne $meta->{$station}->{artist} && $info->{endTime} ne $meta->{$station}->{endTime}))) 
+		|| (!defined $info->{title} && defined $meta->{$station}->{title})
+		|| $dataChanged
 		) {
 	
 		# Data has changed since last time (including now no data but was before)
@@ -1098,7 +1204,7 @@ sub deviceTimer {
 	if ($deviceNextPoll >= $nextPoll){
 		# If there is already a poll outstanding then skip setting up a new one
 		$nextPollInt = $deviceNextPoll-$hiResTime;
-		main::DEBUGLOG && $log->is_debug && $log->debug("$station - Client: $deviceName - Skipping setting poll $nextPoll - already one ".$myClientInfo->{$deviceName}->{nextpoll}." Due in: $nextPollInt");
+		# main::DEBUGLOG && $log->is_debug && $log->debug("$station - Client: $deviceName - Skipping setting poll $nextPoll - already one ".$myClientInfo->{$deviceName}->{nextpoll}." Due in: $nextPollInt");
 	} else {
 		main::DEBUGLOG && $log->is_debug && $log->debug("$station - Client: $deviceName - Setting next poll to fire at $nextPoll Interval: $nextPollInt");
 
