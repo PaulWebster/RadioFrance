@@ -6,7 +6,7 @@ title: RadioFrance - Slimerver/LMS PlugIn to get song information from Radio Fra
 Slimerver/LMS PlugIn to get song information from Radio France stations
 =========================================
 
-Display artist, track, cover and, optionally, album name for:
+Display artist, track, cover and, optionally, album name, label and year for:
 * FIP (http://www.fipradio.fr) stations (including web stations such as Autour du Jazz)
 * France Musique (http://www.francemusique.fr) web stations (such as Ocora and Classique Plus)
 * Mouv' (http://www.mouv.fr)
