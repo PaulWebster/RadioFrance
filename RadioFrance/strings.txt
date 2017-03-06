@@ -29,3 +29,19 @@ PLUGIN_RADIOFRANCE_SHOWPROGIMAGE
 PLUGIN_RADIOFRANCE_SHOWPROGIMAGE_DESC
 	EN	Select (Enable) if you want to try to show icon for the show/programme rather than the station. For some stations / sources this information is never available.
 	FR	Sélectionnez (Activer) si vous voulez essayer d'afficher l'icône pour le show / programme plutôt que la station. Pour certaines stations / sources, cette information n'est jamais disponible.
+
+PLUGIN_RADIOFRANCE_APPENDLABEL
+	EN	Select if you want to try to append the label/publisher name to the album name
+	FR	Sélectionnez si vous souhaitez essayer d'ajouter le maison de disque/éditeur au nom de l'album
+
+PLUGIN_RADIOFRANCE_APPENDLABEL_DESC
+	EN	Select (Enable) if you want to try to append the label/publisher name to the album name, but not always present in the source data
+	FR	Sélectionnez (Activer) si vous souhaitez essayer d'ajouter le maison de disque/éditeur au nom de l'album, mais pas toujours présents dans les données sources
+
+PLUGIN_RADIOFRANCE_APPENDYEAR
+	EN	Select if you want to try to append the year to the album name
+	FR	Sélectionnez si vous souhaitez essayer d'ajouter l'année au nom de l'album
+
+PLUGIN_RADIOFRANCE_APPENDYEAR_DESC
+	EN	Select (Enable) if you want to try to append the year to the album name, but not always present in the source data
+	FR	Sélectionnez (Activer) si vous souhaitez essayer d'ajouter l'année au nom de l'album, mais pas toujours présents dans les données sources

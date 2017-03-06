@@ -22,7 +22,7 @@ sub page {
 }
 
 sub prefs {
-	return ($prefs, qw(disablealbumname tryalternateurl showprogimage) );
+	return ($prefs, qw(disablealbumname tryalternateurl showprogimage appendlabel appendyear) );
 }
 
 # Always end with a 1 to make Perl happy

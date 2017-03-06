@@ -217,6 +217,8 @@ sub initPlugin {
 	$prefs->init({ disablealbumname => 0 });
 	$prefs->init({ tryalternateurl => 0 });
 	$prefs->init({ showprogimage => 0 });
+	$prefs->init({ appendlabel => 0 });
+	$prefs->init({ appendyear => 0 });
 	
 	Slim::Formats::RemoteMetadata->registerParser(
 		match => $urlRegex2,
@@ -724,13 +726,13 @@ sub parseContent {
 
 					if (exists $nowplaying->{'interpreteMorceau'}) {$info->{artist} = _lowercase($nowplaying->{'interpreteMorceau'})};
 					if (exists $nowplaying->{'titre'}) {$info->{title} = _lowercase($nowplaying->{'titre'})};
+					if (exists $nowplaying->{'anneeEditionMusique'}) {$info->{year} = $nowplaying->{'anneeEditionMusique'}};
+					if (exists $nowplaying->{'label'}) {$info->{label} = _lowercase($nowplaying->{'label'})};
 					
 					# main::DEBUGLOG && $log->is_debug && $log->debug('Preferences: DisableAlbumName='.$prefs->get('disablealbumname'));
 					if (!$prefs->get('disablealbumname')){
 						if (exists $nowplaying->{'titreAlbum'}) {$info->{album} = _lowercase($nowplaying->{'titreAlbum'})};
 					}
-					
-					if (exists $nowplaying->{'anneeEditionMusique'}) {$info->{year} = $nowplaying->{'anneeEditionMusique'}};
 					
 					# Artwork - only include if not one of the defaults - to give chance for something else to add it
 					# Regex check to see if present using $iconsIgnoreRegex
@@ -968,13 +970,13 @@ sub parseContent {
 					} elsif (exists $nowplaying->{'authors'}){$info->{artist} = _lowercase($nowplaying->{'authors'})};
 					
 					if (exists $nowplaying->{'title'}) {$info->{title} = _lowercase($nowplaying->{'title'})};
+					if (exists $nowplaying->{'anneeEditionMusique'}) {$info->{year} = $nowplaying->{'anneeEditionMusique'}};
+					if (exists $nowplaying->{'label'}) {$info->{label} = _lowercase($nowplaying->{'label'})};
 					
 					# main::DEBUGLOG && $log->is_debug && $log->debug('Preferences: DisableAlbumName='.$prefs->get('disablealbumname'));
 					if (!$prefs->get('disablealbumname')){
 						if (exists $nowplaying->{'titreAlbum'}) {$info->{album} = _lowercase($nowplaying->{'titreAlbum'})};
 					}
-					
-					if (exists $nowplaying->{'anneeEditionMusique'}) {$info->{year} = $nowplaying->{'anneeEditionMusique'}};
 					
 					# Artwork - only include if not one of the defaults - to give chance for something else to add it
 					# Regex check to see if present using $iconsIgnoreRegex
@@ -1060,6 +1062,28 @@ sub parseContent {
 				$info->{cover} = $meta->{$station}->{cover};
 				main::DEBUGLOG && $log->is_debug && $log->debug("$station - Client: $deviceName - Preserving previously collected artwork: ".$info->{cover});
 			}
+			
+			# Have seen occasions when one source has a "label" and the other does not so preserve it
+			if ( defined $info->{label} && !defined $meta->{$station}->{label} ){
+				# looks like we have label and did not before
+				main::DEBUGLOG && $log->is_debug && $log->debug("$station - Client: $deviceName - Enriching with label name: ".$info->{label});
+				$dataChanged = true;
+			} elsif (!defined $info->{label} && defined $meta->{$station}->{label}){
+				# Had label before but do not now - so preserve old
+				$info->{label} = $meta->{$station}->{label};
+				main::DEBUGLOG && $log->is_debug && $log->debug("$station - Client: $deviceName - Preserving previously collected label name: ".$info->{label});
+			}
+
+			# Just in case ...
+			if ( defined $info->{year} && !defined $meta->{$station}->{year} ){
+				# looks like we have label and did not before
+				main::DEBUGLOG && $log->is_debug && $log->debug("$station - Client: $deviceName - Enriching with year: ".$info->{year});
+				$dataChanged = true;
+			} elsif (!defined $info->{year} && defined $meta->{$station}->{year}){
+				# Had year before but do not now - so preserve old
+				$info->{year} = $meta->{$station}->{year};
+				main::DEBUGLOG && $log->is_debug && $log->debug("$station - Client: $deviceName - Preserving previously collected year: ".$info->{year});
+			}
 		} 
 	}
 	
@@ -1084,6 +1108,7 @@ sub parseContent {
 			if (defined $meta->{$station}->{icon}) {$info->{icon} = $meta->{$station}->{icon}};
 			if (defined $meta->{$station}->{album}) {$info->{album} = $meta->{$station}->{album}};
 			if (defined $meta->{$station}->{year}) {$info->{year} = $meta->{$station}->{year}};
+			if (defined $meta->{$station}->{label}) {$info->{label} = $meta->{$station}->{label}};
 		}
 	}
 		
@@ -1093,7 +1118,7 @@ sub parseContent {
 		|| $dataChanged
 		) {
 	
-		# Data has changed since last time (including now no data but was before)
+		# Core data has changed since last time (including now no data but was before)
 		my $thisartist = '';
 		my $thistitle = '';
 		if (defined $info->{artist}) {$thisartist = $info->{artist}};
@@ -1131,7 +1156,25 @@ sub updateClient {
 	if (defined $info->{cover}) {$thiscover = $info->{cover}};
 	if (defined $info->{icon}) {$thisicon = $info->{icon}};
 
+	if ($prefs->get('appendlabel') && defined $info->{album} && defined $info->{label}){
+		# Been asked to add the record label name to album name if present
+		my $appendStr = ' / '.$info->{label};
+		# Only add it if not already there (could happen when more than one data source)
+		# Note - might not be the last field on the line because of Year below so do not test for EOL $)
+		if ($info->{album} !~ m/\Q$appendStr\E/){
+			$info->{album} .= $appendStr;
+		}
+	}
 
+	if ($prefs->get('appendyear') && defined $info->{album} && defined $info->{year}){
+		# Been asked to add the year to album name if present
+		my $appendStr = ' / '.$info->{year};
+		# Only add it if not already there (could happen when more than one data source)
+		if ($info->{album} !~ m/\Q$appendStr\E$/){
+			$info->{album} .= $appendStr;
+		}
+	}
+	
 	my $deviceName = "";
 	
 	if (!$client->name){

@@ -23,5 +23,22 @@
 		</div>
 
 	[% END %]
+
+	[% WRAPPER setting title="PLUGIN_RADIOFRANCE_APPENDLABEL" desc="PLUGIN_RADIOFRANCE_APPENDLABEL_DESC" %]
+
+		<div class="prefDesc">[% "ENABLE" | string %]
+			<input name="pref_appendlabel" type="checkbox" [% IF prefs.pref_appendlabel %] checked [% END %]>
+		</div>
+
+	[% END %]
+
+	[% WRAPPER setting title="PLUGIN_RADIOFRANCE_APPENDYEAR" desc="PLUGIN_RADIOFRANCE_APPENDYEAR_DESC" %]
+
+		<div class="prefDesc">[% "ENABLE" | string %]
+			<input name="pref_appendyear" type="checkbox" [% IF prefs.pref_appendyear %] checked [% END %]>
+		</div>
+
+	[% END %]
+
 	
 [% PROCESS settings/footer.html %]
