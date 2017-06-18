@@ -32,7 +32,7 @@ Once installed and LMS has been restarted you should play one of the supported r
 If the plugin is working then you should see artist details appear around the time that a new track starts.
 
 **FIP stations supported:**
-FIP (including regional variants while they last), FIP autour du ... Rock, Jazz, Groove, Monde, plus Tout Nouveau and Evenement (Reggae at time of writing).
+FIP (including regional variants while they last), FIP autour ... du Rock, du Jazz, du Groove, du Monde, de l'Electro plus Tout Nouveau and Evenement (Reggae at time of writing).
 
 **France Musique stations supported:**
 Classique Easy
@@ -54,6 +54,11 @@ Note: Radio France does not always provide track information in a timely manner 
 - If things are not working then enable Debug logging for this plugin via LMS/Settings/Advanced/Logging interface, repeat the problem and then check the LMS logs.  
 
 ## Version History
+**0.1.10 17-Jun-2017**
+
+Add FIP Autour de l'Electro
+Change alternate fetch mechanism to always fetch if available and remove setting that controlled it
+Change some station logos to higher definition
 
 **0.1.9 06-Mar-2017**
 

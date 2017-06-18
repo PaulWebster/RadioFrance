@@ -71,6 +71,7 @@ my $urls = {
 	fipnouveau_alt => 'http://www.fipradio.fr/livemeta/70',
 	fipevenement => 'http://www.fipradio.fr/sites/default/files/import_si_webradio_6/si_titre_antenne/FIP_player_current.json',
 	fipevenement_alt => 'http://www.fipradio.fr/livemeta/71',
+	fipelectro => 'http://www.fipradio.fr/livemeta/74',
 	fmclassiqueeasy => 'https://www.francemusique.fr/livemeta/pull/401',
 	fmclassiqueplus => 'https://www.francemusique.fr/livemeta/pull/402',
 	fmconcertsradiofrance => 'https://www.francemusique.fr/livemeta/pull/403',
@@ -89,11 +90,12 @@ my $icons = {
 	fipnantes => 'http://www.fipradio.fr/sites/all/themes/custom/fip/logo.png',
 	fipstrasbourg => 'http://www.fipradio.fr/sites/all/themes/custom/fip/logo.png',
 	fiprock => 'http://www.fipradio.fr/sites/default/files/asset/images/2016/06/fip_autour_du_rock_logo_hd_player.png',
-	fipjazz => 'http://www.fipradio.fr/sites/default/files/asset/images/2016/03/webradio-jazz-d_0.png',
-	fipgroove => 'http://www.fipradio.fr/sites/default/files/asset/images/2016/03/webradio-groove-d_0.png',
-	fipmonde => 'http://www.fipradio.fr/sites/default/files/asset/images/2016/03/webradio-monde-d_0.png',
-	fipnouveau => 'http://www.fipradio.fr/sites/default/files/asset/images/2016/03/webradio-nouveau-d_0.png',
+	fipjazz => 'http://www.fipradio.fr/sites/default/files/asset/images/2016/06/fip_autour_du_jazz_logo_hd_player.png',
+	fipgroove => 'http://www.fipradio.fr/sites/default/files/asset/images/2016/06/fip_autour_du_groove_logo_hd_player.png',
+	fipmonde => 'http://www.fipradio.fr/sites/default/files/asset/images/2016/06/fip_autour_du_monde_logo_hd_player.png',
+	fipnouveau => 'http://www.fipradio.fr/sites/default/files/asset/images/2016/06/fip_tout_nouveau_logo_hd_player.png',
 	fipevenement => 'http://www.fipradio.fr/sites/default/files/asset/images/2016/05/fip_evenement_logo-home.png',
+	fipelectro => 'http://www.fipradio.fr/sites/default/files/asset/images/2017/05/fip-autour-de-l-electro-logo-hd-player.png',
 	fmclassiqueeasy => 'https://s3-eu-west-1.amazonaws.com/cruiser-production/2016/12/aca436ad-7f99-4765-9404-1b04bf216daf/fmwebradiosnormaleasy.jpg',
 	fmclassiqueplus => 'https://s3-eu-west-1.amazonaws.com/cruiser-production/2016/12/b8213b77-465c-487e-b5b6-07ce8e2862df/fmwebradiosnormalplus.jpg',
 	fmconcertsradiofrance => 'https://s3-eu-west-1.amazonaws.com/cruiser-production/2016/12/72f1a384-5b04-4b98-b511-ac07b35c7daf/fmwebradiosnormalconcerts.jpg',
@@ -116,6 +118,7 @@ my $iconsIgnoreRegex = {
 	fipmonde => '(fond_titres_diffuses_degrade.png|direct_default_cover_medium.png)',
 	fipnouveau => '(fond_titres_diffuses_degrade.png|direct_default_cover_medium.png)',
 	fipevenement => '(fond_titres_diffuses_degrade.png|direct_default_cover_medium.png)',
+	fipelectro => '(fond_titres_diffuses_degrade.png|direct_default_cover_medium.png)',
 	fmclassiqueeasy => '(dummy)',
 	fmclassiqueplus => '(dummy)',
 	fmconcertsradiofrance => '(dummy)',
@@ -139,6 +142,7 @@ my %stationMatches = (
 	"id=s262538&", "fipmonde",
 	"id=s262540&", "fipnouveau",
 	"id=s283680&", "fipevenement",
+	"id=s293089&", "fipelectro",
 	"id=s283174&", "fmclassiqueeasy",
 	"id=s283175&", "fmclassiqueplus",
 	"id=s283176&", "fmconcertsradiofrance",
@@ -158,6 +162,7 @@ my %stationMatches = (
 	"fip-webradio4.", "fipmonde",
 	"fip-webradio5.", "fipnouveau",
 	"fip-webradio6.", "fipevenement",
+	"fip-webradio8.", "fipelectro",
 	"francemusiqueeasyclassique-", "fmclassiqueeasy",
 	"francemusiqueclassiqueplus-", "fmclassiquelpus",
 	"francemusiqueconcertsradiofrance-", "fmconcertsradiofrance",
@@ -183,6 +188,7 @@ my $meta = {
 	fipmonde => { busy => 0, title => 'FIP autour du monde', icon => $icons->{fipmonde}, cover => $icons->{fipmonde}, ttl => 0, endTime => 0 },
 	fipnouveau => { busy => 0, title => 'Tout nouveau, tout Fip', icon => $icons->{fipnouveau}, cover => $icons->{fipnouveau}, ttl => 0, endTime => 0 },
 	fipevenement => { busy => 0, title => 'FIP Evenement', icon => $icons->{fipevenement}, cover => $icons->{fipevenement}, ttl => 0, endTime => 0 },
+	fipelectro => { busy => 0, title => 'FIP autour de l\'électro', icon => $icons->{fipelectro}, cover => $icons->{fipelectro}, ttl => 0, endTime => 0 },
 	fmclassiqueeasy => { busy => 0, title => 'France Musique Classique Easy', icon => $icons->{fmclassiqueeasy}, cover => $icons->{fmclassiqueeasy}, ttl => 0, endTime => 0 },
 	fmclassiqueplus => { busy => 0, title => 'France Musique Classique Plus', icon => $icons->{fmclassiqueplus}, cover => $icons->{fmclassiqueplus}, ttl => 0, endTime => 0 },
 	fmconcertsradiofrance => { busy => 0, title => 'France Musique Concerts', icon => $icons->{fmconcertsradiofrance}, cover => $icons->{fmconcertsradiofrance}, ttl => 0, endTime => 0 },
@@ -201,9 +207,9 @@ my $myClientInfo = {};
 # http://opml.radiotime.com/Tune.ashx?id=s15200&formats=aac,ogg,mp3,wmpro,wma,wmvoice&partnerId=16
 # Played via direct URL like ... http://direct.fipradio.fr/live/fip-midfi.mp3 which redirects to something with same suffix
 # Match group 1 is used to find station id in %stationMatches - "fip-" last because it is a substring of others
-my $urlRegex1 = qr/(?:\/)(fipbordeaux-|fipnantes-|fipstrasbourg-|fip-webradio1\.|fip-webradio2\.|fip-webradio3\.|fip-webradio4\.|fip-webradio5\.|fip-webradio6\.|fip-|francemusiqueeasyclassique-|francemusiqueclassiqueplus-|francemusiqueconcertsradiofrance-|francemusiquelajazz-|francemusiquelacontemporaine-|francemusiqueocoramonde-|francemusiquelevenementielle-|mouv-|mouvxtra-)(?:midfi|lofi|hifi|)/i;
-# Selected via TuneIn base|bordeaux|nantes|strasbourg|rock|jazz|groove|monde|nouveau|evenement FranceMusique - ClassicEasy|ClassicPlus|Concerts|Contemporaine|OcoraMonde|ClassiqueKids/Evenementielle - Mouv|MouvXtra
-my $urlRegex2 = qr/(?:radiotime|tunein)\.com.*(id=s15200&|id=s50706&|id=s50770&|id=s111944&|id=s262528&|id=s262533&|id=s262537&|id=s262538&|id=s262540&|id=s283680&|id=s283174&|id=s283175&|id=s283176&|id=s283178&|id=s283179&|id=s283177&|id=s285660&|id=s6597&|id=s244069&)/i;
+my $urlRegex1 = qr/(?:\/)(fipbordeaux-|fipnantes-|fipstrasbourg-|fip-webradio1\.|fip-webradio2\.|fip-webradio3\.|fip-webradio4\.|fip-webradio5\.|fip-webradio6\.|fip-webradio8\.|fip-|francemusiqueeasyclassique-|francemusiqueclassiqueplus-|francemusiqueconcertsradiofrance-|francemusiquelajazz-|francemusiquelacontemporaine-|francemusiqueocoramonde-|francemusiquelevenementielle-|mouv-|mouvxtra-)(?:midfi|lofi|hifi|)/i;
+# Selected via TuneIn base|bordeaux|nantes|strasbourg|rock|jazz|groove|monde|nouveau|evenement|electro FranceMusique - ClassicEasy|ClassicPlus|Concerts|Contemporaine|OcoraMonde|ClassiqueKids/Evenementielle - Mouv|MouvXtra
+my $urlRegex2 = qr/(?:radiotime|tunein)\.com.*(id=s15200&|id=s50706&|id=s50770&|id=s111944&|id=s262528&|id=s262533&|id=s262537&|id=s262538&|id=s262540&|id=s283680&|id=s293089&|id=s283174&|id=s283175&|id=s283176&|id=s283178&|id=s283179&|id=s283177&|id=s285660&|id=s6597&|id=s244069&)/i;
 
 sub getDisplayName {
 	return 'PLUGIN_RADIOFRANCE';
@@ -215,7 +221,6 @@ sub initPlugin {
 	$VERSION = $class->_pluginDataFor('version');
 
 	$prefs->init({ disablealbumname => 0 });
-	$prefs->init({ tryalternateurl => 0 });
 	$prefs->init({ showprogimage => 0 });
 	$prefs->init({ appendlabel => 0 });
 	$prefs->init({ appendyear => 0 });
@@ -385,15 +390,11 @@ sub getmeta {
 			
 			my $sourceUrl = $urls->{$station};
 			
-			# if ($prefs->get('tryalternateurl') && exists $urls->{$station."_alt"}){
-				# # Been configured to try alternate URL and there is one
-				# $sourceUrl = ($urls->{$station."_alt"});
-			# }
 			main::DEBUGLOG && $log->is_debug && $log->debug("$station - Fetching data from $sourceUrl");
 			$http->get($sourceUrl);
 			
-			if ($prefs->get('tryalternateurl') && exists $urls->{$station."_alt"}){
-				# Been configured to try alternate URL and there is one - so do an additional fetch for it
+			if (exists $urls->{$station."_alt"}){
+				# If there is an alternate URL - do an additional fetch for it
 				
 				my $httpalt = Slim::Networking::SimpleAsyncHTTP->new(
 					sub {
