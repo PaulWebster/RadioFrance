@@ -7,7 +7,7 @@
 	
 	<plugins>
 		
-		<plugin name="RadioFrance" version="0.1.9" minTarget="7.4" maxTarget="*">
+		<plugin name="RadioFrance" version="0.1.10" minTarget="7.4" maxTarget="*">
 			<title lang="EN">Radio France</title>
 			<desc  lang="EN">Radio France track information</desc>
 			<desc  lang="FR">Radio France - info sur le morceau de musique</desc>
