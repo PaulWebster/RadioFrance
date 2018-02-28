@@ -224,7 +224,12 @@ sub initPlugin {
 	$prefs->init({ showprogimage => 0 });
 	$prefs->init({ appendlabel => 0 });
 	$prefs->init({ appendyear => 0 });
-	
+
+	if ( !Slim::Networking::Async::HTTP->hasSSL() ) {
+		# Warn if HTTPS support not present because some of the meta provider URLs redirect to https (since February 2018)
+		$log->error(string('PLUGIN_RADIOFRANCE_MISSING_SSL'));
+	}
+
 	Slim::Formats::RemoteMetadata->registerParser(
 		match => $urlRegex2,
 		func  => \&parser,

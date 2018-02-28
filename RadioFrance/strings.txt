@@ -37,3 +37,7 @@ PLUGIN_RADIOFRANCE_APPENDYEAR
 PLUGIN_RADIOFRANCE_APPENDYEAR_DESC
 	EN	Select (Enable) if you want to try to append the year to the album name, but not always present in the source data
 	FR	Sélectionnez (Activer) si vous souhaitez essayer d'ajouter l'année au nom de l'album, mais pas toujours présents dans les données sources
+
+PLUGIN_RADIOFRANCE_MISSING_SSL
+	EN	RadioFrance might require the Perl module IO::Socket::SSL to fetch some of the track information. If you see no track information then please use your operating system's package manager to install it.
+	FR	RadioFrance peut avoir besoin du module Perl IO::Socket::SSL pour récupérer certaines informations. Si vous ne voyez aucune information, veuillez utiliser le gestionnaire de paquets (package manager) de votre système d'exploitation pour l'installer.
