@@ -7,7 +7,7 @@
 	
 	<plugins>
 		
-		<plugin name="RadioFrance" version="0.1.10" minTarget="7.4" maxTarget="*">
+		<plugin name="RadioFrance" version="0.1.11" minTarget="7.4" maxTarget="*">
 			<title lang="EN">Radio France</title>
 			<desc  lang="EN">Radio France track information</desc>
 			<desc  lang="FR">Radio France - info sur le morceau de musique</desc>
@@ -19,8 +19,8 @@
 			<changes lang="FR">
 				- Ajouter la capacité d'afficher l'étiquette d'enregistrement (éditeur) et l'année à la fin du nom de l'album
 			</changes>
-			<url>https://paulwebster.github.io/RadioFrance/RadioFrance-0.1.10.zip</url>
-			<sha>fab84e99b3bbcb3ae693c6c75b80656531a41f6b</sha>
+			<url>https://paulwebster.github.io/RadioFrance/RadioFrance-0.1.11.zip</url>
+			<sha>1b1be19064a638cc5d1ee559cdcca66f19d1cfb2</sha>
 		</plugin>
 
 	</plugins>
