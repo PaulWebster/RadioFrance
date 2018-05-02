@@ -971,7 +971,7 @@ sub parseContent {
 					# If looks like this should not have already finished (allowing for some leniency for clock drift and other delays) then get the details
 					# This requires that the time on the machine running LMS should be accurate - and timezone set correctly
 
-					if (exists $nowplaying->{'performers'}) {
+					if (exists $nowplaying->{'performers'} && $nowplaying->{'performers'} ne '') {
 						$info->{artist} = _lowercase($nowplaying->{'performers'});
 					} elsif (exists $nowplaying->{'authors'}){$info->{artist} = _lowercase($nowplaying->{'authors'})};
 					
