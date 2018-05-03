@@ -14,10 +14,10 @@
 			<creator>Paul Webster</creator>
 			<email></email>
 			<changes lang="EN">
-				- Add ability to show record label (publisher) and year at end of album name
+				- Radio France now sometimes includes an empty artist name (performers) rather than omitting the field - so use alternate field (authors) in that case
 			</changes>
 			<changes lang="FR">
-				- Ajouter la capacité d'afficher l'étiquette d'enregistrement (éditeur) et l'année à la fin du nom de l'album
+				- Radio France inclut maintenant parfois un nom d'artiste vide (performers) plutôt que d'omettre le champ - donc utilisez un champ alternatif (authors) dans ce cas
 			</changes>
 			<url>https://paulwebster.github.io/RadioFrance/RadioFrance-0.1.12.zip</url>
 			<sha>9d11df4afea5dfce961b9f92b6d3c2d55722c2b5</sha>
