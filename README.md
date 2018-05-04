@@ -54,6 +54,10 @@ Note: Radio France does not always provide track information in a timely manner 
 - If things are not working then enable Debug logging for this plugin via LMS/Settings/Advanced/Logging interface, repeat the problem and then check the LMS logs.  
 
 ## Version History
+**0.1.13 04-May-2018**
+
+Data sources for the regional FIP stations stopped working in mid-March 2018 so use alternate (same as main FIP)
+
 **0.1.12 02-May-2018**
 
 Radio France now sometimes includes an empty artist name (performers) rather than omitting the field - so use alternate field (authors) in that case
