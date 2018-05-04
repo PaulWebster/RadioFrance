@@ -7,20 +7,20 @@
 	
 	<plugins>
 		
-		<plugin name="RadioFrance" version="0.1.12" minTarget="7.4" maxTarget="*">
+		<plugin name="RadioFrance" version="0.1.13" minTarget="7.4" maxTarget="*">
 			<title lang="EN">Radio France</title>
 			<desc  lang="EN">Radio France track information</desc>
 			<desc  lang="FR">Radio France - info sur le morceau de musique</desc>
 			<creator>Paul Webster</creator>
 			<email></email>
 			<changes lang="EN">
-				- Radio France now sometimes includes an empty artist name (performers) rather than omitting the field - so use alternate field (authors) in that case
+				- Data sources for the regional FIP stations stopped working in mid-March 2018 so use alternate (same as main FIP)
 			</changes>
 			<changes lang="FR">
-				- Radio France inclut maintenant parfois un nom d'artiste vide (performers) plutôt que d'omettre le champ - donc utilisez un champ alternatif (authors) dans ce cas
+				- Les sources de données pour les stations régionales de la FIP ont cessé de fonctionner à la mi-mars 2018, donc l'utilisation alternée (identique à la FIP principale)
 			</changes>
-			<url>https://paulwebster.github.io/RadioFrance/RadioFrance-0.1.12.zip</url>
-			<sha>9d11df4afea5dfce961b9f92b6d3c2d55722c2b5</sha>
+			<url>https://paulwebster.github.io/RadioFrance/RadioFrance-0.1.13.zip</url>
+			<sha>fccff350610f3aa8f3e3df481ee161ce67e25d3a</sha>
 		</plugin>
 
 	</plugins>
