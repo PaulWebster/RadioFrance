@@ -32,5 +32,18 @@
 
 	[% END %]
 
+	[% WRAPPER setting title="PLUGIN_RADIOFRANCE_HIDETRACKDURATION" desc="PLUGIN_RADIOFRANCE_HIDETRACKDURATION_DESC" %]
+
+		<div class="prefDesc">[% "ENABLE" | string %]
+			<input name="pref_hidetrackduration" type="checkbox" [% IF prefs.pref_hidetrackduration %] checked [% END %]>
+		</div>
+
+	[% END %]
 	
+	[% WRAPPER setting title="PLUGIN_RADIOFRANCE_STREAMDELAY" desc="PLUGIN_RADIOFRANCE_STREAMDELAY_DESC" %]
+
+		<input type="text" class="stdedit sliderInput_0_99_1" name="pref_streamdelay" id="pref_streamdelay" value="[% prefs.streamdelay %]" size="2">
+
+	[% END %]
+
 [% PROCESS settings/footer.html %]

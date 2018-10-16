@@ -54,6 +54,11 @@ Note: Radio France does not always provide track information in a timely manner 
 - If things are not working then enable Debug logging for this plugin via LMS/Settings/Advanced/Logging interface, repeat the problem and then check the LMS logs.  
 
 ## Version History
+**0.1.14 16-Oct-2018
+
+Show (optionally) the duration of the song (thanks to philippe_44 for the key two lines of code). If you enable/disable this then wait for one track before it takes effect
+Add configurable stream delay parameter - default is 2 seconds. Indicates how far behind real time the stream is - making this accurate can help with timely changes of song info, especially visible if track duration is shown
+
 **0.1.13 04-May-2018**
 
 Data sources for the regional FIP stations stopped working in mid-March 2018 so use alternate (same as main FIP)
@@ -93,6 +98,6 @@ Add setting to allow programme image to replace station logo
  
 **0.1.5 06-Feb-2017**
 
-Add alternate URLs for FIP stations and make them (all in one) selectable.  
-Makes more tracks have images but updates might not be as timely.  
+Add alternate URLs for FIP stations and make them (all in one) selectable
+Makes more tracks have images but updates might not be as timely
 

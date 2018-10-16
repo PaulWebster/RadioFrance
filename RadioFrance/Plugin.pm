@@ -51,29 +51,33 @@ my $log = Slim::Utils::Log->addLogCategory({
 my $prefs = preferences('plugin.radiofrance');
 
 use constant cacheTTL => 20;
+use constant maxSongLth => 900;		# Assumed maximum song length in seconds - if appears longer then no duration shown
+					# because might be a problem with the data or perhaps this is a long programme rather than a song
+					# Having no duration should mean earlier call back to try again
 
 # URL for remote web site that is polled to get the information about what is playing
+# Old URLs that used to work but were phased out are commented out as they might help in future if Radio France changes things again
 my $urls = {
-	fipradio => 'http://www.fipradio.fr/sites/default/files/import_si/si_titre_antenne/FIP_player_current.json',
-	fipradio_alt => 'http://www.fipradio.fr/livemeta/7',
-	fipbordeaux => 'http://www.fipradio.fr/sites/default/files/import_si/si_titre_antenne/FIP_player_current.json',
-	fipbordeaux_alt => 'http://www.fipradio.fr/livemeta/7',
-	fipnantes => 'http://www.fipradio.fr/sites/default/files/import_si/si_titre_antenne/FIP_player_current.json',
-	fipnantes_alt => 'http://www.fipradio.fr/livemeta/7',
-	fipstrasbourg => 'http://www.fipradio.fr/sites/default/files/import_si/si_titre_antenne/FIP_player_current.json',
-	fipstrasbourg_alt => 'http://www.fipradio.fr/livemeta/7',
-	fiprock => 'http://www.fipradio.fr/sites/default/files/import_si_webradio_1/si_titre_antenne/FIP_player_current.json',
-	fiprock_alt => 'http://www.fipradio.fr/livemeta/64',
-	fipjazz => 'http://www.fipradio.fr/sites/default/files/import_si_webradio_2/si_titre_antenne/FIP_player_current.json',
-	fipjazz_alt => 'http://www.fipradio.fr/livemeta/65',
-	fipgroove => 'http://www.fipradio.fr/sites/default/files/import_si_webradio_3/si_titre_antenne/FIP_player_current.json',
-	fipgroove_alt => 'http://www.fipradio.fr/livemeta/66',
-	fipmonde => 'http://www.fipradio.fr/sites/default/files/import_si_webradio_4/si_titre_antenne/FIP_player_current.json',
-	fipmonde_alt => 'http://www.fipradio.fr/livemeta/69',
-	fipnouveau => 'http://www.fipradio.fr/sites/default/files/import_si_webradio_5/si_titre_antenne/FIP_player_current.json',
-	fipnouveau_alt => 'http://www.fipradio.fr/livemeta/70',
-	fipevenement => 'http://www.fipradio.fr/sites/default/files/import_si_webradio_6/si_titre_antenne/FIP_player_current.json',
-	fipevenement_alt => 'http://www.fipradio.fr/livemeta/71',
+# finished 1521553005 - 2018-03-20 13:36:45	fipradio_alt => 'http://www.fipradio.fr/sites/default/files/import_si/si_titre_antenne/FIP_player_current.json',
+	fipradio => 'http://www.fipradio.fr/livemeta/7',
+# finished 1521553005 - 2018-03-20 13:36:45	fipbordeaux_alt => 'http://www.fipradio.fr/sites/default/files/import_si/si_titre_antenne/FIP_player_current.json',
+	fipbordeaux => 'http://www.fipradio.fr/livemeta/7',
+# finished 1521553005 - 2018-03-20 13:36:45	fipnantes_alt => 'http://www.fipradio.fr/sites/default/files/import_si/si_titre_antenne/FIP_player_current.json',
+	fipnantes => 'http://www.fipradio.fr/livemeta/7',
+# finished 1521553005 - 2018-03-20 13:36:45	fipstrasbourg_alt => 'http://www.fipradio.fr/sites/default/files/import_si/si_titre_antenne/FIP_player_current.json',
+	fipstrasbourg => 'http://www.fipradio.fr/livemeta/7',
+# finished 1507650288 - 2017-10-10 16:44:48	fiprock_alt => 'http://www.fipradio.fr/sites/default/files/import_si_webradio_1/si_titre_antenne/FIP_player_current.json',
+	fiprock => 'http://www.fipradio.fr/livemeta/64',
+# finished 1507650914 - 2017-10-10 16:55:14	fipjazz_alt => 'http://www.fipradio.fr/sites/default/files/import_si_webradio_2/si_titre_antenne/FIP_player_current.json',
+	fipjazz => 'http://www.fipradio.fr/livemeta/65',
+# finished 1507650885 - 2017-10-10 16:54:45	fipgroove_alt => 'http://www.fipradio.fr/sites/default/files/import_si_webradio_3/si_titre_antenne/FIP_player_current.json',
+	fipgroove => 'http://www.fipradio.fr/livemeta/66',
+# finished 1507650800 - 2017-10-10 16:53:20	fipmonde_alt => 'http://www.fipradio.fr/sites/default/files/import_si_webradio_4/si_titre_antenne/FIP_player_current.json',
+	fipmonde => 'http://www.fipradio.fr/livemeta/69',
+# finished 1507650797 - 2017-10-10 16:53:17	fipnouveau_alt => 'http://www.fipradio.fr/sites/default/files/import_si_webradio_5/si_titre_antenne/FIP_player_current.json',
+	fipnouveau => 'http://www.fipradio.fr/livemeta/70',
+# finished 1507650800 - 2017-10-10 16:53:20	fipevenement_alt => 'http://www.fipradio.fr/sites/default/files/import_si_webradio_6/si_titre_antenne/FIP_player_current.json',
+	fipevenement => 'http://www.fipradio.fr/livemeta/71',
 	fipelectro => 'http://www.fipradio.fr/livemeta/74',
 	fmclassiqueeasy => 'https://www.francemusique.fr/livemeta/pull/401',
 	fmclassiqueplus => 'https://www.francemusique.fr/livemeta/pull/402',
@@ -82,8 +86,8 @@ my $urls = {
 	fmlacontemporaine => 'https://www.francemusique.fr/livemeta/pull/406',
 	fmocoramonde => 'https://www.francemusique.fr/livemeta/pull/404',
 	fmevenementielle => 'https://www.francemusique.fr/livemeta/pull/407',
-	mouv => 'http://www.mouv.fr/sites/default/files/import_si/si_titre_antenne/leMouv_player_current.json',
-	mouv_alt => 'https://api.radiofrance.fr/livemeta/pull/6',
+# finished	mouv_alt => 'http://www.mouv.fr/sites/default/files/import_si/si_titre_antenne/leMouv_player_current.json',
+	mouv => 'https://api.radiofrance.fr/livemeta/pull/6',
 	mouvxtra => 'https://api.radiofrance.fr/livemeta/pull/75',
 };
 
@@ -125,7 +129,7 @@ my $iconsIgnoreRegex = {
 	fmclassiqueeasy => '(dummy)',
 	fmclassiqueplus => '(dummy)',
 	fmconcertsradiofrance => '(dummy)',
-	fmlajazz =>  => '(dummy)',
+	fmlajazz => '(dummy)',
 	fmlacontemporaine => '(dummy)',
 	fmocoramonde => '(dummy)',
 	fmevenementielle => '(dummy)',
@@ -218,6 +222,14 @@ sub getDisplayName {
 	return 'PLUGIN_RADIOFRANCE';
 }
 
+sub getLocalAdjustedTime {
+	# Get the local time - but adjust it for estimated stream delay
+	my $adjustedTime;
+	# Using HiRes time because of difference with ordinary time when running on MacOS
+	$adjustedTime = int(Time::HiRes::time())-$prefs->get('streamdelay');
+
+	return $adjustedTime;
+}
 sub initPlugin {
 	my $class = shift;
 	
@@ -227,6 +239,8 @@ sub initPlugin {
 	$prefs->init({ showprogimage => 0 });
 	$prefs->init({ appendlabel => 0 });
 	$prefs->init({ appendyear => 0 });
+	$prefs->init({ hidetrackduration => 0 });
+	$prefs->init({ streamdelay => 2 });	# Assume that stream is 2 seconds behind real-time
 
 	if ( !Slim::Networking::Async::HTTP->hasSSL() ) {
 		# Warn if HTTPS support not present because some of the meta provider URLs redirect to https (since February 2018)
@@ -379,7 +393,7 @@ sub getmeta {
 	if ($station ne ''){
 		# main::DEBUGLOG && $log->is_debug && $log->debug("$station - Client: $deviceName - IsPlaying=".$client->isPlaying." getmeta called with URL $url");
 
-		my $hiResTime = int(Time::HiRes::time());
+		my $hiResTime = getLocalAdjustedTime;
 		
 		# don't query the remote meta data every time we're called
 		if ( $client->isPlaying && (!$meta->{$station} || $meta->{$station}->{ttl} <= $hiResTime) && !$meta->{$station}->{busy} ) {
@@ -470,7 +484,7 @@ sub getmeta {
 sub timerReturn {
 	my ( $client, $url ) = @_;
 	
-	my $hiResTime = int(Time::HiRes::time());
+	my $hiResTime = getLocalAdjustedTime;
 
 	my $station = &matchStation( $url );
 
@@ -529,8 +543,7 @@ sub timerReturn {
 sub parseContent {
 	my ( $client, $content, $station, $url ) = @_;
 
-	# Using HiRes time because of difference with ordinary time when running on MacOS
-	my $hiResTime = int(Time::HiRes::time());
+	my $hiResTime = getLocalAdjustedTime;
 	my $songDuration = 0;
 	
 	my $info = {
@@ -540,6 +553,7 @@ sub parseContent {
 		title  => undef,
 		ttl    => $hiResTime + cacheTTL,
 		endTime => $hiResTime + cacheTTL,
+		startTime => undef,
 	};
 	
 	my $deviceName = "";
@@ -725,6 +739,8 @@ sub parseContent {
 				# main::DEBUGLOG && $log->is_debug && $log->debug("Current artist: ".$nowplaying->{'interpreteMorceau'}." song: ".$nowplaying->{'titre'});
 				# main::DEBUGLOG && $log->is_debug && $log->debug("Image:\n small: ".$nowplaying->{'visuel'}->{small}."\n medium: ".$nowplaying->{'visuel'}->{medium});
 				
+				if (exists $nowplaying->{'startTime'}){ $info->{startTime} = $nowplaying->{'startTime'}};
+				
 				my $expectedEndTime = $hiResTime;
 				
 				if (exists $nowplaying->{'endTime'}){ $expectedEndTime = $nowplaying->{'endTime'}};
@@ -768,7 +784,7 @@ sub parseContent {
 						
 						# main::DEBUGLOG && $log->is_debug && $log->debug("$station - Duration $songDuration");
 						
-						if ($songDuration > 0 && $songDuration < 300) {$info->{duration} = $songDuration};
+						if ($songDuration > 0 && $songDuration < maxSongLth) {$info->{duration} = $songDuration};
 					}
 					
 					# Try to update the predicted end time to give better chance for timely display of next song
@@ -966,6 +982,8 @@ sub parseContent {
 				# main::DEBUGLOG && $log->is_debug && $log->debug("Current artist: ".$nowplaying->{'performers'}." song: ".$nowplaying->{'title'});
 				# main::DEBUGLOG && $log->is_debug && $log->debug("Image: ".$nowplaying->{'visual'});
 				
+				if (exists $nowplaying->{'start'}){ $info->{startTime} = $nowplaying->{'start'}};
+				
 				my $expectedEndTime = $hiResTime;
 				
 				if (exists $nowplaying->{'end'}){ $expectedEndTime = $nowplaying->{'end'}};
@@ -1008,7 +1026,7 @@ sub parseContent {
 						
 						# main::DEBUGLOG && $log->is_debug && $log->debug("$station - Duration $songDuration");
 						
-						if ($songDuration > 0 && $songDuration < 300) {$info->{duration} = $songDuration};
+						if ($songDuration > 0 && $songDuration < maxSongLth) {$info->{duration} = $songDuration};
 					}
 					
 					# Try to update the predicted end time to give better chance for timely display of next song
@@ -1108,8 +1126,9 @@ sub parseContent {
 				$info->{title} = $meta->{$station}->{title};
 				main::DEBUGLOG && $log->is_debug && $log->debug("$station - Client: $deviceName - Preserving previously collected programme name: ".$info->{title});
 			}
-		} elsif (defined $meta->{$station}->{endTime} && $meta->{$station}->{endTime} >= $hiResTime+cacheTTL){
-			# If the stored data is still within time range then keep it
+		# } elsif (defined $meta->{$station}->{endTime} && $meta->{$station}->{endTime} >= $hiResTime+cacheTTL){
+		} elsif (defined $meta->{$station}->{endTime} && $meta->{$station}->{endTime} >= $hiResTime-cacheTTL){
+			# If the stored data is still within time range then keep it (allowing for timing being slightly out)
 			main::DEBUGLOG && $log->is_debug && $log->debug("$station - Client: $deviceName - Preserving previously collected artist and title");
 			if (defined $meta->{$station}->{artist}){$info->{artist} = $meta->{$station}->{artist};}
 			if (defined $meta->{$station}->{title}){$info->{title} = $meta->{$station}->{title};}
@@ -1201,7 +1220,32 @@ sub updateClient {
 	if ($song && ($lastartist ne $thisartist || $lasttitle ne $thistitle)) {
 			main::DEBUGLOG && $log->is_debug && $log->debug("Client: $deviceName - pushing Now Playing $thisartist - $thistitle");
 			# main::DEBUGLOG && $log->is_debug && $log->debug("Client: $deviceName - pushing cover: $thiscover icon: $thisicon");
+			if (defined $info->{startTime}){main::DEBUGLOG && $log->is_debug && $log->debug("Client: $deviceName - Now: $hiResTime Scheduled start: $info->{startTime}")};
+			
 			$song->pluginData( wmaMeta => $info );
+			
+			if (!$prefs->get('hidetrackduration')){
+				# Pushing duration and startOffset makes the duration and playing position display
+				$song->duration( $info->{duration} );
+				if (defined $info->{startTime}){
+					# We know when it was scheduled and what time it is now ... so use the difference to modify the duration
+					$song->duration( $info->{duration}+$info->{startTime}-$hiResTime );
+				};
+
+				# However, might need some adjusting to allow for joining song in the middle and stream delays
+				# if (defined $info->{endTime} && defined $info->{duration}){
+				# 	# There is an end time and an expected duration ... but might have joined after track start so adjust if needed
+				# 	if ($info->{endTime}-$hiResTime < $info->{duration}){
+				# 		$song->duration( $info->{endTime}-$hiResTime );
+				# 		main::DEBUGLOG && $log->is_debug && $log->debug("Client: $deviceName - adjusting duration from $info->{duration} to $song->duration");
+				# 	}
+				# }
+
+				$song->startOffset( -$client->songElapsedSeconds );
+			} else {
+				# Do not show duration so remove it in case old data there from song before this was disabled
+				$song->duration( 0 );
+			}
 
 			# $client->master->pluginData( metadata => $info );
 			
@@ -1217,7 +1261,7 @@ sub deviceTimer {
 
 	my ( $client, $info, $url ) = @_;
 	
-	my $hiResTime = int(Time::HiRes::time());
+	my $hiResTime = getLocalAdjustedTime+$prefs->get('streamdelay');	# Use real time (not adjusted) because will be setting real timer
 	
 	my $station = &matchStation( $url );
 	
@@ -1240,7 +1284,7 @@ sub deviceTimer {
 	if (exists $info->{endTime}){
 		if ( $info->{endTime} > $nextPoll && $info->{endTime} - $nextPoll < 300) {
 			# Looks like current track finishes in less than 300 seconds so poll just after that
-			$nextPoll = $info->{endTime} + 5;
+			$nextPoll = $info->{endTime} + 1 + $prefs->get('streamdelay');
 			
 			$nextPollInt = $nextPoll - $hiResTime;
 		}

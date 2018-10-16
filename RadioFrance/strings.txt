@@ -38,6 +38,22 @@ PLUGIN_RADIOFRANCE_APPENDYEAR_DESC
 	EN	Select (Enable) if you want to try to append the year to the album name, but not always present in the source data
 	FR	Sélectionnez (Activer) si vous souhaitez essayer d'ajouter l'année au nom de l'album, mais pas toujours présents dans les données sources
 
+PLUGIN_RADIOFRANCE_HIDETRACKDURATION
+	EN	Select if you want to hide the duration of the song
+	FR	Sélectionnez si vous voulez masquer la durée de la chanson
+
+PLUGIN_RADIOFRANCE_HIDETRACKDURATION_DESC
+	EN	Select (Enable) if you want to try to hide the song duration, because annoyed by it being not always present or correct
+	FR	Sélectionnez (Activer) si vous voulez masquer la durée de la chanson, parce que vous êtes ennuyé par le fait qu'il ne soit pas toujours présent ou correct
+
+PLUGIN_RADIOFRANCE_STREAMDELAY
+	EN	Number of seconds that the stream is behind real time
+	FR	Nombre de secondes de retard du flux en temps réel
+
+PLUGIN_RADIOFRANCE_STREAMDELAY_DESC
+	EN	There is a delay between the radio stream arriving at your server. This can result in song titles changing a few seconds too early compared to what you hear. Setting this value to the number of seconds between the two to adjust this.
+	FR	Il y a un délai entre l'arrivée du flux radio sur votre serveur. Cela peut entraîner un changement de titre de chanson de quelques secondes trop tôt par rapport à ce que vous entendez. Définissez cette valeur sur le nombre de secondes entre les deux pour ajuster ceci.
+
 PLUGIN_RADIOFRANCE_MISSING_SSL
-	EN	RadioFrance might require the Perl module IO::Socket::SSL to fetch some of the track information. If you see no track information then please use your operating system's package manager to install it.
+	EN	RadioFrance might require the Perl module IO::Socket::SSL to fetch some of the song information. If you see no song information then please use your operating system's package manager to install it.
 	FR	RadioFrance peut avoir besoin du module Perl IO::Socket::SSL pour récupérer certaines informations. Si vous ne voyez aucune information, veuillez utiliser le gestionnaire de paquets (package manager) de votre système d'exploitation pour l'installer.
