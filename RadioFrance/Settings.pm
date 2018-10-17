@@ -22,7 +22,7 @@ sub page {
 }
 
 sub prefs {
-	return ($prefs, qw(disablealbumname showprogimage appendlabel appendyear streamdelay hidetrackduration) );
+	return ($prefs, qw(disablealbumname showprogimage appendlabel appendyear streamdelay hidetrackduration excludesomestations) );
 }
 
 # Always end with a 1 to make Perl happy

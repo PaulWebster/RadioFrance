@@ -54,6 +54,14 @@ PLUGIN_RADIOFRANCE_STREAMDELAY_DESC
 	EN	There is a delay between the radio stream arriving at your server. This can result in song titles changing a few seconds too early compared to what you hear. Setting this value to the number of seconds between the two to adjust this.
 	FR	Il y a un délai entre l'arrivée du flux radio sur votre serveur. Cela peut entraîner un changement de titre de chanson de quelques secondes trop tôt par rapport à ce que vous entendez. Définissez cette valeur sur le nombre de secondes entre les deux pour ajuster ceci.
 
+PLUGIN_RADIOFRANCE_EXCLUDESOMESTATIONS
+	EN	Select if you want to ignore some stations - primarily not song-based - for example France Inter
+	FR	Sélectionnez si vous souhaitez ignorer certaines stations - principalement non basées sur des chansons - par exemple France Inter
+
+PLUGIN_RADIOFRANCE_EXCLUDESOMESTATIONS_DESC
+	EN	Select (Enable) if you want to try to ignore some stations because default handler does it better - restart required to take effect
+	FR	Sélectionnez (Activer) si vous souhaitez ignorer certaines stations car le gestionnaire par défaut le fait mieux - le redémarrage doit prendre effet
+
 PLUGIN_RADIOFRANCE_MISSING_SSL
 	EN	RadioFrance might require the Perl module IO::Socket::SSL to fetch some of the song information. If you see no song information then please use your operating system's package manager to install it.
 	FR	RadioFrance peut avoir besoin du module Perl IO::Socket::SSL pour récupérer certaines informations. Si vous ne voyez aucune information, veuillez utiliser le gestionnaire de paquets (package manager) de votre système d'exploitation pour l'installer.

@@ -89,6 +89,7 @@ my $urls = {
 # finished	mouv_alt => 'http://www.mouv.fr/sites/default/files/import_si/si_titre_antenne/leMouv_player_current.json',
 	mouv => 'https://api.radiofrance.fr/livemeta/pull/6',
 	mouvxtra => 'https://api.radiofrance.fr/livemeta/pull/75',
+	franceinter => 'https://api.radiofrance.fr/livemeta/pull/1',
 };
 
 my $icons = {
@@ -112,6 +113,7 @@ my $icons = {
 	fmevenementielle => 'https://s3-eu-west-1.amazonaws.com/cruiser-production/2016/12/c3ca5137-44d4-45fd-b23f-62957d7f52e3/fmwebradiosnormalkids.jpg',
 	mouv => 'http://www.mouv.fr/sites/all/themes/mouv/images/LeMouv-logo-215x215.png',
 	mouvxtra => 'http://www.mouv.fr/sites/all/modules/rf/rf_lecteur_commun/lecteur_rf/img/logo_mouv_xtra.png',
+	franceinter => 'https://cdn.radiofrance.fr/s3/cruiser-production/2012/08/5d5a400d-e239-11e1-a7b7-782bcb76618d/640_copie-de-f-inter.jpg',
 };
 
 my $iconsIgnoreRegex = {
@@ -135,6 +137,7 @@ my $iconsIgnoreRegex = {
 	fmevenementielle => '(dummy)',
 	mouv => '(image_default_player.jpg)',
 	mouvxtra => '(image_default_player.jpg)',
+	franceinter => '(dummy)',
 };
 
 # Uses match group 1 from regex call to try to find station
@@ -159,6 +162,8 @@ my %stationMatches = (
 	"id=s285660&", "fmevenementielle",
 	"id=s6597&", "mouv",
 	"id=s244069&", "mouvxtra",
+	"id=s24875&", "franceinter",
+	
 	"fip-", "fipradio",
 	"fipbordeaux-", "fipbordeaux",
 	"fipnantes-", "fipnantes",
@@ -179,6 +184,7 @@ my %stationMatches = (
 	"francemusiquelevenementielle-", "fmevenementielle",
 	"mouv-", "mouv",
 	"mouvxtra-", "mouvxtra",
+	"franceinter-","franceinter",
 );
 
 # $meta holds info about station that is playing - note - the structure is returned to others parts of LMS where particular field names are expected
@@ -205,6 +211,7 @@ my $meta = {
 	fmevenementielle => { busy => 0, title => 'France Musique Classique Kids', icon => $icons->{fmevenementielle}, cover => $icons->{fmevenementielle}, ttl => 0, endTime => 0 },
 	mouv => { busy => 0, title => 'Mouv\'', icon => $icons->{mouv}, cover => $icons->{mouv}, ttl => 0, endTime => 0 },
 	mouvxtra => { busy => 0, title => 'Mouv\' Xtra', icon => $icons->{mouvxtra}, cover => $icons->{mouvxtra}, ttl => 0, endTime => 0 },
+	franceinter => { busy => 0, title => 'France Inter', icon => $icons->{franceinter}, cover => $icons->{franceinter}, ttl => 0, endTime => 0 },
 };
 
 # $myClientInfo holds data about the clients/devices using this plugin - used to schedule next poll
@@ -214,9 +221,14 @@ my $myClientInfo = {};
 # http://opml.radiotime.com/Tune.ashx?id=s15200&formats=aac,ogg,mp3,wmpro,wma,wmvoice&partnerId=16
 # Played via direct URL like ... http://direct.fipradio.fr/live/fip-midfi.mp3 which redirects to something with same suffix
 # Match group 1 is used to find station id in %stationMatches - "fip-" last because it is a substring of others
-my $urlRegex1 = qr/(?:\/)(fipbordeaux-|fipnantes-|fipstrasbourg-|fip-webradio1\.|fip-webradio2\.|fip-webradio3\.|fip-webradio4\.|fip-webradio5\.|fip-webradio6\.|fip-webradio8\.|fip-|francemusiqueeasyclassique-|francemusiqueclassiqueplus-|francemusiqueconcertsradiofrance-|francemusiquelajazz-|francemusiquelacontemporaine-|francemusiqueocoramonde-|francemusiquelevenementielle-|mouv-|mouvxtra-)(?:midfi|lofi|hifi|)/i;
+my $urlRegex1 = qr/(?:\/)(fipbordeaux-|fipnantes-|fipstrasbourg-|fip-webradio1\.|fip-webradio2\.|fip-webradio3\.|fip-webradio4\.|fip-webradio5\.|fip-webradio6\.|fip-webradio8\.|fip-|francemusiqueeasyclassique-|francemusiqueclassiqueplus-|francemusiqueconcertsradiofrance-|francemusiquelajazz-|francemusiquelacontemporaine-|francemusiqueocoramonde-|francemusiquelevenementielle-|mouv-|mouvxtra-|franceinter-)(?:midfi|lofi|hifi|)/i;
 # Selected via TuneIn base|bordeaux|nantes|strasbourg|rock|jazz|groove|monde|nouveau|evenement|electro FranceMusique - ClassicEasy|ClassicPlus|Concerts|Contemporaine|OcoraMonde|ClassiqueKids/Evenementielle - Mouv|MouvXtra
 my $urlRegex2 = qr/(?:radiotime|tunein)\.com.*(id=s15200&|id=s50706&|id=s50770&|id=s111944&|id=s262528&|id=s262533&|id=s262537&|id=s262538&|id=s262540&|id=s283680&|id=s293089&|id=s283174&|id=s283175&|id=s283176&|id=s283178&|id=s283179&|id=s283177&|id=s285660&|id=s6597&|id=s244069&)/i;
+# 2nd pair is for non-song-based stations so that they can be optionally disabled
+my $urlRegexNonSong1 = qr/(?:\/)(franceinter-)(?:midfi|lofi|hifi|)/i;
+# Selected via TuneIn franceinter
+my $urlRegexNonSong2 = qr/(?:radiotime|tunein)\.com.*(id=s24875&)/i;
+
 
 sub getDisplayName {
 	return 'PLUGIN_RADIOFRANCE';
@@ -241,6 +253,7 @@ sub initPlugin {
 	$prefs->init({ appendyear => 0 });
 	$prefs->init({ hidetrackduration => 0 });
 	$prefs->init({ streamdelay => 2 });	# Assume that stream is 2 seconds behind real-time
+	$prefs->init({ excludesomestations => 0});
 
 	if ( !Slim::Networking::Async::HTTP->hasSSL() ) {
 		# Warn if HTTPS support not present because some of the meta provider URLs redirect to https (since February 2018)
@@ -266,6 +279,28 @@ sub initPlugin {
 		match => $urlRegex1,
 		func  => \&provider,
 	);
+
+	if (!$prefs->get('excludesomestations')){
+		Slim::Formats::RemoteMetadata->registerParser(
+			match => $urlRegexNonSong2,
+			func  => \&parser,
+		);
+
+		Slim::Formats::RemoteMetadata->registerParser(
+			match => $urlRegexNonSong1,
+			func  => \&parser,
+		);
+		
+		Slim::Formats::RemoteMetadata->registerProvider(
+			match => $urlRegexNonSong2,
+			func  => \&provider,
+		);
+
+		Slim::Formats::RemoteMetadata->registerProvider(
+			match => $urlRegexNonSong1,
+			func  => \&provider,
+		);
+	}
 	
 	Plugins::RadioFrance::Settings->new;
 }
@@ -348,6 +383,35 @@ sub matchStation {
 			# Found a match so take this station
 			$station = $stationMatches{$testUrl};
 		}		
+	}
+
+	if ($station eq '' && !$prefs->get('excludesomestations')){
+		# Not found yet - so try the other sets
+		# ###ToDo### Optimise this by looping through all sets rather than sets of if/then/else
+		
+		# main::DEBUGLOG && $log->is_debug && $log->debug("Checking data 4 received for $url");
+		$testUrl = $url;
+		$testUrl =~ $urlRegexNonSong2;
+		
+		# main::DEBUGLOG && $log->is_debug && $log->debug("Checking data 5 received for $testUrl");
+
+		if ($testUrl && exists $stationMatches{$testUrl}) {
+			# Found a match so take this station
+			$station = $stationMatches{$testUrl};
+		} else {
+			# Try other match
+			$testUrl = $url;
+			$testUrl =~ $urlRegexNonSong1;
+			
+			if ($1) {$testUrl = lc($1);}
+			
+			# main::DEBUGLOG && $log->is_debug && $log->debug("Checking data 6 received for $testUrl");
+			
+			if (exists $stationMatches{$testUrl}) {
+				# Found a match so take this station
+				$station = $stationMatches{$testUrl};
+			}		
+		}
 	}
 
 	if ($station eq ''){
@@ -905,6 +969,38 @@ sub parseContent {
 			  # ],
 			  # "stationId": 407
 			  # }
+			  
+			  # France Inter - broadly same but different fields because they are programmes rather than songs
+			      # "f75d7e63-c798-4bc2-8fd1-8aa1258fb58e_1": {
+				      # "uuid": "4a74197e-1165-4d21-9841-5701df662093",
+				      # "stepId": "f75d7e63-c798-4bc2-8fd1-8aa1258fb58e_1",
+				      # "title": "\"Chacun pour tous\" et tous pour Jean-Pierre Darroussin et Ahmed Sylla",
+				      # "start": 1539767070,
+				      # "end": 1539770280,
+				      # "fatherStepId": null,
+				      # "stationId": 1,
+				      # "embedId": "7605f350-2ea0-003c-e053-0ae0df142a66",
+				      # "embedType": "expression",
+				      # "depth": 1,
+				      # "discJockey": null,
+				      # "expressionUuid": "0c4136ae-813c-4589-8709-100c54f5e86a",
+				      # "conceptUuid": "8a097b4a-26eb-11e4-907f-782bcb6744eb",
+				      # "businessReference": "22804",
+				      # "magnetothequeId": "2018F22804S0290",
+				      # "titleConcept": "La Bande originale",
+				      # "titleSlug": "chacun-pour-tous-et-tous-pour-jean-pierre-darroussin-et-ahmed-sylla",
+				      # "visual": "d9a58aa1-e565-453d-a27c-2324540c6b1f",
+				      # "visualBanner": "47a8f6b0-6aed-40e5-acdd-5d80430aba9c",
+				      # "producers": [
+					# {
+					  # "uuid": "4339d7bc-26eb-11e4-907f-782bcb6744eb",
+					  # "name": " Nagui"
+					# }
+				      # ],
+				      # "path": "emissions\/la-bande-originale\/la-bande-originale-17-octobre-2018",
+				      # "expressionDescription": "Ce matin, Jean-Pierre Darroussin et Ahmed Sylla sont les invit\u00e9s de la Bande original pour le film de Vianney Lebasque \u201cChacun pour tous\u201d en salles le 31 octobre.",
+				      # "description": "Au programme de cette quatri\u00e8me saison : toujours de la bonne humeur et de l\u2019impertinence pour une \u00e9mission dr\u00f4le et joyeuse ! "
+				    # },
 
 
 			my $nowplaying;
@@ -944,11 +1040,21 @@ sub parseContent {
 										if (exists $perl_data->{steps}->{$item}->{'title'} && $perl_data->{steps}->{$item}->{'title'} ne '' && 
 											!exists $perl_data->{steps}->{$item}->{'authors'} && !exists $perl_data->{steps}->{$item}->{'performers'})
 										{	# If there is a title but no performers/authors then this is a show not a song
-											$info->{remote_title} = $perl_data->{steps}->{$item}->{'title'};
+										
+											if (exists $perl_data->{steps}->{$item}->{'titleConcept'} && $perl_data->{steps}->{$item}->{'titleConcept'} ne ''){
+												# titleConcept (if present) is the name of the show as a whole and then title is the episode/instance name
+												$info->{remote_title} = $perl_data->{steps}->{$item}->{'titleConcept'};
+											} else {
+												$info->{remote_title} = $perl_data->{steps}->{$item}->{'title'};
+											}
 											$info->{remotetitle} = $info->{remote_title};
 											# Also set it at the track title for now - since the others above do not have any visible effect on device displays
 											# Will be overwritten if there is a real song available
 											$info->{title} = $info->{remote_title};
+											
+											if (exists $perl_data->{steps}->{$item}->{'start'}){ $info->{startTime} = $perl_data->{steps}->{$item}->{'start'}};
+											if (exists $perl_data->{steps}->{$item}->{'end'}){ $info->{endTime} = $perl_data->{steps}->{$item}->{'end'}};
+											
 											main::DEBUGLOG && $log->is_debug && $log->debug("Found show name in Type2: $info->{title}\n");
 										} else {
 											$nowplaying = $perl_data->{steps}->{$item};
@@ -996,7 +1102,14 @@ sub parseContent {
 						$info->{artist} = _lowercase($nowplaying->{'performers'});
 					} elsif (exists $nowplaying->{'authors'}){$info->{artist} = _lowercase($nowplaying->{'authors'})};
 					
-					if (exists $nowplaying->{'title'}) {$info->{title} = _lowercase($nowplaying->{'title'})};
+					if (exists $nowplaying->{'titleConcept'} && $nowplaying->{'titleConcept'} ne ''){
+						# titleConcept used for programmes in a series - in which case title is the episode/instance name
+						# No need to fiddle with the case as they do use mixed for this so all lowercase probably deliberate
+						$info->{title} = $nowplaying->{'titleConcept'};
+					} else {
+						if (exists $nowplaying->{'title'}) {$info->{title} = _lowercase($nowplaying->{'title'})};
+					}
+					
 					if (exists $nowplaying->{'anneeEditionMusique'}) {$info->{year} = $nowplaying->{'anneeEditionMusique'}};
 					if (exists $nowplaying->{'label'}) {$info->{label} = _lowercase($nowplaying->{'label'})};
 					
@@ -1226,10 +1339,12 @@ sub updateClient {
 			
 			if (!$prefs->get('hidetrackduration')){
 				# Pushing duration and startOffset makes the duration and playing position display
-				$song->duration( $info->{duration} );
-				if (defined $info->{startTime}){
-					# We know when it was scheduled and what time it is now ... so use the difference to modify the duration
-					$song->duration( $info->{duration}+$info->{startTime}-$hiResTime );
+				if (defined $info->{duration}){
+					$song->duration( $info->{duration} );
+					if (defined $info->{startTime}){
+						# We know when it was scheduled and what time it is now ... so use the difference to modify the duration
+						$song->duration( $info->{duration}+$info->{startTime}-$hiResTime );
+					};
 				};
 
 				# However, might need some adjusting to allow for joining song in the middle and stream delays

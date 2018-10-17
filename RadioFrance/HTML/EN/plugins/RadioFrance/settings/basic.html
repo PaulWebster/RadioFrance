@@ -46,4 +46,13 @@
 
 	[% END %]
 
+	[% WRAPPER setting title="PLUGIN_RADIOFRANCE_EXCLUDESOMESTATIONS" desc="PLUGIN_RADIOFRANCE_EXCLUDESOMESTATIONS_DESC" %]
+
+		<div class="prefDesc">[% "ENABLE" | string %]
+			<input name="pref_excludesomestations" type="checkbox" [% IF prefs.pref_excludesomestations %] checked [% END %]>
+		</div>
+
+	[% END %]
+
+	
 [% PROCESS settings/footer.html %]
