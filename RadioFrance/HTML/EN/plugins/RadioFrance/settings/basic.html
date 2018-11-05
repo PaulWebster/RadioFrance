@@ -54,5 +54,12 @@
 
 	[% END %]
 
+	[% WRAPPER setting title="PLUGIN_RADIOFRANCE_EXCLUDESYNOPSIS" desc="PLUGIN_RADIOFRANCE_EXCLUDESYNOPSIS_DESC" %]
+
+		<div class="prefDesc">[% "ENABLE" | string %]
+			<input name="pref_excludesynopsis" type="checkbox" [% IF prefs.pref_excludesynopsis %] checked [% END %]>
+		</div>
+
+	[% END %]
 	
 [% PROCESS settings/footer.html %]

@@ -10,6 +10,9 @@ Display artist, track, cover and, optionally, album name, label and year for:
 * FIP (http://www.fipradio.fr) stations (including web stations such as Autour du Jazz)
 * France Musique (http://www.francemusique.fr) web stations (such as Ocora and Classique Plus)
 * Mouv' (http://www.mouv.fr)
+Display programme name and synopsis (when available) for:
+* France Inter, France Info, France Musique, France Culture
+
 This software is licensed under the GPL.
 
 ## Requirements
@@ -18,7 +21,7 @@ This plugin requires Logitech Media Server v7.4.0 or greater.
 
 ## Installation
 
-Add the following repository to your Logitech Media Server:
+If not already visible in LMS then add the following repository to your Logitech Media Server:
 
 https://paulwebster.github.io/RadioFrance/repo.xml
 If that does not work (some installations of LMS do not support https) then try
@@ -32,7 +35,7 @@ Once installed and LMS has been restarted you should play one of the supported r
 If the plugin is working then you should see artist details appear around the time that a new track starts.
 
 **FIP stations supported:**
-FIP (including regional variants while they last), FIP autour ... du Rock, du Jazz, du Groove, du Monde, de l'Electro plus Tout Nouveau and Evenement (Reggae at time of writing).
+FIP (including regional variants while they last), FIP autour ... du Rock, du Jazz, du Groove, du Monde, de l'Electro, de Reggae plus Tout Nouveau.
 
 **France Musique stations supported:**
 Classique Easy
@@ -42,19 +45,30 @@ La Jazz
 La Contemporaine
 Ocora Monde
 Evenementielle / Classique Kids
-but not France Musique itself as they only make the programme name available and that comes from Tunein anyway
 
 **Mouv' stations supported:**
 Mouv'
 Mouv'Xtra
-	
-Note: Radio France does not always provide track information in a timely manner - so if you find that sometimes no new details arrive then check on the FIP site or teir mobile app to see if they have the same problem.
+
+**Other Radio France (general) stations supported:**
+France Inter
+France Info
+France Musique
+France Culture
+
+Note: Radio France does not always provide track information in a timely manner - so if you find that sometimes no new details arrive then check on the FIP site or their mobile app to see if they have the same problem.
 
 - This plugin relies on the time on your local LMS server to be roughly correct - timezone and time - because the local time is compared with the scheduled time for each track at Radio France  
 - If things are not working then enable Debug logging for this plugin via LMS/Settings/Advanced/Logging interface, repeat the problem and then check the LMS logs.  
 
 ## Version History
+**0.1.16 05-Nov-2018
+
+Support for France Inter, France Info, France Musique and France Culture (can be disabled in settings)
+FIP Autour de Reggae now supported as a distinct station rather than through FIP Evenement
+
 **0.1.15 17-Oct-2018
+
 Experimental support for France Inter (can be disabled in settings)
 
 **0.1.14 16-Oct-2018

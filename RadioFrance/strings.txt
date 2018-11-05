@@ -62,6 +62,14 @@ PLUGIN_RADIOFRANCE_EXCLUDESOMESTATIONS_DESC
 	EN	Select (Enable) if you want to try to ignore some stations because default handler does it better - restart required to take effect
 	FR	Sélectionnez (Activer) si vous souhaitez ignorer certaines stations car le gestionnaire par défaut le fait mieux - le redémarrage doit prendre effet
 
+PLUGIN_RADIOFRANCE_EXCLUDESYNOPSIS
+	EN	Select if you want to not show the programme synopsis
+	FR	Sélectionnez si vous ne souhaitez pas afficher le synopsis du programme
+
+PLUGIN_RADIOFRANCE_EXCLUDESYNOPSIS_DESC
+	EN	Select (Enable) to hide the synopsis of the programme (note - it might not be available anyway)
+	FR	Sélectionnez (Activer) pour masquer le synopsis du programme (remarque: il se peut qu'il ne soit pas disponible de toute façon)
+
 PLUGIN_RADIOFRANCE_MISSING_SSL
 	EN	RadioFrance might require the Perl module IO::Socket::SSL to fetch some of the song information. If you see no song information then please use your operating system's package manager to install it.
 	FR	RadioFrance peut avoir besoin du module Perl IO::Socket::SSL pour récupérer certaines informations. Si vous ne voyez aucune information, veuillez utiliser le gestionnaire de paquets (package manager) de votre système d'exploitation pour l'installer.

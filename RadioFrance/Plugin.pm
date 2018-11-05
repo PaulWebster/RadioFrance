@@ -52,7 +52,8 @@ my $prefs = preferences('plugin.radiofrance');
 
 use constant cacheTTL => 20;
 use constant maxSongLth => 900;		# Assumed maximum song length in seconds - if appears longer then no duration shown
-					# because might be a problem with the data or perhaps this is a long programme rather than a song
+use constant maxShowLth => 3600;	# Assumed maximum programme length in seconds - if appears longer then no duration shown
+					# because might be a problem with the data
 					# Having no duration should mean earlier call back to try again
 
 # URL for remote web site that is polled to get the information about what is playing
@@ -77,7 +78,8 @@ my $urls = {
 # finished 1507650797 - 2017-10-10 16:53:17	fipnouveau_alt => 'http://www.fipradio.fr/sites/default/files/import_si_webradio_5/si_titre_antenne/FIP_player_current.json',
 	fipnouveau => 'http://www.fipradio.fr/livemeta/70',
 # finished 1507650800 - 2017-10-10 16:53:20	fipevenement_alt => 'http://www.fipradio.fr/sites/default/files/import_si_webradio_6/si_titre_antenne/FIP_player_current.json',
-	fipevenement => 'http://www.fipradio.fr/livemeta/71',
+# FIP Evenement became FIP Autour Du Reggae
+	fipreggae => 'http://www.fipradio.fr/livemeta/71',
 	fipelectro => 'http://www.fipradio.fr/livemeta/74',
 	fmclassiqueeasy => 'https://www.francemusique.fr/livemeta/pull/401',
 	fmclassiqueplus => 'https://www.francemusique.fr/livemeta/pull/402',
@@ -90,6 +92,9 @@ my $urls = {
 	mouv => 'https://api.radiofrance.fr/livemeta/pull/6',
 	mouvxtra => 'https://api.radiofrance.fr/livemeta/pull/75',
 	franceinter => 'https://api.radiofrance.fr/livemeta/pull/1',
+	franceinfo => 'https://api.radiofrance.fr/livemeta/pull/2',
+	francemusique => 'https://api.radiofrance.fr/livemeta/pull/4',
+	franceculture => 'https://api.radiofrance.fr/livemeta/pull/5',
 };
 
 my $icons = {
@@ -102,7 +107,7 @@ my $icons = {
 	fipgroove => 'http://www.fipradio.fr/sites/default/files/asset/images/2016/06/fip_autour_du_groove_logo_hd_player.png',
 	fipmonde => 'http://www.fipradio.fr/sites/default/files/asset/images/2016/06/fip_autour_du_monde_logo_hd_player.png',
 	fipnouveau => 'http://www.fipradio.fr/sites/default/files/asset/images/2016/06/fip_tout_nouveau_logo_hd_player.png',
-	fipevenement => 'http://www.fipradio.fr/sites/default/files/asset/images/2016/05/fip_evenement_logo-home.png',
+	fipreggae => 'https://www.fip.fr/sites/default/files/styles/image_ppale_full/public/asset/images/2017/01/fip-webradio-1200x8006.png',
 	fipelectro => 'http://www.fipradio.fr/sites/default/files/asset/images/2017/05/fip-autour-de-l-electro-logo-hd-player.png',
 	fmclassiqueeasy => 'https://s3-eu-west-1.amazonaws.com/cruiser-production/2016/12/aca436ad-7f99-4765-9404-1b04bf216daf/fmwebradiosnormaleasy.jpg',
 	fmclassiqueplus => 'https://s3-eu-west-1.amazonaws.com/cruiser-production/2016/12/b8213b77-465c-487e-b5b6-07ce8e2862df/fmwebradiosnormalplus.jpg',
@@ -113,7 +118,10 @@ my $icons = {
 	fmevenementielle => 'https://s3-eu-west-1.amazonaws.com/cruiser-production/2016/12/c3ca5137-44d4-45fd-b23f-62957d7f52e3/fmwebradiosnormalkids.jpg',
 	mouv => 'http://www.mouv.fr/sites/all/themes/mouv/images/LeMouv-logo-215x215.png',
 	mouvxtra => 'http://www.mouv.fr/sites/all/modules/rf/rf_lecteur_commun/lecteur_rf/img/logo_mouv_xtra.png',
-	franceinter => 'https://cdn.radiofrance.fr/s3/cruiser-production/2012/08/5d5a400d-e239-11e1-a7b7-782bcb76618d/640_copie-de-f-inter.jpg',
+	franceinter => 'https://www.radiofrance.fr/sites/default/files/atoms/images/offre_logo_inter.jpg',
+	franceinfo => 'https://www.radiofrance.fr/sites/default/files/atoms/images/offre_logo_franceinfo.jpg',
+	francemusique => 'https://www.radiofrance.fr/sites/default/files/atoms/images/offre_logo_france_musique.jpg',
+	franceculture => 'https://www.radiofrance.fr/sites/default/files/atoms/images/offre_logo_france_culture.jpg',
 };
 
 my $iconsIgnoreRegex = {
@@ -126,7 +134,7 @@ my $iconsIgnoreRegex = {
 	fipgroove => '(fond_titres_diffuses_degrade.png|direct_default_cover_medium.png)',
 	fipmonde => '(fond_titres_diffuses_degrade.png|direct_default_cover_medium.png)',
 	fipnouveau => '(fond_titres_diffuses_degrade.png|direct_default_cover_medium.png)',
-	fipevenement => '(fond_titres_diffuses_degrade.png|direct_default_cover_medium.png)',
+	fipreggae => '(fond_titres_diffuses_degrade.png|direct_default_cover_medium.png)',
 	fipelectro => '(fond_titres_diffuses_degrade.png|direct_default_cover_medium.png)',
 	fmclassiqueeasy => '(dummy)',
 	fmclassiqueplus => '(dummy)',
@@ -138,6 +146,9 @@ my $iconsIgnoreRegex = {
 	mouv => '(image_default_player.jpg)',
 	mouvxtra => '(image_default_player.jpg)',
 	franceinter => '(dummy)',
+	franceinfo => '(dummy)',
+	francemusique => '(dummy)',
+	franceculture => '(dummy)',
 };
 
 # Uses match group 1 from regex call to try to find station
@@ -151,7 +162,7 @@ my %stationMatches = (
 	"id=s262537&", "fipgroove",
 	"id=s262538&", "fipmonde",
 	"id=s262540&", "fipnouveau",
-	"id=s283680&", "fipevenement",
+	"id=s293090&", "fipreggae",
 	"id=s293089&", "fipelectro",
 	"id=s283174&", "fmclassiqueeasy",
 	"id=s283175&", "fmclassiqueplus",
@@ -163,6 +174,10 @@ my %stationMatches = (
 	"id=s6597&", "mouv",
 	"id=s244069&", "mouvxtra",
 	"id=s24875&", "franceinter",
+	"id=s9948&", "franceinfo",
+	"id=s15198&", "francemusique",
+	"id=s2442&", "franceculture",
+	
 	
 	"fip-", "fipradio",
 	"fipbordeaux-", "fipbordeaux",
@@ -173,7 +188,7 @@ my %stationMatches = (
 	"fip-webradio3.", "fipgroove",
 	"fip-webradio4.", "fipmonde",
 	"fip-webradio5.", "fipnouveau",
-	"fip-webradio6.", "fipevenement",
+	"fip-webradio6.", "fipreggae",
 	"fip-webradio8.", "fipelectro",
 	"francemusiqueeasyclassique-", "fmclassiqueeasy",
 	"francemusiqueclassiqueplus-", "fmclassiquelpus",
@@ -185,6 +200,9 @@ my %stationMatches = (
 	"mouv-", "mouv",
 	"mouvxtra-", "mouvxtra",
 	"franceinter-","franceinter",
+	"franceinfo-","franceinfo",
+	"francemusique-","francemusique",
+	"franceculture-","franceculture",
 );
 
 # $meta holds info about station that is playing - note - the structure is returned to others parts of LMS where particular field names are expected
@@ -200,7 +218,7 @@ my $meta = {
 	fipgroove => { busy => 0, title => 'FIP autour du groove', icon => $icons->{fipgroove}, cover => $icons->{fipgroove}, ttl => 0, endTime => 0 },
 	fipmonde => { busy => 0, title => 'FIP autour du monde', icon => $icons->{fipmonde}, cover => $icons->{fipmonde}, ttl => 0, endTime => 0 },
 	fipnouveau => { busy => 0, title => 'Tout nouveau, tout Fip', icon => $icons->{fipnouveau}, cover => $icons->{fipnouveau}, ttl => 0, endTime => 0 },
-	fipevenement => { busy => 0, title => 'FIP Evenement', icon => $icons->{fipevenement}, cover => $icons->{fipevenement}, ttl => 0, endTime => 0 },
+	fipreggae => { busy => 0, title => 'FIP autour du reggae', icon => $icons->{fipreggae}, cover => $icons->{fipreggae}, ttl => 0, endTime => 0 },
 	fipelectro => { busy => 0, title => 'FIP autour de l\'électro', icon => $icons->{fipelectro}, cover => $icons->{fipelectro}, ttl => 0, endTime => 0 },
 	fmclassiqueeasy => { busy => 0, title => 'France Musique Classique Easy', icon => $icons->{fmclassiqueeasy}, cover => $icons->{fmclassiqueeasy}, ttl => 0, endTime => 0 },
 	fmclassiqueplus => { busy => 0, title => 'France Musique Classique Plus', icon => $icons->{fmclassiqueplus}, cover => $icons->{fmclassiqueplus}, ttl => 0, endTime => 0 },
@@ -212,6 +230,9 @@ my $meta = {
 	mouv => { busy => 0, title => 'Mouv\'', icon => $icons->{mouv}, cover => $icons->{mouv}, ttl => 0, endTime => 0 },
 	mouvxtra => { busy => 0, title => 'Mouv\' Xtra', icon => $icons->{mouvxtra}, cover => $icons->{mouvxtra}, ttl => 0, endTime => 0 },
 	franceinter => { busy => 0, title => 'France Inter', icon => $icons->{franceinter}, cover => $icons->{franceinter}, ttl => 0, endTime => 0 },
+	franceinfo => { busy => 0, title => 'France Info', icon => $icons->{franceinfo}, cover => $icons->{franceinfo}, ttl => 0, endTime => 0 },
+	francemusique => { busy => 0, title => 'France Musique', icon => $icons->{francemusique}, cover => $icons->{francemusique}, ttl => 0, endTime => 0 },
+	franceculture => { busy => 0, title => 'France Culture', icon => $icons->{franceculture}, cover => $icons->{franceculture}, ttl => 0, endTime => 0 },
 };
 
 # $myClientInfo holds data about the clients/devices using this plugin - used to schedule next poll
@@ -222,12 +243,12 @@ my $myClientInfo = {};
 # Played via direct URL like ... http://direct.fipradio.fr/live/fip-midfi.mp3 which redirects to something with same suffix
 # Match group 1 is used to find station id in %stationMatches - "fip-" last because it is a substring of others
 my $urlRegex1 = qr/(?:\/)(fipbordeaux-|fipnantes-|fipstrasbourg-|fip-webradio1\.|fip-webradio2\.|fip-webradio3\.|fip-webradio4\.|fip-webradio5\.|fip-webradio6\.|fip-webradio8\.|fip-|francemusiqueeasyclassique-|francemusiqueclassiqueplus-|francemusiqueconcertsradiofrance-|francemusiquelajazz-|francemusiquelacontemporaine-|francemusiqueocoramonde-|francemusiquelevenementielle-|mouv-|mouvxtra-|franceinter-)(?:midfi|lofi|hifi|)/i;
-# Selected via TuneIn base|bordeaux|nantes|strasbourg|rock|jazz|groove|monde|nouveau|evenement|electro FranceMusique - ClassicEasy|ClassicPlus|Concerts|Contemporaine|OcoraMonde|ClassiqueKids/Evenementielle - Mouv|MouvXtra
-my $urlRegex2 = qr/(?:radiotime|tunein)\.com.*(id=s15200&|id=s50706&|id=s50770&|id=s111944&|id=s262528&|id=s262533&|id=s262537&|id=s262538&|id=s262540&|id=s283680&|id=s293089&|id=s283174&|id=s283175&|id=s283176&|id=s283178&|id=s283179&|id=s283177&|id=s285660&|id=s6597&|id=s244069&)/i;
+# Selected via TuneIn base|bordeaux|nantes|strasbourg|rock|jazz|groove|monde|nouveau|reggae|electro FranceMusique - ClassicEasy|ClassicPlus|Concerts|Contemporaine|OcoraMonde|ClassiqueKids/Evenementielle - Mouv|MouvXtra
+my $urlRegex2 = qr/(?:radiotime|tunein)\.com.*(id=s15200&|id=s50706&|id=s50770&|id=s111944&|id=s262528&|id=s262533&|id=s262537&|id=s262538&|id=s262540&|id=s293090&|id=s293089&|id=s283174&|id=s283175&|id=s283176&|id=s283178&|id=s283179&|id=s283177&|id=s285660&|id=s6597&|id=s244069&)/i;
 # 2nd pair is for non-song-based stations so that they can be optionally disabled
-my $urlRegexNonSong1 = qr/(?:\/)(franceinter-)(?:midfi|lofi|hifi|)/i;
-# Selected via TuneIn franceinter
-my $urlRegexNonSong2 = qr/(?:radiotime|tunein)\.com.*(id=s24875&)/i;
+my $urlRegexNonSong1 = qr/(?:\/)(franceinter-|franceinfo-|francemusique-|franceculture-)(?:midfi|lofi|hifi|)/i;
+# Selected via TuneIn franceinter|franceinfo|francemusique|franceculture
+my $urlRegexNonSong2 = qr/(?:radiotime|tunein)\.com.*(id=s24875&|id=s9948&|id=s15198&|id=s2442&)/i;
 
 
 sub getDisplayName {
@@ -254,6 +275,7 @@ sub initPlugin {
 	$prefs->init({ hidetrackduration => 0 });
 	$prefs->init({ streamdelay => 2 });	# Assume that stream is 2 seconds behind real-time
 	$prefs->init({ excludesomestations => 0});
+	$prefs->init({ excludesynopsis => 0});
 
 	if ( !Slim::Networking::Async::HTTP->hasSSL() ) {
 		# Warn if HTTPS support not present because some of the meta provider URLs redirect to https (since February 2018)
@@ -609,6 +631,7 @@ sub parseContent {
 
 	my $hiResTime = getLocalAdjustedTime;
 	my $songDuration = 0;
+	my $showDuration = 0;
 	
 	my $info = {
 		icon   => $icons->{$station},
@@ -618,6 +641,7 @@ sub parseContent {
 		ttl    => $hiResTime + cacheTTL,
 		endTime => $hiResTime + cacheTTL,
 		startTime => undef,
+		isSong => false,
 	};
 	
 	my $deviceName = "";
@@ -1001,12 +1025,44 @@ sub parseContent {
 				      # "expressionDescription": "Ce matin, Jean-Pierre Darroussin et Ahmed Sylla sont les invit\u00e9s de la Bande original pour le film de Vianney Lebasque \u201cChacun pour tous\u201d en salles le 31 octobre.",
 				      # "description": "Au programme de cette quatri\u00e8me saison : toujours de la bonne humeur et de l\u2019impertinence pour une \u00e9mission dr\u00f4le et joyeuse ! "
 				    # },
+				    
+				    # and here is a sub-section within another programme. It has "fatherStepId" ... tricky ... 
+				        # "1252bc86-d460-42db-8283-47ad6e4106d2_1": {
+					      # "uuid": "a7ee8cef-bb98-4214-9ff1-852a61ac7523",
+					      # "stepId": "1252bc86-d460-42db-8283-47ad6e4106d2_1",
+					      # "title": "L'Arabie Saoudite, le Disneyland de l'horreur",
+					      # "start": 1539770820,
+					      # "end": 1539771000,
+					      # "fatherStepId": "58e51839-ab01-45bf-8936-d4c54d1d2a98_1",
+					      # "stationId": 1,
+					      # "embedId": "7605f350-2ea3-003c-e053-0ae0df142a66",
+					      # "embedType": "expression",
+					      # "depth": 2,
+					      # "discJockey": null,
+					      # "expressionUuid": "40335751-efe8-42aa-b9ce-24d3d55da76d",
+					      # "conceptUuid": "eaf66c64-99e0-45a7-8eb3-d74fa59659a2",
+					      # "businessReference": "29767",
+					      # "magnetothequeId": "2018F29767S0290",
+					      # "titleConcept": "Tanguy Pastureau maltraite l'info",
+					      # "titleSlug": "l-arabie-saoudite-le-disneyland-de-l-horreur",
+					      # "visual": "8a7bf96b-7b35-4402-88fe-092d718e1682",
+					      # "visualBanner": "26259170-7522-4ba4-98c0-6923df08b4d8",
+					      # "producers": [
+						# {
+						  # "uuid": "1cc4347f-17f6-4c7e-842c-e544130a234e",
+						  # "name": "Tanguy Pastureau"
+						# }
+					      # ],
+					      # "path": "emissions\/tanguy-pastureau-maltraite-l-info\/tanguy-pastureau-maltraite-l-info-17-octobre-2018",
+					      # "expressionDescription": "Jusqu'\u00e0 r\u00e9cemment, on nous pr\u00e9sentait l'Arabie Saoudite comme un pays g\u00e9nial"
+					    # },
 
 
 			my $nowplaying;
-			my $foundSong = false;
+			my $parentItem = '';
+			my $thisItem;
 			
-			# Try to find which song is playing
+			# Try to find what is playing (priority to song over programme)
 			
 			if (exists $perl_data->{'levels'}){
 				my @levels = @{ $perl_data->{'levels'} };
@@ -1030,35 +1086,104 @@ sub parseContent {
 								
 								if (exists $perl_data->{steps}->{$item}){
 									# the step exists so check the start / end to see if this is now
+									$thisItem = $perl_data->{steps}->{$item};
 									
 									# main::DEBUGLOG && $log->is_debug && $log->debug("Now: $hiResTime Start: ".$perl_data->{steps}->{$item}->{'start'}." End: $perl_data->{steps}->{$item}->{'end'}");
 									
-									if ( exists $perl_data->{steps}->{$item}->{'start'} && $perl_data->{steps}->{$item}->{'start'} <= $hiResTime && 
-										exists $perl_data->{steps}->{$item}->{'end'} && $perl_data->{steps}->{$item}->{'end'} >= $hiResTime ) {
-										# This one is in range
+									if ( exists $thisItem->{'start'} && $thisItem->{'start'} <= $hiResTime && 
+										exists $thisItem->{'end'} && $thisItem->{'end'} >= $hiResTime &&
+										!$info->{isSong}) {
+										# This one is in range and not already found a song (might have found a programme or segment but song trumps it)
 										# main::DEBUGLOG && $log->is_debug && $log->debug("Current playing $item");
-										if (exists $perl_data->{steps}->{$item}->{'title'} && $perl_data->{steps}->{$item}->{'title'} ne '' && 
-											!exists $perl_data->{steps}->{$item}->{'authors'} && !exists $perl_data->{steps}->{$item}->{'performers'})
-										{	# If there is a title but no performers/authors then this is a show not a song
+										if (exists $thisItem->{'title'} && $thisItem->{'title'} ne '' && 
+										    exists $thisItem->{'embedType'} && $thisItem->{'embedType'} ne 'song' &&
+										    (!exists $thisItem->{'authors'} || ref($thisItem->{'authors'}) eq 'ARRAY') && !exists $thisItem->{'performers'} && !exists $thisItem->{'composers'})
+										{	# If there is a title but no authors/performers/composers then this is a show not a song
 										
-											if (exists $perl_data->{steps}->{$item}->{'titleConcept'} && $perl_data->{steps}->{$item}->{'titleConcept'} ne ''){
-												# titleConcept (if present) is the name of the show as a whole and then title is the episode/instance name
-												$info->{remote_title} = $perl_data->{steps}->{$item}->{'titleConcept'};
-											} else {
-												$info->{remote_title} = $perl_data->{steps}->{$item}->{'title'};
+											main::DEBUGLOG && $log->is_debug && $log->debug("$station Found programme: ".$thisItem->{'title'});
+											
+											my $parentTitle = '';
+											
+											if (!$prefs->get('excludesynopsis') && (!exists $info->{album} || $info->{album} eq '')){
+												if (exists $thisItem->{'expressionDescription'} && 
+												   $thisItem->{'expressionDescription'} ne '' && 
+												   $thisItem->{'expressionDescription'} ne '...')
+												{
+													# If not already collected an "album" (synopsis in this case) then take this one
+													$info->{album} = $thisItem->{'expressionDescription'};
+												} elsif (exists $thisItem->{'description'} && $thisItem->{'description'} ne ''){
+													# Try Description instead
+													$info->{album} = $thisItem->{'description'};
+												}
 											}
+
+											$info->{remote_title} = $thisItem->{'title'};
+											
+											if (exists $thisItem->{'titleConcept'} && $thisItem->{'titleConcept'} ne ''){
+												# titleConcept (if present) is the name of the show as a whole and then title is the episode/instance name
+												$parentTitle = $thisItem->{'titleConcept'};
+												
+											} elsif (exists $thisItem->{'fatherStepId'} && defined($thisItem->{'fatherStepId'}) && $thisItem->{'fatherStepId'} ne ''){
+												# There appears to be a parent item ... so if valid then use info from it
+												$parentItem = $thisItem->{'fatherStepId'};
+												main::DEBUGLOG && $log->is_debug && $log->debug("$station Parent: ".$parentItem);
+												if (exists $perl_data->{steps}->{$parentItem}){
+													# Parent item is present
+													if (exists $perl_data->{steps}->{$parentItem}->{'titleConcept'} || exists $perl_data->{steps}->{$parentItem}->{'title'}){
+														# Appears to have a name
+														if (exists $perl_data->{steps}->{$parentItem}->{'titleConcept'} && $perl_data->{steps}->{$parentItem}->{'titleConcept'} ne ''){
+															$parentTitle = $perl_data->{steps}->{$parentItem}->{'titleConcept'};
+														} elsif (exists $perl_data->{steps}->{$parentItem}->{'title'} && $perl_data->{steps}->{$parentItem}->{'title'} ne ''){
+															$parentTitle = $perl_data->{steps}->{$parentItem}->{'title'};
+														}
+													}
+													
+													if (!$prefs->get('excludesynopsis') && (!exists $info->{album} || $info->{album} eq '')){
+														if (exists $perl_data->{steps}->{$parentItem}->{'expressionDescription'} && 
+														    $perl_data->{steps}->{$parentItem}->{'expressionDescription'} ne '' && 
+														    $perl_data->{steps}->{$parentItem}->{'expressionDescription'} ne '...')
+														{
+															# If not already collected an "album" (synopsis in this case) then take this one
+															$info->{album} = $perl_data->{steps}->{$parentItem}->{'expressionDescription'};
+														} elsif (exists $perl_data->{steps}->{$parentItem}->{'description'} && $perl_data->{steps}->{$parentItem}->{'description'} ne ''){
+															# Try Description instead
+															$info->{album} = $perl_data->{steps}->{$parentItem}->{'description'};
+														}
+													}
+												}
+											}
+											
+											if ($parentTitle ne ''){
+												# Have both fields - but only include first if not already included in second to reduce line length to reduce chance of scrolling
+												if ($thisItem->{'title'} !~ /^\Q$parentTitle\E/i ){
+													$info->{remote_title} = $parentTitle." / ".$thisItem->{'title'};
+												}
+											
+												main::DEBUGLOG && $log->is_debug && $log->debug("$station Found subprogramme: ".$info->{remote_title});
+											}
+											
 											$info->{remotetitle} = $info->{remote_title};
 											# Also set it at the track title for now - since the others above do not have any visible effect on device displays
 											# Will be overwritten if there is a real song available
 											$info->{title} = $info->{remote_title};
 											
-											if (exists $perl_data->{steps}->{$item}->{'start'}){ $info->{startTime} = $perl_data->{steps}->{$item}->{'start'}};
-											if (exists $perl_data->{steps}->{$item}->{'end'}){ $info->{endTime} = $perl_data->{steps}->{$item}->{'end'}};
+											if (exists $thisItem->{'start'}){ $info->{startTime} = $thisItem->{'start'}};
+											if (exists $thisItem->{'end'}){ $info->{endTime} = $thisItem->{'end'}};
+											
+											if ( exists $thisItem->{'end'} && exists $thisItem->{'start'} ){
+												# Work out programme duration and return if plausible
+												$showDuration = $thisItem->{'end'} - $thisItem->{'start'};
+												
+												# main::DEBUGLOG && $log->is_debug && $log->debug("$station - Show Duration $showDuration");
+												
+												if ($showDuration > 0 && $showDuration < maxShowLth) {$info->{duration} = $showDuration};
+											}
+
 											
 											main::DEBUGLOG && $log->is_debug && $log->debug("Found show name in Type2: $info->{title}\n");
 										} else {
-											$nowplaying = $perl_data->{steps}->{$item};
-											$foundSong = true;
+											$nowplaying = $thisItem;
+											$info->{isSong} = true;
 										}
 									}
 								} else {
@@ -1078,7 +1203,7 @@ sub parseContent {
 				main::INFOLOG && $log->is_info && $log->info("$station - Failed to find 'levels' in received data");
 			}
 			
-			if ( $foundSong ) {
+			if ( $info->{isSong} ) {
 			
 				# $dumped =  Dumper $nowplaying;
 				# $dumped =~ s/\n {44}/\n/g;   
@@ -1100,7 +1225,11 @@ sub parseContent {
 
 					if (exists $nowplaying->{'performers'} && $nowplaying->{'performers'} ne '') {
 						$info->{artist} = _lowercase($nowplaying->{'performers'});
-					} elsif (exists $nowplaying->{'authors'}){$info->{artist} = _lowercase($nowplaying->{'authors'})};
+					} elsif (exists $nowplaying->{'authors'} && $nowplaying->{'authors'} ne ''){
+						$info->{artist} = _lowercase($nowplaying->{'authors'});
+					} elsif (exists $nowplaying->{'composers'} && $nowplaying->{'composers'} ne '') {
+						$info->{artist} = _lowercase($nowplaying->{'composers'});
+					};
 					
 					if (exists $nowplaying->{'titleConcept'} && $nowplaying->{'titleConcept'} ne ''){
 						# titleConcept used for programmes in a series - in which case title is the episode/instance name
@@ -1112,6 +1241,9 @@ sub parseContent {
 					
 					if (exists $nowplaying->{'anneeEditionMusique'}) {$info->{year} = $nowplaying->{'anneeEditionMusique'}};
 					if (exists $nowplaying->{'label'}) {$info->{label} = _lowercase($nowplaying->{'label'})};
+					
+					# Force the album name ... just in case one was collected as part of programme details but now in a song
+					if (exists $info->{album}) {delete $info->{album}};
 					
 					# main::DEBUGLOG && $log->is_debug && $log->debug('Preferences: DisableAlbumName='.$prefs->get('disablealbumname'));
 					if (!$prefs->get('disablealbumname')){
@@ -1126,7 +1258,9 @@ sub parseContent {
 						$thisartwork = $nowplaying->{'visual'};
 					}
 					
-					if ($thisartwork ne '' && ($thisartwork !~ /$iconsIgnoreRegex->{$station}/ || $thisartwork eq $info->{icon}) ){
+					if (($thisartwork ne '' && ($thisartwork !~ /$iconsIgnoreRegex->{$station}/ || $thisartwork eq $info->{icon})) &&
+					     ($thisartwork =~ /^https?:/i)){
+					     # There is something, it is not excluded, it is not the station logo and it appears to be a URL
 						$info->{cover} = $thisartwork;
 					} else {
 						# Icon not present or matches one to be ignored
@@ -1142,12 +1276,12 @@ sub parseContent {
 						if ($songDuration > 0 && $songDuration < maxSongLth) {$info->{duration} = $songDuration};
 					}
 					
+					$info->{remote_title} = $info->{title};
+					$info->{remotetitle} = $info->{title};
+					
 					# Try to update the predicted end time to give better chance for timely display of next song
 					$info->{endTime} = $expectedEndTime;
 					
-					$dumped =  Dumper $info;
-					$dumped =~ s/\n {44}/\n/g;   
-					main::DEBUGLOG && $log->is_debug && $log->debug("Type2:$dumped");
 				} else {
 					# This song that is playing should have already finished so returning largely blank data should reset what is displayed
 					main::DEBUGLOG && $log->is_debug && $log->debug("$station - Song already finished - expected end $expectedEndTime and now $hiResTime");
@@ -1158,6 +1292,11 @@ sub parseContent {
 				main::DEBUGLOG && $log->is_debug && $log->debug("$station - Did not find Current Song in retrieved data");
 
 			}
+			
+			$dumped =  Dumper $info;
+			$dumped =~ s/\n {44}/\n/g;   
+			main::DEBUGLOG && $log->is_debug && $log->debug("Type2:$dumped");
+
 		} else {
 			# Do not know how to parse this - probably a mistake in setup of $meta or $station
 			main::INFOLOG && $log->is_info && $log->info("Called for station $station - but do know which format parser to use");
@@ -1235,14 +1374,16 @@ sub parseContent {
 		if ((!defined $meta->{$station}->{artist} || $meta->{$station}->{artist} eq '') && 
 			defined $meta->{$station}->{title} && $meta->{$station}->{title} ne '' ){
 			# Not much track details found BUT previously had a programme name (no artist) so keep old programme name - with danger that it is out of date
-			if (!defined $info->{title}){
+			if (!defined $info->{title} &&
+			    defined $meta->{$station}->{endTime} && $meta->{$station}->{endTime} >= $hiResTime-cacheTTL){
 				$info->{title} = $meta->{$station}->{title};
-				main::DEBUGLOG && $log->is_debug && $log->debug("$station - Client: $deviceName - Preserving previously collected programme name: ".$info->{title});
+				$info->{endTime} = $meta->{$station}->{endTime};	# Copy back the expected end-time since it will be saved back to $meta at end otherwise will advance by being set in $info at the entry point
+				main::DEBUGLOG && $log->is_debug && $log->debug("$station - Client: $deviceName - Preserving previously collected programme name: ".$info->{title}." - scheduled end:".$meta->{$station}->{endTime});
 			}
 		# } elsif (defined $meta->{$station}->{endTime} && $meta->{$station}->{endTime} >= $hiResTime+cacheTTL){
 		} elsif (defined $meta->{$station}->{endTime} && $meta->{$station}->{endTime} >= $hiResTime-cacheTTL){
 			# If the stored data is still within time range then keep it (allowing for timing being slightly out)
-			main::DEBUGLOG && $log->is_debug && $log->debug("$station - Client: $deviceName - Preserving previously collected artist and title");
+			main::DEBUGLOG && $log->is_debug && $log->debug("$station - Client: $deviceName - Preserving previously collected artist and title - scheduled end:".$meta->{$station}->{endTime}." Compared to:".$hiResTime);
 			if (defined $meta->{$station}->{artist}){$info->{artist} = $meta->{$station}->{artist};}
 			if (defined $meta->{$station}->{title}){$info->{title} = $meta->{$station}->{title};}
 			if (defined $meta->{$station}->{cover}) {$info->{cover} = $meta->{$station}->{cover}};
@@ -1250,6 +1391,7 @@ sub parseContent {
 			if (defined $meta->{$station}->{album}) {$info->{album} = $meta->{$station}->{album}};
 			if (defined $meta->{$station}->{year}) {$info->{year} = $meta->{$station}->{year}};
 			if (defined $meta->{$station}->{label}) {$info->{label} = $meta->{$station}->{label}};
+			$info->{endTime} = $meta->{$station}->{endTime};	# Copy back the expected end-time since it will be saved back to $meta at end otherwise will advance by being set in $info at the entry point
 		}
 	}
 		
@@ -1401,7 +1543,7 @@ sub deviceTimer {
 			# Looks like current track finishes in less than 300 seconds so poll just after that
 			$nextPoll = $info->{endTime} + 1 + $prefs->get('streamdelay');
 			
-			$nextPollInt = $nextPoll - $hiResTime;
+			$nextPollInt = $nextPoll - $hiResTime + $prefs->get('streamdelay');
 		}
 	} else {
 		# Really should exist so output some debugging
@@ -1414,7 +1556,7 @@ sub deviceTimer {
 	
 	if ($deviceNextPoll >= $nextPoll){
 		# If there is already a poll outstanding then skip setting up a new one
-		$nextPollInt = $deviceNextPoll-$hiResTime;
+		$nextPollInt = $deviceNextPoll-$hiResTime+$prefs->get('streamdelay');
 		# main::DEBUGLOG && $log->is_debug && $log->debug("$station - Client: $deviceName - Skipping setting poll $nextPoll - already one ".$myClientInfo->{$deviceName}->{nextpoll}." Due in: $nextPollInt");
 	} else {
 		main::DEBUGLOG && $log->is_debug && $log->debug("$station - Client: $deviceName - Setting next poll to fire at $nextPoll Interval: $nextPollInt");
