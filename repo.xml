@@ -7,20 +7,22 @@
 	
 	<plugins>
 		
-		<plugin name="RadioFrance" version="0.1.14" minTarget="7.4" maxTarget="*">
+		<plugin name="RadioFrance" version="0.1.16" minTarget="7.4" maxTarget="*">
 			<title lang="EN">Radio France</title>
 			<desc  lang="EN">Radio France track information</desc>
 			<desc  lang="FR">Radio France - info sur le morceau de musique</desc>
 			<creator>Paul Webster</creator>
 			<email></email>
 			<changes lang="EN">
-				- Show (optionally) the duration of the song
+				- Support for France Inter, France Info, France Musique and France Culture (can be disabled in settings)
+				- FIP Autour de Reggae now supported as a distinct station rather than through FIP Evenement
 			</changes>
 			<changes lang="FR">
-				- Afficher (optionnellement) la durée de la chanson
+				- Support pour France Inter, France Info, France Musique et France Culture (peut être désactivé dans les paramètres)
+				- Le FIP Autour de Reggae est désormais inclus en tant que station distincte plutôt qu'en tant que FIP Evenement
 			</changes>
-			<url>https://paulwebster.github.io/RadioFrance/RadioFrance-0.1.14.zip</url>
-			<sha>dab29c3dc7786ad0f9860a16c37c6df7e96290ba</sha>
+			<url>https://paulwebster.github.io/RadioFrance/RadioFrance-0.1.16.zip</url>
+			<sha>a59a053a67536252dcb05fb3af551206eb1c533d</sha>
 		</plugin>
 
 	</plugins>
