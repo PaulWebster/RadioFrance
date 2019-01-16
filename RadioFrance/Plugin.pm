@@ -1,5 +1,5 @@
 # Slimerver/LMS PlugIn to get Metadata from Radio France stations
-# Copyright (C) 2017 Paul Webster
+# Copyright (C) 2017, 2018, 2019 Paul Webster
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -631,7 +631,8 @@ sub parseContent {
 
 	my $hiResTime = getLocalAdjustedTime;
 	my $songDuration = 0;
-	my $showDuration = 0;
+	my $progDuration = 0;
+	my $hideDuration = $prefs->get('hidetrackduration');
 	
 	my $info = {
 		icon   => $icons->{$station},
@@ -872,7 +873,7 @@ sub parseContent {
 						
 						# main::DEBUGLOG && $log->is_debug && $log->debug("$station - Duration $songDuration");
 						
-						if ($songDuration > 0 && $songDuration < maxSongLth) {$info->{duration} = $songDuration};
+						if ($songDuration > 0 && $songDuration < maxSongLth && !$hideDuration) {$info->{duration} = $songDuration};
 					}
 					
 					# Try to update the predicted end time to give better chance for timely display of next song
@@ -1172,11 +1173,11 @@ sub parseContent {
 											
 											if ( exists $thisItem->{'end'} && exists $thisItem->{'start'} ){
 												# Work out programme duration and return if plausible
-												$showDuration = $thisItem->{'end'} - $thisItem->{'start'};
+												$progDuration = $thisItem->{'end'} - $thisItem->{'start'};
 												
-												# main::DEBUGLOG && $log->is_debug && $log->debug("$station - Show Duration $showDuration");
+												# main::DEBUGLOG && $log->is_debug && $log->debug("$station - Show Duration $progDuration");
 												
-												if ($showDuration > 0 && $showDuration < maxShowLth) {$info->{duration} = $showDuration};
+												if ($progDuration > 0 && $progDuration < maxShowLth && !$hideDuration) {$info->{duration} = $progDuration};
 											}
 
 											
@@ -1273,7 +1274,7 @@ sub parseContent {
 						
 						# main::DEBUGLOG && $log->is_debug && $log->debug("$station - Duration $songDuration");
 						
-						if ($songDuration > 0 && $songDuration < maxSongLth) {$info->{duration} = $songDuration};
+						if ($songDuration > 0 && $songDuration < maxSongLth && !$hideDuration) {$info->{duration} = $songDuration};
 					}
 					
 					$info->{remote_title} = $info->{title};
@@ -1308,7 +1309,7 @@ sub parseContent {
 		$content = '';
 	}
 
-	# Beyond this point should not use data from the data that was pulled because the code below is generic
+	# Beyond this point should not use information from the data that was pulled because the code below is generic
 
 	my $dataChanged = false;
 	
