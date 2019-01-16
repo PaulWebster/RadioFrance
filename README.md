@@ -62,6 +62,10 @@ Note: Radio France does not always provide track information in a timely manner 
 - If things are not working then enable Debug logging for this plugin via LMS/Settings/Advanced/Logging interface, repeat the problem and then check the LMS logs.  
 
 ## Version History
+**0.1.17 16-Jan-2019
+
+Improve hiding of duration when option is set
+
 **0.1.16 05-Nov-2018
 
 Support for France Inter, France Info, France Musique and France Culture (can be disabled in settings)
