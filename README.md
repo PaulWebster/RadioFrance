@@ -62,20 +62,23 @@ Note: Radio France does not always provide track information in a timely manner 
 - If things are not working then enable Debug logging for this plugin via LMS/Settings/Advanced/Logging interface, repeat the problem and then check the LMS logs.  
 
 ## Version History
-**0.1.17 16-Jan-2019
+**0.1.18 17-Jan-2019**
+Avoid warning about 2 lines being ambiguous by adding spaces around a minus sign
+
+**0.1.17 16-Jan-2019**
 
 Improve hiding of duration when option is set
 
-**0.1.16 05-Nov-2018
+**0.1.16 05-Nov-2018**
 
 Support for France Inter, France Info, France Musique and France Culture (can be disabled in settings)
 FIP Autour de Reggae now supported as a distinct station rather than through FIP Evenement
 
-**0.1.15 17-Oct-2018
+**0.1.15 17-Oct-2018**
 
 Experimental support for France Inter (can be disabled in settings)
 
-**0.1.14 16-Oct-2018
+**0.1.14 16-Oct-2018**
 
 Show (optionally) the duration of the song (thanks to philippe_44 for the key two lines of code). If you enable/disable this then wait for one track before it takes effect
 Add configurable stream delay parameter - default is 2 seconds. Indicates how far behind real time the stream is - making this accurate can help with timely changes of song info, especially visible if track duration is shown
