@@ -1376,13 +1376,13 @@ sub parseContent {
 			defined $meta->{$station}->{title} && $meta->{$station}->{title} ne '' ){
 			# Not much track details found BUT previously had a programme name (no artist) so keep old programme name - with danger that it is out of date
 			if (!defined $info->{title} &&
-			    defined $meta->{$station}->{endTime} && $meta->{$station}->{endTime} >= $hiResTime-cacheTTL){
+			    defined $meta->{$station}->{endTime} && $meta->{$station}->{endTime} >= $hiResTime - cacheTTL){
 				$info->{title} = $meta->{$station}->{title};
 				$info->{endTime} = $meta->{$station}->{endTime};	# Copy back the expected end-time since it will be saved back to $meta at end otherwise will advance by being set in $info at the entry point
 				main::DEBUGLOG && $log->is_debug && $log->debug("$station - Client: $deviceName - Preserving previously collected programme name: ".$info->{title}." - scheduled end:".$meta->{$station}->{endTime});
 			}
-		# } elsif (defined $meta->{$station}->{endTime} && $meta->{$station}->{endTime} >= $hiResTime+cacheTTL){
-		} elsif (defined $meta->{$station}->{endTime} && $meta->{$station}->{endTime} >= $hiResTime-cacheTTL){
+		# } elsif (defined $meta->{$station}->{endTime} && $meta->{$station}->{endTime} >= $hiResTime + cacheTTL){
+		} elsif (defined $meta->{$station}->{endTime} && $meta->{$station}->{endTime} >= $hiResTime - cacheTTL){
 			# If the stored data is still within time range then keep it (allowing for timing being slightly out)
 			main::DEBUGLOG && $log->is_debug && $log->debug("$station - Client: $deviceName - Preserving previously collected artist and title - scheduled end:".$meta->{$station}->{endTime}." Compared to:".$hiResTime);
 			if (defined $meta->{$station}->{artist}){$info->{artist} = $meta->{$station}->{artist};}
