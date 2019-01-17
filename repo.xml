@@ -7,20 +7,22 @@
 	
 	<plugins>
 		
-		<plugin name="RadioFrance" version="0.1.17" minTarget="7.4" maxTarget="*">
+		<plugin name="RadioFrance" version="0.1.18" minTarget="7.4" maxTarget="*">
 			<title lang="EN">Radio France</title>
 			<desc  lang="EN">Radio France track information</desc>
 			<desc  lang="FR">Radio France - info sur le morceau de musique</desc>
 			<creator>Paul Webster</creator>
 			<email></email>
 			<changes lang="EN">
-				- Improve hiding of duration when option is set
+				- Avoid warning about 2 lines being ambiguous
+				- Improve hiding of duration when option is set (0.1.17)
 			</changes>
 			<changes lang="FR">
-				- Améliorer le masquage de la durée lorsque l'option est définie
+				- Évitez de prévenir que 2 lignes sont ambiguës
+				- Améliorer le masquage de la durée lorsque l'option est définie (0.1.17)
 			</changes>
-			<url>https://paulwebster.github.io/RadioFrance/RadioFrance-0.1.17.zip</url>
-			<sha>71ae4cb7c9f5d23414245ae86e68a7fd29ca4a6d</sha>
+			<url>https://paulwebster.github.io/RadioFrance/RadioFrance-0.1.18.zip</url>
+			<sha>cff5b45062c7cd6993e95ce31b4eecbe9ce57173</sha>
 		</plugin>
 
 	</plugins>
