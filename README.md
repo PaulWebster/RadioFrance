@@ -48,7 +48,8 @@ Evenementielle / Classique Kids
 
 **Mouv' stations supported:**
 Mouv'
-Mouv'Xtra
+~~Mouv'Xtra~~ (Replaced by 100% Mix)
+Classics, DanceHall, R'N'B, Rap US, Rap Français, 100% Mix
 
 **Other Radio France (general) stations supported:**
 France Inter
@@ -62,7 +63,16 @@ Note: Radio France does not always provide track information in a timely manner 
 - If things are not working then enable Debug logging for this plugin via LMS/Settings/Advanced/Logging interface, repeat the problem and then check the LMS logs.  
 
 ## Version History
+**0.1.20 15-Feb-2019**
+
+Add support for the new streams from Mouv' and remove the now defunct Mouv'Xtra
+
+**0.1.19 12-Feb-2019**
+
+Test version - start adding support for the new Mouv streams.
+
 **0.1.18 17-Jan-2019**
+
 Avoid warning about 2 lines being ambiguous by adding spaces around a minus sign
 
 **0.1.17 16-Jan-2019**

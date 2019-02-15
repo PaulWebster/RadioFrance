@@ -19,6 +19,7 @@
 
 package Plugins::RadioFrance::Plugin;
 
+use utf8;
 use strict;
 use warnings;
 
@@ -56,6 +57,8 @@ use constant maxShowLth => 3600;	# Assumed maximum programme length in seconds -
 					# because might be a problem with the data
 					# Having no duration should mean earlier call back to try again
 
+my $type3suffix = 'extensions=%7B%22persistedQuery%22%3A%7B%22version%22%3A1%2C%22sha256Hash%22%3A%22a6f39630b68ceb8e56340a4478e099d05c9f5fc1959eaccdfb81e2ce295d82a5%22%7D%7D';
+
 # URL for remote web site that is polled to get the information about what is playing
 # Old URLs that used to work but were phased out are commented out as they might help in future if Radio France changes things again
 my $urls = {
@@ -91,6 +94,12 @@ my $urls = {
 # finished	mouv_alt => 'http://www.mouv.fr/sites/default/files/import_si/si_titre_antenne/leMouv_player_current.json',
 	mouv => 'https://api.radiofrance.fr/livemeta/pull/6',
 	mouvxtra => 'https://api.radiofrance.fr/livemeta/pull/75',
+	mouvclassics => 'https://www.mouv.fr/latest/api/graphql?operationName=NowWebradio&variables=%7B%22stationId%22%3A601%7D&'.$type3suffix,
+	mouvdancehall => 'https://www.mouv.fr/latest/api/graphql?operationName=NowWebradio&variables=%7B%22stationId%22%3A602%7D&'.$type3suffix,
+	mouvrnb => 'https://www.mouv.fr/latest/api/graphql?operationName=NowWebradio&variables=%7B%22stationId%22%3A603%7D&'.$type3suffix,
+	mouvrapus => 'https://www.mouv.fr/latest/api/graphql?operationName=NowWebradio&variables=%7B%22stationId%22%3A604%7D&'.$type3suffix,
+	mouvrapfr => 'https://www.mouv.fr/latest/api/graphql?operationName=NowWebradio&variables=%7B%22stationId%22%3A605%7D&'.$type3suffix,
+	mouv100mix => 'https://www.mouv.fr/latest/api/graphql?operationName=NowWebradio&variables=%7B%22stationId%22%3A75%7D&'.$type3suffix,
 	franceinter => 'https://api.radiofrance.fr/livemeta/pull/1',
 	franceinfo => 'https://api.radiofrance.fr/livemeta/pull/2',
 	francemusique => 'https://api.radiofrance.fr/livemeta/pull/4',
@@ -118,6 +127,12 @@ my $icons = {
 	fmevenementielle => 'https://s3-eu-west-1.amazonaws.com/cruiser-production/2016/12/c3ca5137-44d4-45fd-b23f-62957d7f52e3/fmwebradiosnormalkids.jpg',
 	mouv => 'http://www.mouv.fr/sites/all/themes/mouv/images/LeMouv-logo-215x215.png',
 	mouvxtra => 'http://www.mouv.fr/sites/all/modules/rf/rf_lecteur_commun/lecteur_rf/img/logo_mouv_xtra.png',
+	mouvclassics => 'https://cdn.radiofrance.fr/s3/cruiser-production/2019/01/bb8da8da-f679-405f-8810-b4a172f6a32d/300x300-noTransform_mouv-classic_02.jpg',
+	mouvdancehall => 'https://cdn.radiofrance.fr/s3/cruiser-production/2019/01/9d04e918-c907-4627-a332-1071bdc2366e/300x300-noTransform_dancehall.jpeg',
+	mouvrnb => 'https://cdn.radiofrance.fr/s3/cruiser-production/2019/01/f3bf764e-637c-48c0-b152-1a258726710f/300x300-noTransform_rnb.jpeg',
+	mouvrapus => 'https://cdn.radiofrance.fr/s3/cruiser-production/2019/01/54f3a745-fcf5-4f62-885a-a014cdd50a62/300x300-noTransform_rapus.jpeg',
+	mouvrapfr => 'https://cdn.radiofrance.fr/s3/cruiser-production/2019/01/3c4dc967-ed2c-4ce5-a998-9437a64e05d5/300x300-noTransform_rapfr.jpeg',
+	mouv100mix => 'https://cdn.radiofrance.fr/s3/cruiser-production/2019/01/689453b1-de6c-4c9e-9ebd-de70d0220e69/300x300-noTransform_mouv-100mix-final.jpg',
 	franceinter => 'https://www.radiofrance.fr/sites/default/files/atoms/images/offre_logo_inter.jpg',
 	franceinfo => 'https://www.radiofrance.fr/sites/default/files/atoms/images/offre_logo_franceinfo.jpg',
 	francemusique => 'https://www.radiofrance.fr/sites/default/files/atoms/images/offre_logo_france_musique.jpg',
@@ -145,6 +160,12 @@ my $iconsIgnoreRegex = {
 	fmevenementielle => '(dummy)',
 	mouv => '(image_default_player.jpg)',
 	mouvxtra => '(image_default_player.jpg)',
+	mouvclassics => '(image_default_player.jpg)',
+	mouvdancehall => '(image_default_player.jpg)',
+	mouvrnb => '(image_default_player.jpg)',
+	mouvrapus => '(image_default_player.jpg)',
+	mouvrapfr => '(image_default_player.jpg)',
+	mouv100mix => '(image_default_player.jpg)',
 	franceinter => '(dummy)',
 	franceinfo => '(dummy)',
 	francemusique => '(dummy)',
@@ -172,7 +193,13 @@ my %stationMatches = (
 	"id=s283177&", "fmocoramonde",
 	"id=s285660&", "fmevenementielle",
 	"id=s6597&", "mouv",
-	"id=s244069&", "mouvxtra",
+	# gone - taken over by Mouv 100% Mix "id=s244069&", "mouvxtra",
+	"id=s307696&", "mouvclassics",
+	"id=s307697&", "mouvdancehall",
+	"id=s307695&", "mouvrnb",
+	"id=s307694&", "mouvrapus",
+	"id=s307693&", "mouvrapfr",
+	"id=s244069&", "mouv100mix",
 	"id=s24875&", "franceinter",
 	"id=s9948&", "franceinfo",
 	"id=s15198&", "francemusique",
@@ -199,6 +226,12 @@ my %stationMatches = (
 	"francemusiquelevenementielle-", "fmevenementielle",
 	"mouv-", "mouv",
 	"mouvxtra-", "mouvxtra",
+	"mouvclassics-", "mouvclassics",
+	"mouvdancehall-", "mouvdancehall",
+	"mouvrnb-", "mouvrnb",
+	"mouvrapus-", "mouvrapus",
+	"mouvrapfr-", "mouvrapfr",
+	"mouv100p100mix-", "mouv100mix",
 	"franceinter-","franceinter",
 	"franceinfo-","franceinfo",
 	"francemusique-","francemusique",
@@ -229,6 +262,12 @@ my $meta = {
 	fmevenementielle => { busy => 0, title => 'France Musique Classique Kids', icon => $icons->{fmevenementielle}, cover => $icons->{fmevenementielle}, ttl => 0, endTime => 0 },
 	mouv => { busy => 0, title => 'Mouv\'', icon => $icons->{mouv}, cover => $icons->{mouv}, ttl => 0, endTime => 0 },
 	mouvxtra => { busy => 0, title => 'Mouv\' Xtra', icon => $icons->{mouvxtra}, cover => $icons->{mouvxtra}, ttl => 0, endTime => 0 },
+	mouvclassics => { busy => 0, title => 'Mouv\' Classics', icon => $icons->{mouvclassics}, cover => $icons->{mouvclassics}, ttl => 0, endTime => 0 },
+	mouvdancehall => { busy => 0, title => 'Mouv\' Dancehall', icon => $icons->{mouvdancehall}, cover => $icons->{mouvdancehall}, ttl => 0, endTime => 0 },
+	mouvrnb => { busy => 0, title => 'Mouv\' R\'N\'B', icon => $icons->{mouvrnb}, cover => $icons->{mouvrnb}, ttl => 0, endTime => 0 },
+	mouvrapus => { busy => 0, title => 'Mouv\' RAP US', icon => $icons->{mouvrapus}, cover => $icons->{mouvrapus}, ttl => 0, endTime => 0 },
+	mouvrapfr => { busy => 0, title => 'Mouv\' RAP Français', icon => $icons->{mouvrapfr}, cover => $icons->{mouvrapfr}, ttl => 0, endTime => 0 },
+	mouv100mix => { busy => 0, title => 'Mouv\' 100\% Mix', icon => $icons->{mouv100mix}, cover => $icons->{mouv100mix}, ttl => 0, endTime => 0 },
 	franceinter => { busy => 0, title => 'France Inter', icon => $icons->{franceinter}, cover => $icons->{franceinter}, ttl => 0, endTime => 0 },
 	franceinfo => { busy => 0, title => 'France Info', icon => $icons->{franceinfo}, cover => $icons->{franceinfo}, ttl => 0, endTime => 0 },
 	francemusique => { busy => 0, title => 'France Musique', icon => $icons->{francemusique}, cover => $icons->{francemusique}, ttl => 0, endTime => 0 },
@@ -242,9 +281,9 @@ my $myClientInfo = {};
 # http://opml.radiotime.com/Tune.ashx?id=s15200&formats=aac,ogg,mp3,wmpro,wma,wmvoice&partnerId=16
 # Played via direct URL like ... http://direct.fipradio.fr/live/fip-midfi.mp3 which redirects to something with same suffix
 # Match group 1 is used to find station id in %stationMatches - "fip-" last because it is a substring of others
-my $urlRegex1 = qr/(?:\/)(fipbordeaux-|fipnantes-|fipstrasbourg-|fip-webradio1\.|fip-webradio2\.|fip-webradio3\.|fip-webradio4\.|fip-webradio5\.|fip-webradio6\.|fip-webradio8\.|fip-|francemusiqueeasyclassique-|francemusiqueclassiqueplus-|francemusiqueconcertsradiofrance-|francemusiquelajazz-|francemusiquelacontemporaine-|francemusiqueocoramonde-|francemusiquelevenementielle-|mouv-|mouvxtra-|franceinter-)(?:midfi|lofi|hifi|)/i;
-# Selected via TuneIn base|bordeaux|nantes|strasbourg|rock|jazz|groove|monde|nouveau|reggae|electro FranceMusique - ClassicEasy|ClassicPlus|Concerts|Contemporaine|OcoraMonde|ClassiqueKids/Evenementielle - Mouv|MouvXtra
-my $urlRegex2 = qr/(?:radiotime|tunein)\.com.*(id=s15200&|id=s50706&|id=s50770&|id=s111944&|id=s262528&|id=s262533&|id=s262537&|id=s262538&|id=s262540&|id=s293090&|id=s293089&|id=s283174&|id=s283175&|id=s283176&|id=s283178&|id=s283179&|id=s283177&|id=s285660&|id=s6597&|id=s244069&)/i;
+my $urlRegex1 = qr/(?:\/)(fipbordeaux-|fipnantes-|fipstrasbourg-|fip-webradio1\.|fip-webradio2\.|fip-webradio3\.|fip-webradio4\.|fip-webradio5\.|fip-webradio6\.|fip-webradio8\.|fip-|francemusiqueeasyclassique-|francemusiqueclassiqueplus-|francemusiqueconcertsradiofrance-|francemusiquelajazz-|francemusiquelacontemporaine-|francemusiqueocoramonde-|francemusiquelevenementielle-|mouv-|mouvxtra-|mouvclassics-|mouvdancehall-|mouvrnb-|mouvrapus-|mouvrapfr-|mouv100p100mix-|franceinter-)(?:midfi|lofi|hifi|)/i;
+# Selected via TuneIn base|bordeaux|nantes|strasbourg|rock|jazz|groove|monde|nouveau|reggae|electro FranceMusique - ClassicEasy|ClassicPlus|Concerts|Contemporaine|OcoraMonde|ClassiqueKids/Evenementielle - Mouv|classics|dancehall|rnb|rapus|rapfr|100mix
+my $urlRegex2 = qr/(?:radiotime|tunein)\.com.*(id=s15200&|id=s50706&|id=s50770&|id=s111944&|id=s262528&|id=s262533&|id=s262537&|id=s262538&|id=s262540&|id=s293090&|id=s293089&|id=s283174&|id=s283175&|id=s283176&|id=s283178&|id=s283179&|id=s283177&|id=s285660&|id=s6597&|id=s244069&|id=s307693&|id=s307694&|id=s307695&|id=s307696&|id=s307697&)/i;
 # 2nd pair is for non-song-based stations so that they can be optionally disabled
 my $urlRegexNonSong1 = qr/(?:\/)(franceinter-|franceinfo-|francemusique-|franceculture-)(?:midfi|lofi|hifi|)/i;
 # Selected via TuneIn franceinter|franceinfo|francemusique|franceculture
@@ -668,7 +707,7 @@ sub parseContent {
 		# $dumped =  Dumper $perl_data;
 		# $dumped =~ s/\n {44}/\n/g;   
 		# print $dumped;
-
+		
 		if (exists $perl_data->{'current'}->{'song'} || $perl_data->{'current'}->{'emission'}){
 			# FIP type
 			# Get the data from FIP-style json
@@ -1298,6 +1337,147 @@ sub parseContent {
 			$dumped =~ s/\n {44}/\n/g;   
 			main::DEBUGLOG && $log->is_debug && $log->debug("Type2:$dumped");
 
+		} elsif (exists $perl_data->{'data'}->{'now'}->{'playing_item'}) {
+			# Sample response from Mouv' additional stations (from Feb-2019)
+			# Note - do not know where the sha1 ref for the persistent search comes from but seems to be consistent across stations
+			# https://www.mouv.fr/latest/api/graphql?operationName=NowWebradio&variables=%7B%22stationId%22%3A605%7D&extensions=%7B%22persistedQuery%22%3A%7B%22version%22%3A1%2C%22sha256Hash%22%3A%22a6f39630b68ceb8e56340a4478e099d05c9f5fc1959eaccdfb81e2ce295d82a5%22%7D%7D
+			# {
+			  # "data": {
+				# "now": {
+				  # "__typename": "Now",
+				  # "playing_item": {
+					# "__typename": "TimelineItem",
+					# "title": "ORELSAN (feat DAMSO)",
+					# "subtitle": "Reves Bizarres",
+					# "cover": "https:\/\/e-cdns-images.dzcdn.net\/images\/cover\/c05a1a7fcc1c2b0672d998ce7c492664\/1000x1000-000000-80-0-0.jpg",
+					# "start_time": 1549974775,
+					# "end_time": 1549974985
+				  # },
+				  # "server_time": 1549974955,
+				  # "next_refresh": 1549974986,
+				  # "mode": "song"
+				# }
+			  # }
+			# }
+
+			my $nowplaying;
+			my $thisItem;
+			
+			# Try to find what is playing (priority to song over programme)
+			$thisItem = $perl_data->{'data'}->{'now'}->{'playing_item'};
+			
+			# main::DEBUGLOG && $log->is_debug && $log->debug("Now: $hiResTime Start: ".$thisitem->{'start_time'}." End: $thisitem->{'end_time'}");
+			
+			if ( exists $thisItem->{'start_time'} && $thisItem->{'start_time'} <= $hiResTime && 
+				exists $thisItem->{'end_time'} && $thisItem->{'end_time'} >= $hiResTime ) {
+				# This is in range
+				# main::DEBUGLOG && $log->is_debug && $log->debug("Current playing $thisItem");
+				if ((!exists $thisItem->{'title'} || !defined($thisItem->{'title'}) || $thisItem->{'title'} eq '') && 
+					exists $thisItem->{'subtitle'} && defined($thisItem->{'subtitle'}) && $thisItem->{'subtitle'} ne '' )
+				{	# If there is no title but there is a subtitle then this is a show not a song
+				
+					main::DEBUGLOG && $log->is_debug && $log->debug("$station Found programme: ".$thisItem->{'subtitle'});
+					
+					$info->{remote_title} = $thisItem->{'subtitle'};
+					$info->{remotetitle} = $info->{remote_title};
+					# Also set it at the track title for now - since the others above do not have any visible effect on device displays
+					# Will be overwritten if there is a real song available
+					$info->{title} = $info->{remote_title};
+					
+					if (exists $thisItem->{'start_time'}){ $info->{startTime} = $thisItem->{'start_time'}};
+					if (exists $thisItem->{'end_time'}){ $info->{endTime} = $thisItem->{'end_time'}};
+					
+					if ( exists $thisItem->{'end_time'} && exists $thisItem->{'start_time'} ){
+						# Work out programme duration and return if plausible
+						$progDuration = $thisItem->{'end_time'} - $thisItem->{'start_time'};
+						
+						# main::DEBUGLOG && $log->is_debug && $log->debug("$station - Show Duration $progDuration");
+						
+						if ($progDuration > 0 && $progDuration < maxShowLth && !$hideDuration) {$info->{duration} = $progDuration};
+					}
+
+					
+					main::DEBUGLOG && $log->is_debug && $log->debug("Found show name in Type3: $info->{title}\n");
+				} else {
+					$nowplaying = $thisItem;
+					$info->{isSong} = true;
+				}
+			}
+			
+			if ( $info->{isSong} ) {
+			
+				# $dumped =  Dumper $nowplaying;
+				# $dumped =~ s/\n {44}/\n/g;   
+				# main::DEBUGLOG && $log->is_debug && $log->debug($dumped);
+
+				# main::DEBUGLOG && $log->is_debug && $log->debug("Time: ".time." Ends: ".$nowplaying->{'end_time'});
+				# main::DEBUGLOG && $log->is_debug && $log->debug("Current artist: ".$nowplaying->{'title'}." song: ".$nowplaying->{'subtitle'});
+				# main::DEBUGLOG && $log->is_debug && $log->debug("Image: ".$nowplaying->{'cover'});
+				
+				if (exists $nowplaying->{'start_time'}){ $info->{startTime} = $nowplaying->{'start_time'}};
+				
+				my $expectedEndTime = $hiResTime;
+				
+				if (exists $nowplaying->{'end_time'}){ $expectedEndTime = $nowplaying->{'end_time'}};
+				
+				if ( $expectedEndTime > $hiResTime-30 ){
+					# If looks like this should not have already finished (allowing for some leniency for clock drift and other delays) then get the details
+					# This requires that the time on the machine running LMS should be accurate - and timezone set correctly
+
+					if (exists $nowplaying->{'title'} && defined($nowplaying->{'title'}) && $nowplaying->{'title'} ne '') {
+						$info->{artist} = _lowercase($nowplaying->{'title'});
+					}
+					
+					if (exists $nowplaying->{'subtitle'} && defined($nowplaying->{'subtitle'}) && $nowplaying->{'subtitle'} ne '') {$info->{title} = _lowercase($nowplaying->{'subtitle'})};
+					
+					# Artwork - only include if not one of the defaults - to give chance for something else to add it
+					# Regex check to see if present using $iconsIgnoreRegex
+					my $thisartwork = '';
+					
+					if ($nowplaying->{'cover'}){
+						$thisartwork = $nowplaying->{'cover'};
+					}
+					
+					if (($thisartwork ne '' && ($thisartwork !~ /$iconsIgnoreRegex->{$station}/ || $thisartwork eq $info->{icon})) &&
+					     ($thisartwork =~ /^https?:/i)){
+					     # There is something, it is not excluded, it is not the station logo and it appears to be a URL
+						$info->{cover} = $thisartwork;
+					} else {
+						# Icon not present or matches one to be ignored
+						# main::DEBUGLOG && $log->is_debug && $log->debug("Image: ".$nowplaying->{'visual'});
+					}
+					
+					if ( exists $nowplaying->{'end_time'} && exists $nowplaying->{'start_time'} ){
+						# Work out song duration and return if plausible
+						$songDuration = $nowplaying->{'end_time'} - $nowplaying->{'start_time'};
+						
+						# main::DEBUGLOG && $log->is_debug && $log->debug("$station - Duration $songDuration");
+						
+						if ($songDuration > 0 && $songDuration < maxSongLth && !$hideDuration) {$info->{duration} = $songDuration};
+					}
+					
+					$info->{remote_title} = $info->{title};
+					$info->{remotetitle} = $info->{title};
+					
+					# Try to update the predicted end time to give better chance for timely display of next song
+					$info->{endTime} = $expectedEndTime;
+					
+				} else {
+					# This song that is playing should have already finished so returning largely blank data should reset what is displayed
+					main::DEBUGLOG && $log->is_debug && $log->debug("$station - Song already finished - expected end $expectedEndTime and now $hiResTime");
+				}
+
+			} else {
+
+				main::DEBUGLOG && $log->is_debug && $log->debug("$station - Did not find Current Song in retrieved data");
+
+			}
+			
+			$dumped =  Dumper $info;
+			$dumped =~ s/\n {44}/\n/g;   
+			main::DEBUGLOG && $log->is_debug && $log->debug("Type3:$dumped");
+
+		
 		} else {
 			# Do not know how to parse this - probably a mistake in setup of $meta or $station
 			main::INFOLOG && $log->is_info && $log->info("Called for station $station - but do know which format parser to use");
