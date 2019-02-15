@@ -9,7 +9,7 @@ Slimerver/LMS PlugIn to get song information from Radio France stations
 Display artist, track, cover and, optionally, album name, label and year for:
 * FIP (http://www.fipradio.fr) stations (including web stations such as Autour du Jazz)
 * France Musique (http://www.francemusique.fr) web stations (such as Ocora and Classique Plus)
-* Mouv' (http://www.mouv.fr)
+* Mouv' (http://www.mouv.fr) (including web stations such as Classics)
 Display programme name and synopsis (when available) for:
 * France Inter, France Info, France Musique, France Culture
 
@@ -48,7 +48,8 @@ Evenementielle / Classique Kids
 
 **Mouv' stations supported:**
 Mouv'
-Mouv'Xtra
+~~Mouv'Xtra~~ (Replaced by 100% Mix)
+Classics, DanceHall, R'N'B, Rap US, Rap Français, 100% Mix
 
 **Other Radio France (general) stations supported:**
 France Inter

@@ -7,22 +7,20 @@
 	
 	<plugins>
 		
-		<plugin name="RadioFrance" version="0.1.18" minTarget="7.4" maxTarget="*">
+		<plugin name="RadioFrance" version="0.1.20" minTarget="7.4" maxTarget="*">
 			<title lang="EN">Radio France</title>
 			<desc  lang="EN">Radio France track information</desc>
 			<desc  lang="FR">Radio France - info sur le morceau de musique</desc>
 			<creator>Paul Webster</creator>
 			<email></email>
 			<changes lang="EN">
-				- Avoid warning about 2 lines being ambiguous
-				- Improve hiding of duration when option is set (0.1.17)
+				- Add support for new Mouv' streams
 			</changes>
 			<changes lang="FR">
-				- Évitez de prévenir que 2 lignes sont ambiguës
-				- Améliorer le masquage de la durée lorsque l'option est définie (0.1.17)
+				- Ajout du support pour les nouveaux flux de Mouv'
 			</changes>
-			<url>https://paulwebster.github.io/RadioFrance/RadioFrance-0.1.18.zip</url>
-			<sha>cff5b45062c7cd6993e95ce31b4eecbe9ce57173</sha>
+			<url>https://paulwebster.github.io/RadioFrance/RadioFrance-0.1.20.zip</url>
+			<sha>f66118895b8e7db2e3430307f8063564a824deb0</sha>
 		</plugin>
 
 	</plugins>
