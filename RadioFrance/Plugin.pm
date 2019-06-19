@@ -29,7 +29,6 @@ use Digest::SHA1;
 use HTTP::Request;
 
 use Slim::Networking::SimpleAsyncHTTP;
-use Slim::Networking::SqueezeNetwork;
 use Slim::Utils::Log;
 use Slim::Utils::Prefs;
 use Plugins::RadioFrance::Settings;
@@ -125,14 +124,14 @@ my $icons = {
 	fmlacontemporaine => 'https://s3-eu-west-1.amazonaws.com/cruiser-production/2016/12/92f9a1f4-5525-4b2a-af13-213ff3b0c0a6/fmwebradiosnormalcontemp.jpg',
 	fmocoramonde => 'https://s3-eu-west-1.amazonaws.com/cruiser-production/2016/12/22b8b3d6-e848-4090-8b24-141c25225861/fmwebradiosnormalocora.jpg',
 	fmevenementielle => 'https://s3-eu-west-1.amazonaws.com/cruiser-production/2016/12/c3ca5137-44d4-45fd-b23f-62957d7f52e3/fmwebradiosnormalkids.jpg',
-	mouv => 'http://www.mouv.fr/sites/all/themes/mouv/images/LeMouv-logo-215x215.png',
+	mouv => 'https://www.radiofrance.fr/sites/default/files/offre_logo_mouv_2015.jpg',
 	mouvxtra => 'http://www.mouv.fr/sites/all/modules/rf/rf_lecteur_commun/lecteur_rf/img/logo_mouv_xtra.png',
-	mouvclassics => 'https://cdn.radiofrance.fr/s3/cruiser-production/2019/01/bb8da8da-f679-405f-8810-b4a172f6a32d/300x300-noTransform_mouv-classic_02.jpg',
-	mouvdancehall => 'https://cdn.radiofrance.fr/s3/cruiser-production/2019/01/9d04e918-c907-4627-a332-1071bdc2366e/300x300-noTransform_dancehall.jpeg',
-	mouvrnb => 'https://cdn.radiofrance.fr/s3/cruiser-production/2019/01/f3bf764e-637c-48c0-b152-1a258726710f/300x300-noTransform_rnb.jpeg',
-	mouvrapus => 'https://cdn.radiofrance.fr/s3/cruiser-production/2019/01/54f3a745-fcf5-4f62-885a-a014cdd50a62/300x300-noTransform_rapus.jpeg',
-	mouvrapfr => 'https://cdn.radiofrance.fr/s3/cruiser-production/2019/01/3c4dc967-ed2c-4ce5-a998-9437a64e05d5/300x300-noTransform_rapfr.jpeg',
-	mouv100mix => 'https://cdn.radiofrance.fr/s3/cruiser-production/2019/01/689453b1-de6c-4c9e-9ebd-de70d0220e69/300x300-noTransform_mouv-100mix-final.jpg',
+	mouvclassics => 'https://cdn.radiofrance.fr/s3/cruiser-production/2019/01/bb8da8da-f679-405f-8810-b4a172f6a32d/300x300_mouv-classic_02.jpg',
+	mouvdancehall => 'https://cdn.radiofrance.fr/s3/cruiser-production/2019/01/9d04e918-c907-4627-a332-1071bdc2366e/300x300_dancehall.jpg',
+	mouvrnb => 'https://cdn.radiofrance.fr/s3/cruiser-production/2019/01/f3bf764e-637c-48c0-b152-1a258726710f/300x300_rnb.jpg',
+	mouvrapus => 'https://cdn.radiofrance.fr/s3/cruiser-production/2019/01/54f3a745-fcf5-4f62-885a-a014cdd50a62/300x300_rapus.jpg',
+	mouvrapfr => 'https://cdn.radiofrance.fr/s3/cruiser-production/2019/01/3c4dc967-ed2c-4ce5-a998-9437a64e05d5/300x300_rapfr.jpg',
+	mouv100mix => 'https://cdn.radiofrance.fr/s3/cruiser-production/2019/01/689453b1-de6c-4c9e-9ebd-de70d0220e69/300x300_mouv-100mix-final.jpg',
 	franceinter => 'https://www.radiofrance.fr/sites/default/files/atoms/images/offre_logo_inter.jpg',
 	franceinfo => 'https://www.radiofrance.fr/sites/default/files/atoms/images/offre_logo_franceinfo.jpg',
 	francemusique => 'https://www.radiofrance.fr/sites/default/files/atoms/images/offre_logo_france_musique.jpg',
@@ -1658,16 +1657,22 @@ sub updateClient {
 			# main::DEBUGLOG && $log->is_debug && $log->debug("Client: $deviceName - pushing cover: $thiscover icon: $thisicon");
 			if (defined $info->{startTime}){main::DEBUGLOG && $log->is_debug && $log->debug("Client: $deviceName - Now: $hiResTime Scheduled start: $info->{startTime}")};
 			
-			$song->pluginData( wmaMeta => $info );
+			# $song->pluginData( wmaMeta => $info );
 			
 			if (!$prefs->get('hidetrackduration')){
+				my $startOffset;
+				
+				$startOffset = 0;
 				# Pushing duration and startOffset makes the duration and playing position display
 				if (defined $info->{duration}){
 					$song->duration( $info->{duration} );
-					if (defined $info->{startTime}){
-						# We know when it was scheduled and what time it is now ... so use the difference to modify the duration
-						$song->duration( $info->{duration}+$info->{startTime}-$hiResTime );
-					};
+					# if (defined $info->{startTime}){
+						# # We know when it was scheduled and what time it is now ... so use the difference to modify the duration
+						# $song->duration( $info->{duration}+$info->{startTime}-$hiResTime );
+						# # Copy back the modified duration
+						# $info->duration( $song->{duration} );
+					# };
+					$startOffset = $info->{startTime}-$hiResTime if defined $info->{startTime};
 				};
 
 				# However, might need some adjusting to allow for joining song in the middle and stream delays
@@ -1679,12 +1684,16 @@ sub updateClient {
 				# 	}
 				# }
 
-				$song->startOffset( -$client->songElapsedSeconds );
+				#$song->startOffset( -$client->songElapsedSeconds );
+				$song->startOffset( -$startOffset-$client->songElapsedSeconds );
 			} else {
 				# Do not show duration so remove it in case old data there from song before this was disabled
 				$song->duration( 0 );
+				# Copy back the modified duration
+				$info->duration( $song->{duration} );
 			}
 
+			$song->pluginData( wmaMeta => $info );
 			# $client->master->pluginData( metadata => $info );
 			
 			Slim::Control::Request::notifyFromArray( $client, [ 'newmetadata' ] );

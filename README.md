@@ -63,6 +63,13 @@ Note: Radio France does not always provide track information in a timely manner 
 - If things are not working then enable Debug logging for this plugin via LMS/Settings/Advanced/Logging interface, repeat the problem and then check the LMS logs.  
 
 ## Version History
+65d3199a553ee01f6f78abf166a36e9b30e9b6c8
+**0.1.21 19-Jun-2019**
+
+Updated default logos for some stations
+Change action when joining a song in progress. Show the offset into the song if possible.
+Do not include the unused SqueezeNetwork module because results in errors if LMS running in "nomysqueeze" mode
+
 **0.1.20 15-Feb-2019**
 
 Add support for the new streams from Mouv' and remove the now defunct Mouv'Xtra
