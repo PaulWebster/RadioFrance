@@ -7,24 +7,20 @@
 	
 	<plugins>
 		
-		<plugin name="RadioFrance" version="0.1.21" minTarget="7.4" maxTarget="*">
+		<plugin name="RadioFrance" version="0.1.22" minTarget="7.4" maxTarget="*">
 			<title lang="EN">Radio France</title>
 			<desc  lang="EN">Radio France track information</desc>
 			<desc  lang="FR">Radio France - info sur le morceau de musique</desc>
 			<creator>Paul Webster</creator>
 			<email></email>
 			<changes lang="EN">
-				- Updated default logos for some stations
-				- Change action when joining a song in progress. Show the offset into the song if possible.
-				- Do not include the unused SqueezeNetwork module because results in errors if LMS running in "nomysqueeze" mode
+				- Corrected typing error that prevented ClassiquePlus track info from appearing
 			</changes>
 			<changes lang="FR">
-				- Mise à jour des logos défaut pour certaines stations
-				- Changer d'action lorsque vous rejoignez une chanson en cours. Afficher le décalage dans la chanson si possible.
-				- N'incluez pas le module SqueezeNetwork inutilisé, car cela entraînerait des erreurs si le LMS s'exécutait en mode "nomysqueeze"
+				- Correction d'une erreur qui empêchait l'affichage des informations de ClassiquePlus
 			</changes>
-			<url>https://paulwebster.github.io/RadioFrance/RadioFrance-0.1.21.zip</url>
-			<sha>65d3199a553ee01f6f78abf166a36e9b30e9b6c8</sha>
+			<url>https://paulwebster.github.io/RadioFrance/RadioFrance-0.1.22.zip</url>
+			<sha>6f97553c3228f11352026add6b7a61581d10b59a</sha>
 		</plugin>
 
 	</plugins>
