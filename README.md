@@ -63,11 +63,14 @@ Note: Radio France does not always provide track information in a timely manner 
 - If things are not working then enable Debug logging for this plugin via LMS/Settings/Advanced/Logging interface, repeat the problem and then check the LMS logs.  
 
 ## Version History
+**0.1.22 03-Jul-2019**
+
+Corrected typing error that prevented ClassiquePlus track info from appearing  
 
 **0.1.21 19-Jun-2019**
 
 Updated default logos for some stations
-Change action when joining a song in progress. Show the offset into the song if possible.
+Change action when joining a song in progress. Show the offset into the song if possible.  
 Do not include the unused SqueezeNetwork module because results in errors if LMS running in "nomysqueeze" mode
 
 **0.1.20 15-Feb-2019**
@@ -88,7 +91,7 @@ Improve hiding of duration when option is set
 
 **0.1.16 05-Nov-2018**
 
-Support for France Inter, France Info, France Musique and France Culture (can be disabled in settings)
+Support for France Inter, France Info, France Musique and France Culture (can be disabled in settings)  
 FIP Autour de Reggae now supported as a distinct station rather than through FIP Evenement
 
 **0.1.15 17-Oct-2018**
@@ -97,7 +100,7 @@ Experimental support for France Inter (can be disabled in settings)
 
 **0.1.14 16-Oct-2018**
 
-Show (optionally) the duration of the song (thanks to philippe_44 for the key two lines of code). If you enable/disable this then wait for one track before it takes effect
+Show (optionally) the duration of the song (thanks to philippe_44 for the key two lines of code). If you enable/disable this then wait for one track before it takes effect  
 Add configurable stream delay parameter - default is 2 seconds. Indicates how far behind real time the stream is - making this accurate can help with timely changes of song info, especially visible if track duration is shown
 
 **0.1.13 04-May-2018**
@@ -114,8 +117,8 @@ Add warning if Perl SSL support missing because https sometimes required to coll
 
 **0.1.10 17-Jun-2017**
 
-Add FIP Autour de l'Electro
-Change alternate fetch mechanism to always fetch if available and remove setting that controlled it
+Add FIP Autour de l'Electro  
+Change alternate fetch mechanism to always fetch if available and remove setting that controlled it  
 Change some station logos to higher definition
 
 **0.1.9 06-Mar-2017**
@@ -139,6 +142,6 @@ Add setting to allow programme image to replace station logo
  
 **0.1.5 06-Feb-2017**
 
-Add alternate URLs for FIP stations and make them (all in one) selectable
+Add alternate URLs for FIP stations and make them (all in one) selectable  
 Makes more tracks have images but updates might not be as timely
 

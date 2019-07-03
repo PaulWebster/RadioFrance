@@ -217,7 +217,7 @@ my %stationMatches = (
 	"fip-webradio6.", "fipreggae",
 	"fip-webradio8.", "fipelectro",
 	"francemusiqueeasyclassique-", "fmclassiqueeasy",
-	"francemusiqueclassiqueplus-", "fmclassiquelpus",
+	"francemusiqueclassiqueplus-", "fmclassiqueplus",
 	"francemusiqueconcertsradiofrance-", "fmconcertsradiofrance",
 	"francemusiquelajazz-", "fmlajazz",
 	"francemusiquelacontemporaine-", "fmlacontemporaine",
