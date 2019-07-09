@@ -7,20 +7,20 @@
 	
 	<plugins>
 		
-		<plugin name="RadioFrance" version="0.1.22" minTarget="7.4" maxTarget="*">
+		<plugin name="RadioFrance" version="0.1.23" minTarget="7.4" maxTarget="*">
 			<title lang="EN">Radio France</title>
 			<desc  lang="EN">Radio France track information</desc>
 			<desc  lang="FR">Radio France - info sur le morceau de musique</desc>
 			<creator>Paul Webster</creator>
 			<email></email>
 			<changes lang="EN">
-				- Corrected typing error that prevented ClassiquePlus track info from appearing
+				- Changed URLs for meta data and logos for some stations
 			</changes>
 			<changes lang="FR">
-				- Correction d'une erreur qui empêchait l'affichage des informations de ClassiquePlus
+				- Modification des URL pour les metadata et les logos de certaines stations
 			</changes>
-			<url>https://paulwebster.github.io/RadioFrance/RadioFrance-0.1.22.zip</url>
-			<sha>6f97553c3228f11352026add6b7a61581d10b59a</sha>
+			<url>https://paulwebster.github.io/RadioFrance/RadioFrance-0.1.23.zip</url>
+			<sha>c40bd3a906287d7016a26f6fb2525682890f80ba</sha>
 		</plugin>
 
 	</plugins>
