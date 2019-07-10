@@ -7,7 +7,7 @@ Slimerver/LMS PlugIn to get song information from Radio France stations
 =========================================
 
 Display artist, track, cover and, optionally, album name, label and year for:
-* FIP (http://www.fipradio.fr) stations (including web stations such as Autour du Jazz)
+* FIP (http://www.fipradio.fr) stations (including web stations such as Jazz)
 * France Musique (http://www.francemusique.fr) web stations (such as Ocora and Classique Plus)
 * Mouv' (http://www.mouv.fr) (including web stations such as Classics)
 Display programme name and synopsis (when available) for:
@@ -35,7 +35,7 @@ Once installed and LMS has been restarted you should play one of the supported r
 If the plugin is working then you should see artist details appear around the time that a new track starts.
 
 **FIP stations supported:**
-FIP (including regional variants while they last), FIP autour ... du Rock, du Jazz, du Groove, du Monde, de l'Electro, de Reggae plus Tout Nouveau.
+FIP (including regional variants while they last), FIP ... Rock, Jazz, Groove, Monde, Electro, Reggae, Tout Nouveau plus l'été Metal.
 
 **France Musique stations supported:**
 Classique Easy
