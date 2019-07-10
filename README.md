@@ -35,7 +35,7 @@ Once installed and LMS has been restarted you should play one of the supported r
 If the plugin is working then you should see artist details appear around the time that a new track starts.
 
 **FIP stations supported:**
-FIP (including regional variants while they last), FIP autour ... du Rock, du Jazz, du Groove, du Monde, de l'Electro, de Reggae plus Tout Nouveau.
+FIP (including regional variants while they last), FIP ... Rock, Jazz, Groove, Monde, Electro, Reggae, Tout Nouveau plus L'été Metal.
 
 **France Musique stations supported:**
 Classique Easy
@@ -63,6 +63,14 @@ Note: Radio France does not always provide track information in a timely manner 
 - If things are not working then enable Debug logging for this plugin via LMS/Settings/Advanced/Logging interface, repeat the problem and then check the LMS logs.  
 
 ## Version History
+**0.1.24 10-Jul-2019**
+
+Add new station FIP L'été Metal
+
+**0.1.23 09-Jul-2019**
+
+Changed URLs for meta data and logos for some stations
+
 **0.1.22 03-Jul-2019**
 
 Corrected typing error that prevented ClassiquePlus track info from appearing  
