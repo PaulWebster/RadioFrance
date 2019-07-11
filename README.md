@@ -7,7 +7,7 @@ Slimerver/LMS PlugIn to get song information from Radio France stations
 =========================================
 
 Display artist, track, cover and, optionally, album name, label and year for:
-* FIP (http://www.fipradio.fr) stations (including web stations such as Autour du Jazz)
+* FIP (http://www.fipradio.fr) stations (including web stations such as Jazz)
 * France Musique (http://www.francemusique.fr) web stations (such as Ocora and Classique Plus)
 * Mouv' (http://www.mouv.fr)
 Display programme name and synopsis (when available) for:
@@ -44,7 +44,7 @@ Concerts Radio France
 La Jazz
 La Contemporaine
 Ocora Monde
-Evenementielle / Classique Kids
+Evenementielle / Classique Kids / B.O.
 
 **Mouv' stations supported:**
 Mouv'
@@ -63,6 +63,10 @@ Note: Radio France does not always provide track information in a timely manner 
 - If things are not working then enable Debug logging for this plugin via LMS/Settings/Advanced/Logging interface, repeat the problem and then check the LMS logs.  
 
 ## Version History
+**0.1.25 11-Jul-2019**
+
+Add support for France Musique B.O.
+
 **0.1.24 10-Jul-2019**
 
 Add new station FIP L'été Metal
