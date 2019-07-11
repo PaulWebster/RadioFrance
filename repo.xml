@@ -7,20 +7,20 @@
 	
 	<plugins>
 		
-		<plugin name="RadioFrance" version="0.1.24" minTarget="7.4" maxTarget="*">
+		<plugin name="RadioFrance" version="0.1.25" minTarget="7.4" maxTarget="*">
 			<title lang="EN">Radio France</title>
 			<desc  lang="EN">Radio France track information</desc>
 			<desc  lang="FR">Radio France - info sur le morceau de musique</desc>
 			<creator>Paul Webster</creator>
 			<email></email>
 			<changes lang="EN">
-				- Add new station FIP L'été Metal
+				- Add support for France Musique B.O.
 			</changes>
 			<changes lang="FR">
-				- Ajouter une nouvelle station FIP L'été Metal
+				- Ajouter support pour France Musique B.O.
 			</changes>
-			<url>https://paulwebster.github.io/RadioFrance/RadioFrance-0.1.24.zip</url>
-			<sha>3fba2589c408a037d8d89884e33b6fbeac1721f9</sha>
+			<url>https://paulwebster.github.io/RadioFrance/RadioFrance-0.1.25.zip</url>
+			<sha>bb33ff860d02a0277be310a10fc581a18ffb44c3</sha>
 		</plugin>
 
 	</plugins>

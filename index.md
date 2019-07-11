@@ -44,7 +44,7 @@ Concerts Radio France
 La Jazz
 La Contemporaine
 Ocora Monde
-Evenementielle / Classique Kids
+Evenementielle / Classique Kids / B.O.
 
 **Mouv' stations supported:**
 Mouv'
