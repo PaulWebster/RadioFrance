@@ -7,20 +7,22 @@
 	
 	<plugins>
 		
-		<plugin name="RadioFrance" version="0.1.25" minTarget="7.4" maxTarget="*">
+		<plugin name="RadioFrance" version="0.1.26" minTarget="7.4" maxTarget="*">
 			<title lang="EN">Radio France</title>
 			<desc  lang="EN">Radio France track information</desc>
 			<desc  lang="FR">Radio France - info sur le morceau de musique</desc>
 			<creator>Paul Webster</creator>
 			<email></email>
 			<changes lang="EN">
-				- Add support for France Musique B.O.
+				- Add another way to get programme art
+				- Update default images for stations
 			</changes>
 			<changes lang="FR">
-				- Ajouter support pour France Musique B.O.
+				- Ajouter un autre moyen d'obtenir de l'art de programme
+				- Mettre à jour les images par défaut pour les stations
 			</changes>
-			<url>https://paulwebster.github.io/RadioFrance/RadioFrance-0.1.25.zip</url>
-			<sha>bb33ff860d02a0277be310a10fc581a18ffb44c3</sha>
+			<url>https://paulwebster.github.io/RadioFrance/RadioFrance-0.1.26.zip</url>
+			<sha>7fe802db1b5aad469059f39640ead3b5b6fd7257</sha>
 		</plugin>
 
 	</plugins>
