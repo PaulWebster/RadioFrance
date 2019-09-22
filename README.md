@@ -63,6 +63,11 @@ Note: Radio France does not always provide track information in a timely manner 
 - If things are not working then enable Debug logging for this plugin via LMS/Settings/Advanced/Logging interface, repeat the problem and then check the LMS logs.  
 
 ## Version History
+**0.1.26 22-Sep-2019**
+
+Add another way to get programme art
+Update default images for stations
+
 **0.1.25 11-Jul-2019**
 
 Add support for France Musique B.O.

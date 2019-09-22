@@ -55,6 +55,10 @@ use constant maxSongLth => 900;		# Assumed maximum song length in seconds - if a
 use constant maxShowLth => 3600;	# Assumed maximum programme length in seconds - if appears longer then no duration shown
 					# because might be a problem with the data
 					# Having no duration should mean earlier call back to try again
+					
+# If no image provided in return then try to create one from 'visual' or 'visualbanner'
+my $imageapiprefix = 'https://api.radiofrance.fr/v1/services/embed/image/';
+my $imageapisuffix = '?preset=400x400';
 
 my $type3suffix = 'extensions=%7B%22persistedQuery%22%3A%7B%22version%22%3A1%2C%22sha256Hash%22%3A%22a6f39630b68ceb8e56340a4478e099d05c9f5fc1959eaccdfb81e2ce295d82a5%22%7D%7D';
 
@@ -126,7 +130,7 @@ my $icons = {
 	fmlacontemporaine => 'https://s3-eu-west-1.amazonaws.com/cruiser-production/2016/12/92f9a1f4-5525-4b2a-af13-213ff3b0c0a6/fmwebradiosnormalcontemp.jpg',
 	fmocoramonde => 'https://s3-eu-west-1.amazonaws.com/cruiser-production/2016/12/22b8b3d6-e848-4090-8b24-141c25225861/fmwebradiosnormalocora.jpg',
 	fmevenementielle => 'https://cdn.radiofrance.fr/s3/cruiser-production/2017/06/d2ac7a26-843d-4f0c-a497-8ddf6f3b2f0f/200x200_fmwebbotout.jpg',
-	mouv => 'https://www.radiofrance.fr/sites/default/files/offre_logo_mouv_2015.jpg',
+	mouv => 'https://www.radiofrance.fr/sites/default/files/styles/format_16_9/public/2019-08/logo_mouv_bloc_c.png.jpeg',
 	mouvxtra => 'http://www.mouv.fr/sites/all/modules/rf/rf_lecteur_commun/lecteur_rf/img/logo_mouv_xtra.png',
 	mouvclassics => 'https://cdn.radiofrance.fr/s3/cruiser-production/2019/01/bb8da8da-f679-405f-8810-b4a172f6a32d/300x300_mouv-classic_02.jpg',
 	mouvdancehall => 'https://cdn.radiofrance.fr/s3/cruiser-production/2019/01/9d04e918-c907-4627-a332-1071bdc2366e/300x300_dancehall.jpg',
@@ -134,10 +138,10 @@ my $icons = {
 	mouvrapus => 'https://cdn.radiofrance.fr/s3/cruiser-production/2019/01/54f3a745-fcf5-4f62-885a-a014cdd50a62/300x300_rapus.jpg',
 	mouvrapfr => 'https://cdn.radiofrance.fr/s3/cruiser-production/2019/01/3c4dc967-ed2c-4ce5-a998-9437a64e05d5/300x300_rapfr.jpg',
 	mouv100mix => 'https://cdn.radiofrance.fr/s3/cruiser-production/2019/01/689453b1-de6c-4c9e-9ebd-de70d0220e69/300x300_mouv-100mix-final.jpg',
-	franceinter => 'https://www.radiofrance.fr/sites/default/files/atoms/images/offre_logo_inter.jpg',
-	franceinfo => 'https://www.radiofrance.fr/sites/default/files/atoms/images/offre_logo_franceinfo.jpg',
-	francemusique => 'https://www.radiofrance.fr/sites/default/files/atoms/images/offre_logo_france_musique.jpg',
-	franceculture => 'https://www.radiofrance.fr/sites/default/files/atoms/images/offre_logo_france_culture.jpg',
+	franceinter => 'http://mediateur.radiofrance.fr/wp-content/themes/radiofrance/img/france-inter.png',
+	franceinfo => 'http://mediateur.radiofrance.fr/wp-content/themes/radiofrance/img/france-info.png',
+	francemusique => 'http://mediateur.radiofrance.fr/wp-content/themes/radiofrance/img/france-musique.png',
+	franceculture => 'http://mediateur.radiofrance.fr/wp-content/themes/radiofrance/img/france-culture.png',
 };
 
 my $iconsIgnoreRegex = {
@@ -500,6 +504,37 @@ sub provider {
 	# main::DEBUGLOG && $log->is_debug && $log->debug("provider - device ".$client->name." called with URL ".$url);
 	
 	return &getmeta( $client, $url, true );
+}
+
+
+sub getcover {
+	my ( $playinginfo, $station, $info ) = @_;
+	
+	my $thisartwork = '';
+	
+	if ( exists $playinginfo->{'cover'} && $playinginfo->{'cover'} ne '' ){
+		$thisartwork = $playinginfo->{'cover'};
+	} elsif ( exists $playinginfo->{'visual'} && $playinginfo->{'visual'} ne '' ){
+		$thisartwork = $playinginfo->{'visual'};
+	} elsif (exists $playinginfo->{'visualBanner'} && $playinginfo->{'visualBanner'} ne ''){
+		$thisartwork = $playinginfo->{'visualBanner'};
+	}
+	
+	if (($thisartwork ne '' && ($thisartwork !~ /$iconsIgnoreRegex->{$station}/ || $thisartwork eq $info->{icon})) &&
+	     ($thisartwork =~ /^https?:/i) || $thisartwork =~ /^.*-.*-.*-.*-/){
+	     # There is something, it is not excluded, it is not the station logo and (it appears to be a URL or an id)
+	     # example id "visual": "38fab9df-91cc-4e50-adc4-eb3a9f2a017a",
+		if ($thisartwork =~ /^.*-.*-.*-.*-/ && $thisartwork !~ /^https?:/i){
+			main::DEBUGLOG && $log->is_debug && $log->debug("$station - image id $thisartwork");
+			$thisartwork = $imageapiprefix.$thisartwork.$imageapisuffix;
+		}
+		
+	} else {
+		# Icon not present or matches one to be ignored
+		# main::DEBUGLOG && $log->is_debug && $log->debug("Image: ".$playinginfo->{'visual'});
+	}
+	
+	return $thisartwork;
 }
 
 
@@ -1224,7 +1259,20 @@ sub parseContent {
 												
 												if ($progDuration > 0 && $progDuration < maxShowLth && !$hideDuration) {$info->{duration} = $progDuration};
 											}
-
+											
+											# Artwork - only include if not one of the defaults - to give chance for something else to add it
+											# Regex check to see if present using $iconsIgnoreRegex
+											
+											if ($prefs->get('showprogimage')){
+												my $thisartwork = '';
+												
+												$thisartwork = getcover($thisItem, $station, $info);
+												
+												if ($thisartwork ne '') {
+													$info->{cover} = $thisartwork;
+												}
+												
+											}	# Requested programme image
 											
 											main::DEBUGLOG && $log->is_debug && $log->debug("Found show name in Type2: $info->{title}\n");
 										} else {
@@ -1300,17 +1348,10 @@ sub parseContent {
 					# Regex check to see if present using $iconsIgnoreRegex
 					my $thisartwork = '';
 					
-					if ($nowplaying->{'visual'}){
-						$thisartwork = $nowplaying->{'visual'};
-					}
+					$thisartwork = getcover($nowplaying, $station, $info);
 					
-					if (($thisartwork ne '' && ($thisartwork !~ /$iconsIgnoreRegex->{$station}/ || $thisartwork eq $info->{icon})) &&
-					     ($thisartwork =~ /^https?:/i)){
-					     # There is something, it is not excluded, it is not the station logo and it appears to be a URL
+					if ($thisartwork ne ''){
 						$info->{cover} = $thisartwork;
-					} else {
-						# Icon not present or matches one to be ignored
-						# main::DEBUGLOG && $log->is_debug && $log->debug("Image: ".$nowplaying->{'visual'});
 					}
 					
 					if ( exists $nowplaying->{'end'} && exists $nowplaying->{'start'} ){
@@ -1440,17 +1481,10 @@ sub parseContent {
 					# Regex check to see if present using $iconsIgnoreRegex
 					my $thisartwork = '';
 					
-					if ($nowplaying->{'cover'}){
-						$thisartwork = $nowplaying->{'cover'};
-					}
+					$thisartwork = getcover($nowplaying, $station, $info);
 					
-					if (($thisartwork ne '' && ($thisartwork !~ /$iconsIgnoreRegex->{$station}/ || $thisartwork eq $info->{icon})) &&
-					     ($thisartwork =~ /^https?:/i)){
-					     # There is something, it is not excluded, it is not the station logo and it appears to be a URL
+					if ($thisartwork ne ''){
 						$info->{cover} = $thisartwork;
-					} else {
-						# Icon not present or matches one to be ignored
-						# main::DEBUGLOG && $log->is_debug && $log->debug("Image: ".$nowplaying->{'visual'});
 					}
 					
 					if ( exists $nowplaying->{'end_time'} && exists $nowplaying->{'start_time'} ){
