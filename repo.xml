@@ -7,22 +7,20 @@
 	
 	<plugins>
 		
-		<plugin name="RadioFrance" version="0.1.26" minTarget="7.4" maxTarget="*">
+		<plugin name="RadioFrance" version="0.1.27" minTarget="7.4" maxTarget="*">
 			<title lang="EN">Radio France</title>
 			<desc  lang="EN">Radio France track information</desc>
 			<desc  lang="FR">Radio France - info sur le morceau de musique</desc>
 			<creator>Paul Webster</creator>
 			<email></email>
 			<changes lang="EN">
-				- Add another way to get programme art
-				- Update default images for stations
+				- Inconsistent use of metadata across stations so use different way to show track names when inside a programme like Jazz A Fip
 			</changes>
 			<changes lang="FR">
-				- Ajouter un autre moyen d'obtenir de l'art de programme
-				- Mettre à jour les images par défaut pour les stations
+				- Utilisation incohérente des métadonnées entre les stations, utilisez donc différentes méthodes pour afficher les noms de piste dans un programme tel que Jazz A Fip
 			</changes>
-			<url>https://paulwebster.github.io/RadioFrance/RadioFrance-0.1.26.zip</url>
-			<sha>7fe802db1b5aad469059f39640ead3b5b6fd7257</sha>
+			<url>https://paulwebster.github.io/RadioFrance/RadioFrance-0.1.27.zip</url>
+			<sha>f7e1a9c71e84fdef0c042f509e95462737e450c7</sha>
 		</plugin>
 
 	</plugins>
