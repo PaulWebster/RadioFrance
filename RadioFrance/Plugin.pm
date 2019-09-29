@@ -36,7 +36,8 @@ use Plugins::RadioFrance::Settings;
 # use JSON;		# JSON.pm Not installed on all LMS implementations so use LMS-friendly one below
 use JSON::XS::VersionOneAndTwo;
 use Encode;
-use Data::Dumper;
+use Data::Dumper
+$Data::Dumper::Sortkeys = 1;
 
 use constant false => 0;
 use constant true  => 1;
@@ -219,13 +220,21 @@ my %stationMatches = (
 	"fipnantes-", "fipnantes",
 	"fipstrasbourg-", "fipstrasbourg",
 	"fip-webradio1.", "fiprock",
+	"fiprock-", "fiprock",
 	"fip-webradio2.", "fipjazz",
+	"fipjazz-", "fipjazz",
 	"fip-webradio3.", "fipgroove",
+	"fipgroove-", "fipgroove",
 	"fip-webradio4.", "fipmonde",
+	"fipworld-", "fipmonde",
 	"fip-webradio5.", "fipnouveau",
+	"fipnouveautes-", "fipnouveau",
 	"fip-webradio6.", "fipreggae",
+	"fipreggae-", "fipreggae",
 	"fip-webradio8.", "fipelectro",
+	"fipelectro-", "fipelectro",
 	"fip-webradio7.", "fipmetal",
+	"fipmetal-", "fipmetal",
 	"francemusiqueeasyclassique-", "fmclassiqueeasy",
 	"francemusiqueclassiqueplus-", "fmclassiqueplus",
 	"francemusiqueconcertsradiofrance-", "fmconcertsradiofrance",
@@ -291,7 +300,13 @@ my $myClientInfo = {};
 # http://opml.radiotime.com/Tune.ashx?id=s15200&formats=aac,ogg,mp3,wmpro,wma,wmvoice&partnerId=16
 # Played via direct URL like ... http://direct.fipradio.fr/live/fip-midfi.mp3 which redirects to something with same suffix
 # Match group 1 is used to find station id in %stationMatches - "fip-" last because it is a substring of others
-my $urlRegex1 = qr/(?:\/)(fipbordeaux-|fipnantes-|fipstrasbourg-|fip-webradio1\.|fip-webradio2\.|fip-webradio3\.|fip-webradio4\.|fip-webradio5\.|fip-webradio6\.|fip-webradio8\.|fip-webradio7\.|fip-|francemusiqueeasyclassique-|francemusiqueclassiqueplus-|francemusiqueconcertsradiofrance-|francemusiquelajazz-|francemusiquelacontemporaine-|francemusiqueocoramonde-|francemusiquelevenementielle-|mouv-|mouvxtra-|mouvclassics-|mouvdancehall-|mouvrnb-|mouvrapus-|mouvrapfr-|mouv100p100mix-|franceinter-)(?:midfi|lofi|hifi|)/i;
+# local variables used to help keep the lines shorter and easier to read
+my $tmpstr1 = 'fipbordeaux-|fipnantes-|fipstrasbourg-|fip-webradio1\.|fiprock-|fip-webradio2\.|fipjazz-|fip-webradio3\.|fipgroove-|fip-webradio4\.|fipworld-|fip-webradio5\.|';
+my $tmpstr2 = 'fipnouveautes-|fip-webradio6\.|fipreggae-|fip-webradio8\.|fipelectro-|fip-webradio7\.|fipmetal-|fip-|';
+my $tmpstr3 = 'francemusiqueeasyclassique-|francemusiqueclassiqueplus-|francemusiqueconcertsradiofrance-|francemusiquelajazz-|francemusiquelacontemporaine-|francemusiqueocoramonde-|francemusiquelevenementielle-|';
+my $tmpstr4 = 'mouv-|mouvxtra-|mouvclassics-|mouvdancehall-|mouvrnb-|mouvrapus-|mouvrapfr-|mouv100p100mix-|franceinter-';
+my $urlRegex1 = qr/(?:\/)($tmpstr1$tmpstr2$tmpstr3$tmpstr4)(?:midfi|lofi|hifi|)/i;
+# main::DEBUGLOG && $log->is_debug && $log->debug("First Regex for station match $urlRegex1");
 # Selected via TuneIn base|bordeaux|nantes|strasbourg|rock|jazz|groove|monde|nouveau|reggae|electro|metal FranceMusique - ClassicEasy|ClassicPlus|Concerts|Contemporaine|OcoraMonde|ClassiqueKids/Evenementielle/B.O. - Mouv|classics|dancehall|rnb|rapus|rapfr|100mix
 my $urlRegex2 = qr/(?:radiotime|tunein)\.com.*(id=s15200&|id=s50706&|id=s50770&|id=s111944&|id=s262528&|id=s262533&|id=s262537&|id=s262538&|id=s262540&|id=s293090&|id=s293089&|id=s308366&|id=s283174&|id=s283175&|id=s283176&|id=s283178&|id=s283179&|id=s283177&|id=s285660|id=s306575&|id=s6597&|id=s244069&|id=s307693&|id=s307694&|id=s307695&|id=s307696&|id=s307697&)/i;
 # 2nd pair is for non-song-based stations so that they can be optionally disabled
@@ -516,6 +531,8 @@ sub getcover {
 		$thisartwork = $playinginfo->{'cover'};
 	} elsif ( exists $playinginfo->{'visual'} && $playinginfo->{'visual'} ne '' ){
 		$thisartwork = $playinginfo->{'visual'};
+	} elsif (exists $playinginfo->{'coverUuid'} && $playinginfo->{'coverUuid'} ne ''){
+		$thisartwork = $playinginfo->{'coverUuid'};
 	} elsif (exists $playinginfo->{'visualBanner'} && $playinginfo->{'visualBanner'} ne ''){
 		$thisartwork = $playinginfo->{'visualBanner'};
 	}
@@ -699,6 +716,7 @@ sub timerReturn {
 			
 			Slim::Utils::Timers::killTimers($client, \&timerReturn);
 			$myClientInfo->{$deviceName}->{nextpoll} = 0;
+			$myClientInfo->{$deviceName}->{cover} = "";	# Wipe out the cover info to try to make old cover disappear on resume where no artwork present in fetched data
 		}
 	} else {
 		main::DEBUGLOG && $log->is_debug && $log->debug("$station - timerReturn - Just ignored timer expiry because wrong or no station");
@@ -1176,18 +1194,23 @@ sub parseContent {
 										!$info->{isSong}) {
 										# This one is in range and not already found a song (might have found a programme or segment but song trumps it)
 										# main::DEBUGLOG && $log->is_debug && $log->debug("Current playing $item");
-										if (exists $thisItem->{'title'} && $thisItem->{'title'} ne '' && 
+										if ((exists $thisItem->{'title'} && $thisItem->{'title'} ne '' && 
 										    exists $thisItem->{'embedType'} && $thisItem->{'embedType'} ne 'song' &&
-										    (!exists $thisItem->{'authors'} || ref($thisItem->{'authors'}) eq 'ARRAY') && !exists $thisItem->{'performers'} && !exists $thisItem->{'composers'})
-										{	# If there is a title but no authors/performers/composers then this is a show not a song
-										
-											main::DEBUGLOG && $log->is_debug && $log->debug("$station Found programme: ".$thisItem->{'title'});
+										    (!exists $thisItem->{'authors'} || ref($thisItem->{'authors'}) eq 'ARRAY') && 
+										    !exists $thisItem->{'performers'} && 
+										    !exists $thisItem->{'composers'}) ||
+										    $thisItem->{'end'} - $thisItem->{'start'} > maxSongLth )
+										    {
+											# If there is a title but no authors/performers/composers OR too long for a song then this is a show not a song
+											$progDuration = $thisItem->{'end'} - $thisItem->{'start'};
+											main::DEBUGLOG && $log->is_debug && $log->debug("$station Found programme: $thisItem->{'title'} - duration: $progDuration");
 											
 											my $parentTitle = '';
 											
 											if (!$prefs->get('excludesynopsis') && (!exists $info->{album} || $info->{album} eq '')){
 												if (exists $thisItem->{'expressionDescription'} && 
 												   $thisItem->{'expressionDescription'} ne '' && 
+												   $thisItem->{'expressionDescription'} ne '.' && 
 												   $thisItem->{'expressionDescription'} ne '...')
 												{
 													# If not already collected an "album" (synopsis in this case) then take this one
@@ -1198,7 +1221,7 @@ sub parseContent {
 												}
 											}
 
-											$info->{remote_title} = $thisItem->{'title'};
+											if (exists $thisItem->{'title'}) {$info->{remote_title} = $thisItem->{'title'}};
 											
 											if (exists $thisItem->{'titleConcept'} && $thisItem->{'titleConcept'} ne ''){
 												# titleConcept (if present) is the name of the show as a whole and then title is the episode/instance name
@@ -1222,6 +1245,7 @@ sub parseContent {
 													if (!$prefs->get('excludesynopsis') && (!exists $info->{album} || $info->{album} eq '')){
 														if (exists $perl_data->{steps}->{$parentItem}->{'expressionDescription'} && 
 														    $perl_data->{steps}->{$parentItem}->{'expressionDescription'} ne '' && 
+														    $perl_data->{steps}->{$parentItem}->{'expressionDescription'} ne '.' && 
 														    $perl_data->{steps}->{$parentItem}->{'expressionDescription'} ne '...')
 														{
 															# If not already collected an "album" (synopsis in this case) then take this one
@@ -1607,7 +1631,13 @@ sub parseContent {
 			main::DEBUGLOG && $log->is_debug && $log->debug("$station - Client: $deviceName - Preserving previously collected artist and title - scheduled end:".$meta->{$station}->{endTime}." Compared to:".$hiResTime);
 			if (defined $meta->{$station}->{artist}){$info->{artist} = $meta->{$station}->{artist};}
 			if (defined $meta->{$station}->{title}){$info->{title} = $meta->{$station}->{title};}
-			if (defined $meta->{$station}->{cover}) {$info->{cover} = $meta->{$station}->{cover}};
+			if (defined $meta->{$station}->{cover}) {
+				if ($info->{cover} eq $icons->{$station}){
+					# If is the station icon then overwrite it with old value (which might be the same)
+					$info->{cover} = $meta->{$station}->{cover};
+					main::DEBUGLOG && $log->is_debug && $log->debug("$station - Client: $deviceName - Replace default station icon with $info->{cover}");
+				}
+			}
 			if (defined $meta->{$station}->{icon}) {$info->{icon} = $meta->{$station}->{icon}};
 			if (defined $meta->{$station}->{album}) {$info->{album} = $meta->{$station}->{album}};
 			if (defined $meta->{$station}->{year}) {$info->{year} = $meta->{$station}->{year}};
@@ -1650,6 +1680,7 @@ sub updateClient {
 	# Send Now Playing info to the client/device
 	my ( $client, $song, $info, $hiResTime ) = @_;
 	
+	my $dumped;
 	my $thisartist = '';
 	my $thistitle = '';
 	my $thiscover = '';
@@ -1690,10 +1721,12 @@ sub updateClient {
 
 	my $lastartist = '';
 	my $lasttitle = '';
+	my $lastcover = '';
 	if (defined $myClientInfo->{$deviceName}->{lastartist}) {$lastartist = $myClientInfo->{$deviceName}->{lastartist}};
 	if (defined $myClientInfo->{$deviceName}->{lasttitle}) {$lasttitle = $myClientInfo->{$deviceName}->{lasttitle}};
+	if (defined $myClientInfo->{$deviceName}->{lastcover}) {$lastcover = $myClientInfo->{$deviceName}->{lastcover}};
 	
-	if ($song && ($lastartist ne $thisartist || $lasttitle ne $thistitle)) {
+	if ($song && ($lastartist ne $thisartist || $lasttitle ne $thistitle || $lastcover ne $thiscover)) {
 			main::DEBUGLOG && $log->is_debug && $log->debug("Client: $deviceName - pushing Now Playing $thisartist - $thistitle");
 			# main::DEBUGLOG && $log->is_debug && $log->debug("Client: $deviceName - pushing cover: $thiscover icon: $thisicon");
 			if (defined $info->{startTime}){main::DEBUGLOG && $log->is_debug && $log->debug("Client: $deviceName - Now: $hiResTime Scheduled start: $info->{startTime}")};
@@ -1733,6 +1766,11 @@ sub updateClient {
 				# Copy back the modified duration
 				$info->duration( $song->{duration} );
 			}
+			
+			$dumped =  Dumper $info;
+			$dumped =~ s/\n {44}/\n/g;   
+			main::INFOLOG && $log->is_info && $log->info("About to push:$dumped");
+
 
 			$song->pluginData( wmaMeta => $info );
 			# $client->master->pluginData( metadata => $info );
@@ -1741,6 +1779,7 @@ sub updateClient {
 			$myClientInfo->{$deviceName}->{lastpush} = $hiResTime;
 			$myClientInfo->{$deviceName}->{lastartist} = $thisartist;
 			$myClientInfo->{$deviceName}->{lasttitle} = $thistitle;
+			$myClientInfo->{$deviceName}->{lastcover} = $thiscover;
 	}
 }
 

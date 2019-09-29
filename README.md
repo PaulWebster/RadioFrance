@@ -63,6 +63,10 @@ Note: Radio France does not always provide track information in a timely manner 
 - If things are not working then enable Debug logging for this plugin via LMS/Settings/Advanced/Logging interface, repeat the problem and then check the LMS logs.  
 
 ## Version History
+**0.1.27 29-Sep-2019**
+
+Inconsistent use of metadata across stations so use different way to show track names when inside a programme like Jazz A Fip
+
 **0.1.26 22-Sep-2019**
 
 Add another way to get programme art
