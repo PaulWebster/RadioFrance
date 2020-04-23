@@ -293,6 +293,19 @@ my $meta = {
 	franceculture => { busy => 0, title => 'France Culture', icon => $icons->{franceculture}, cover => $icons->{franceculture}, ttl => 0, endTime => 0 },
 };
 
+
+# calculatedPlaying holds information about what is calculated as playing now
+# Programme and Song data is held separately
+my $calculatedPlaying = {
+};
+
+foreach my $metakey (keys(%$meta)){
+	# Inialise the calculatedPlaying table
+	# main::DEBUGLOG && $log->is_debug && $log->debug("Initialising calculatedPlaying - $metakey");
+	$calculatedPlaying->{$metakey} = { progtitle => '', progstart => 0, progend => 0, proglth => 0, proglogo => '', progsynopsis => '', progsubtitle => '',
+			  songtitle => '', songartist => '', songalbum => '', songstart => 0, songend => 0, songlth => 0, songcover => '', songlabel => '', songyear => '' };
+}
+
 # $myClientInfo holds data about the clients/devices using this plugin - used to schedule next poll
 my $myClientInfo = {};
 
@@ -305,15 +318,16 @@ my $tmpstr1 = 'fipbordeaux-|fipnantes-|fipstrasbourg-|fip-webradio1\.|fiprock-|f
 my $tmpstr2 = 'fipnouveautes-|fip-webradio6\.|fipreggae-|fip-webradio8\.|fipelectro-|fip-webradio7\.|fipmetal-|fip-|';
 my $tmpstr3 = 'francemusiqueeasyclassique-|francemusiqueclassiqueplus-|francemusiqueconcertsradiofrance-|francemusiquelajazz-|francemusiquelacontemporaine-|francemusiqueocoramonde-|francemusiquelevenementielle-|';
 my $tmpstr4 = 'mouv-|mouvxtra-|mouvclassics-|mouvdancehall-|mouvrnb-|mouvrapus-|mouvrapfr-|mouv100p100mix-|franceinter-';
-my $urlRegex1 = qr/(?:\/)($tmpstr1$tmpstr2$tmpstr3$tmpstr4)(?:midfi|lofi|hifi|)/i;
-# main::DEBUGLOG && $log->is_debug && $log->debug("First Regex for station match $urlRegex1");
-# Selected via TuneIn base|bordeaux|nantes|strasbourg|rock|jazz|groove|monde|nouveau|reggae|electro|metal FranceMusique - ClassicEasy|ClassicPlus|Concerts|Contemporaine|OcoraMonde|ClassiqueKids/Evenementielle/B.O. - Mouv|classics|dancehall|rnb|rapus|rapfr|100mix
-my $urlRegex2 = qr/(?:radiotime|tunein)\.com.*(id=s15200&|id=s50706&|id=s50770&|id=s111944&|id=s262528&|id=s262533&|id=s262537&|id=s262538&|id=s262540&|id=s293090&|id=s293089&|id=s308366&|id=s283174&|id=s283175&|id=s283176&|id=s283178&|id=s283179&|id=s283177&|id=s285660|id=s306575&|id=s6597&|id=s244069&|id=s307693&|id=s307694&|id=s307695&|id=s307696&|id=s307697&)/i;
-# 2nd pair is for non-song-based stations so that they can be optionally disabled
-my $urlRegexNonSong1 = qr/(?:\/)(franceinter-|franceinfo-|francemusique-|franceculture-)(?:midfi|lofi|hifi|)/i;
-# Selected via TuneIn franceinter|franceinfo|francemusique|franceculture
-my $urlRegexNonSong2 = qr/(?:radiotime|tunein)\.com.*(id=s24875&|id=s9948&|id=s15198&|id=s2442&)/i;
 
+my @urlRegexSet = ( qr/(?:\/)($tmpstr1$tmpstr2$tmpstr3$tmpstr4)(?:midfi|lofi|hifi|)/i,
+# Selected via TuneIn base|bordeaux|nantes|strasbourg|rock|jazz|groove|monde|nouveau|reggae|electro|metal FranceMusique - ClassicEasy|ClassicPlus|Concerts|Contemporaine|OcoraMonde|ClassiqueKids/Evenementielle/B.O. - Mouv|classics|dancehall|rnb|rapus|rapfr|100mix
+					qr/(?:radiotime|tunein)\.com.*(id=s15200&|id=s50706&|id=s50770&|id=s111944&|id=s262528&|id=s262533&|id=s262537&|id=s262538&|id=s262540&|id=s293090&|id=s293089&|id=s308366&|id=s283174&|id=s283175&|id=s283176&|id=s283178&|id=s283179&|id=s283177&|id=s285660|id=s306575&|id=s6597&|id=s244069&|id=s307693&|id=s307694&|id=s307695&|id=s307696&|id=s307697&)/i,
+);
+# 2nd pair is for non-song-based stations so that they can be optionally disabled
+my @urlRegexNonSongSet = ( qr/(?:\/)(franceinter-|franceinfo-|francemusique-|franceculture-)(?:midfi|lofi|hifi|)/i,
+							# Selected via TuneIn franceinter|franceinfo|francemusique|franceculture
+						   qr/(?:radiotime|tunein)\.com.*(id=s24875&|id=s9948&|id=s15198&|id=s2442&)/i,
+);
 
 sub getDisplayName {
 	return 'PLUGIN_RADIOFRANCE';
@@ -346,46 +360,36 @@ sub initPlugin {
 		$log->error(string('PLUGIN_RADIOFRANCE_MISSING_SSL'));
 	}
 
-	Slim::Formats::RemoteMetadata->registerParser(
-		match => $urlRegex2,
-		func  => \&parser,
-	);
-
-	Slim::Formats::RemoteMetadata->registerParser(
-		match => $urlRegex1,
-		func  => \&parser,
-	);
-
-	Slim::Formats::RemoteMetadata->registerProvider(
-		match => $urlRegex2,
-		func  => \&provider,
-	);
-
-	Slim::Formats::RemoteMetadata->registerProvider(
-		match => $urlRegex1,
-		func  => \&provider,
-	);
+	foreach my $urlRegex (@urlRegexSet) {
+		# Loop through the regex set and register them as Parser and Provider
+		if ($urlRegex ne ''){
+			Slim::Formats::RemoteMetadata->registerParser(
+				match => $urlRegex,
+				func  => \&parser,
+			);
+		
+			Slim::Formats::RemoteMetadata->registerProvider(
+				match => $urlRegex,
+				func  => \&provider,
+			);
+		}
+	}
 
 	if (!$prefs->get('excludesomestations')){
-		Slim::Formats::RemoteMetadata->registerParser(
-			match => $urlRegexNonSong2,
-			func  => \&parser,
-		);
-
-		Slim::Formats::RemoteMetadata->registerParser(
-			match => $urlRegexNonSong1,
-			func  => \&parser,
-		);
-		
-		Slim::Formats::RemoteMetadata->registerProvider(
-			match => $urlRegexNonSong2,
-			func  => \&provider,
-		);
-
-		Slim::Formats::RemoteMetadata->registerProvider(
-			match => $urlRegexNonSong1,
-			func  => \&provider,
-		);
+		foreach my $urlRegex (@urlRegexNonSongSet) {
+			# Loop through the regex set and register them as Parser and Provider
+			if ($urlRegex ne ''){
+				Slim::Formats::RemoteMetadata->registerParser(
+					match => $urlRegex,
+					func  => \&parser,
+				);
+			
+				Slim::Formats::RemoteMetadata->registerProvider(
+					match => $urlRegex,
+					func  => \&provider,
+				);
+			}
+		}
 	}
 	
 	Plugins::RadioFrance::Settings->new;
@@ -448,55 +452,47 @@ sub matchStation {
 	my $station = '';
 
 	# main::DEBUGLOG && $log->is_debug && $log->debug("Checking data 1 received for $url");
-	
-	$testUrl =~ $urlRegex2;
-	
-	# main::DEBUGLOG && $log->is_debug && $log->debug("Checking data 2 received for $testUrl");
-
-	if ($testUrl && exists $stationMatches{$testUrl}) {
-		# Found a match so take this station
-		$station = $stationMatches{$testUrl};
-	} else {
-		# Try other match
-		$testUrl = $url;
-		$testUrl =~ $urlRegex1;
+	foreach my $urlRegex (@urlRegexSet){
+		# main::DEBUGLOG && $log->is_debug && $log->debug("Checking against $urlRegex");
 		
-		if ($1) {$testUrl = lc($1);}
+		$testUrl = lc($url);
+		if ($testUrl =~ $urlRegex) {
+			# $1 contains the capture ... assuming one was defined in the regex ... which it should be in our case
+			if (defined($1)) {$testUrl = $1};
+		}
 		
-		# main::DEBUGLOG && $log->is_debug && $log->debug("Checking data 3 received for $testUrl");
+		# main::DEBUGLOG && $log->is_debug && $log->debug("Try $1");
 		
-		if (exists $stationMatches{$testUrl}) {
+		if ($testUrl && exists $stationMatches{$testUrl}) {
 			# Found a match so take this station
 			$station = $stationMatches{$testUrl};
-		}		
+			
+			last;	# Found it
+		}
 	}
 
 	if ($station eq '' && !$prefs->get('excludesomestations')){
 		# Not found yet - so try the other sets
-		# ###ToDo### Optimise this by looping through all sets rather than sets of if/then/else
-		
 		# main::DEBUGLOG && $log->is_debug && $log->debug("Checking data 4 received for $url");
 		$testUrl = $url;
-		$testUrl =~ $urlRegexNonSong2;
 		
-		# main::DEBUGLOG && $log->is_debug && $log->debug("Checking data 5 received for $testUrl");
-
-		if ($testUrl && exists $stationMatches{$testUrl}) {
-			# Found a match so take this station
-			$station = $stationMatches{$testUrl};
-		} else {
-			# Try other match
-			$testUrl = $url;
-			$testUrl =~ $urlRegexNonSong1;
+		foreach my $urlRegex (@urlRegexNonSongSet){
+			# main::DEBUGLOG && $log->is_debug && $log->debug("Checking against $urlRegex");
 			
-			if ($1) {$testUrl = lc($1);}
+			$testUrl = lc($url);
+			if ($testUrl =~ $urlRegex) {
+				# $1 contains the capture ... assuming one was defined in the regex ... which it should be in our case
+				if (defined($1)) {$testUrl = $1};
+			}
 			
-			# main::DEBUGLOG && $log->is_debug && $log->debug("Checking data 6 received for $testUrl");
+			# main::DEBUGLOG && $log->is_debug && $log->debug("Try $1");
 			
-			if (exists $stationMatches{$testUrl}) {
+			if ($testUrl && exists $stationMatches{$testUrl}) {
 				# Found a match so take this station
 				$station = $stationMatches{$testUrl};
-			}		
+				
+				last;	# Found it
+			}
 		}
 	}
 
@@ -744,6 +740,7 @@ sub parseContent {
 	};
 	
 	my $deviceName = "";
+	my $dataType = '';
 	
 	if (!$client->name){
 		# No name present - this is odd
@@ -754,8 +751,9 @@ sub parseContent {
 	
 	my $dumped;
 	
-	# main::DEBUGLOG && $log->is_debug && $log->debug("About to parseContent");
-	
+	# $dumped = Dumper $calculatedPlaying;
+	# print $dumped;
+	# main::DEBUGLOG && $log->is_debug && $log->debug("$station - initial calculatedPlaying $dumped");
 
 	if (defined($content) && $content ne ''){
 	
@@ -767,7 +765,8 @@ sub parseContent {
 		# $dumped =~ s/\n {44}/\n/g;   
 		# print $dumped;
 		
-		if (exists $perl_data->{'current'}->{'song'} || $perl_data->{'current'}->{'emission'}){
+		if (ref($perl_data) ne "ARRAY" && 
+		   (exists $perl_data->{'current'}->{'song'} || exists $perl_data->{'current'}->{'emission'})){
 			# FIP type
 			# Get the data from FIP-style json
 			# curl "http://www.fipradio.fr/sites/default/files/import_si/si_titre_antenne/FIP_player_current.json?_=1430663616447" -H "Cookie: xtvrn=$539041$; has_js=1; xtidc=150221104626734282; xtan=-; xtant=1" -H "Accept-Encoding: gzip, deflate, sdch" -H "Accept-Language: en-US,en;q=0.8" -H "User-Agent: Mozilla/5.0 (Windows NT 6.3; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/42.0.2311.90 Safari/537.36" -H "Accept: application/json, text/javascript, */*; q=0.01" -H"Referer: http://www.fipradio.fr/" -H "X-Requested-With: XMLHttpRequest" -H "Connection: keep-alive" --compressed
@@ -870,7 +869,7 @@ sub parseContent {
 			#   }
 			# }			
 			
-			
+			$dataType = '1';
 			
 			my $nowplaying = $perl_data->{'current'}->{'song'};
 
@@ -879,12 +878,11 @@ sub parseContent {
 				# Station / Programme name provided so use that if it is on now - e.g. gives real current name for FIP Evenement
 			
 				if (exists $perl_data->{'current'}->{'emission'}->{'titre'} && $perl_data->{'current'}->{'emission'}->{'titre'} ne ''){
-					$info->{remote_title} = $perl_data->{'current'}->{'emission'}->{'titre'};
-					$info->{remotetitle} = $info->{remote_title};
-					# Also set it at the track title for now - since the others above do not have any visible effect on device displays
-					# Will be overwritten if there is a real song available
-					$info->{title} = $info->{remote_title};
+					$calculatedPlaying->{$station}->{'progtitle'} = $perl_data->{'current'}->{'emission'}->{'titre'};
 				}
+				
+				$calculatedPlaying->{$station}->{'progsubtitle'} = '';
+				$calculatedPlaying->{$station}->{proglogo} = '';
 				
 				if ($prefs->get('showprogimage')){
 					my $progIcon = '';
@@ -900,7 +898,7 @@ sub parseContent {
 					}
 
 					if ($progIcon ne '' && $progIcon !~ /$iconsIgnoreRegex->{$station}/ ){
-						$info->{cover} = $progIcon;
+						$calculatedPlaying->{$station}->{proglogo} = $progIcon;
 					} else {
 						# Icon not present or matches one to be ignored
 						# if ($progIcon ne ''){main::DEBUGLOG && $log->is_debug && $log->debug("Prog Image skipped: $progIcon");}
@@ -925,8 +923,8 @@ sub parseContent {
 				# main::DEBUGLOG && $log->is_debug && $log->debug("Time: ".time." Ends: ".$nowplaying->{'endTime'});
 				# main::DEBUGLOG && $log->is_debug && $log->debug("Current artist: ".$nowplaying->{'interpreteMorceau'}." song: ".$nowplaying->{'titre'});
 				# main::DEBUGLOG && $log->is_debug && $log->debug("Image:\n small: ".$nowplaying->{'visuel'}->{small}."\n medium: ".$nowplaying->{'visuel'}->{medium});
-				
-				if (exists $nowplaying->{'startTime'}){ $info->{startTime} = $nowplaying->{'startTime'}};
+
+				if (exists $nowplaying->{'startTime'}){ $calculatedPlaying->{$station}->{progstart} = $nowplaying->{'startTime'}};
 				
 				my $expectedEndTime = $hiResTime;
 				
@@ -935,16 +933,15 @@ sub parseContent {
 				if ( $expectedEndTime > $hiResTime-30 ){
 					# If looks like this should not have already finished (allowing for some leniency for clock drift and other delays) then get the details
 					# This requires that the time on the machine running LMS should be accurate - and timezone set correctly
-
-					if (exists $nowplaying->{'interpreteMorceau'}) {$info->{artist} = _lowercase($nowplaying->{'interpreteMorceau'})};
-					if (exists $nowplaying->{'titre'}) {$info->{title} = _lowercase($nowplaying->{'titre'})};
-					if (exists $nowplaying->{'anneeEditionMusique'}) {$info->{year} = $nowplaying->{'anneeEditionMusique'}};
-					if (exists $nowplaying->{'label'}) {$info->{label} = _lowercase($nowplaying->{'label'})};
+					if (exists $nowplaying->{'interpreteMorceau'}) {$calculatedPlaying->{$station}->{'songartist'} = _lowercase($nowplaying->{'interpreteMorceau'})};
+					if (exists $nowplaying->{'titre'}) {$calculatedPlaying->{$station}->{'songtitle'} = _lowercase($nowplaying->{'titre'})};
+					$calculatedPlaying->{$station}->{'songyear'} = '';
+					if (exists $nowplaying->{'anneeEditionMusique'}) {$calculatedPlaying->{$station}->{'songyear'} = $nowplaying->{'anneeEditionMusique'}};
+					$calculatedPlaying->{$station}->{'songlabel'} = '';
+					if (exists $nowplaying->{'label'}) {$calculatedPlaying->{$station}->{'songlabel'} = _lowercase($nowplaying->{'label'})};
 					
-					# main::DEBUGLOG && $log->is_debug && $log->debug('Preferences: DisableAlbumName='.$prefs->get('disablealbumname'));
-					if (!$prefs->get('disablealbumname')){
-						if (exists $nowplaying->{'titreAlbum'}) {$info->{album} = _lowercase($nowplaying->{'titreAlbum'})};
-					}
+					$calculatedPlaying->{$station}->{'songalbum'} = '';
+					if (exists $nowplaying->{'titreAlbum'}) {$calculatedPlaying->{$station}->{'songalbum'} = _lowercase($nowplaying->{'titreAlbum'})};
 					
 					# Artwork - only include if not one of the defaults - to give chance for something else to add it
 					# Regex check to see if present using $iconsIgnoreRegex
@@ -959,27 +956,31 @@ sub parseContent {
 					}
 					
 					if ($thisartwork ne '' && ($thisartwork !~ /$iconsIgnoreRegex->{$station}/ || $thisartwork eq $info->{icon}) ){
-						$info->{cover} = $thisartwork;
+						$calculatedPlaying->{$station}->{'songcover'} = $thisartwork;
 					} else {
 						# Icon not present or matches one to be ignored
 						# main::DEBUGLOG && $log->is_debug && $log->debug("Image:\n small: ".$nowplaying->{'visuel'}->{small}."\n medium: ".$nowplaying->{'visuel'}->{medium});
 					}
 					
 					if ( exists $nowplaying->{'endTime'} && exists $nowplaying->{'startTime'} ){
-						# Work out song duration and return if plausible
+						# Work out song duration and return (plausibility checks done later in generic code)
 						$songDuration = $nowplaying->{'endTime'} - $nowplaying->{'startTime'};
 						
 						# main::DEBUGLOG && $log->is_debug && $log->debug("$station - Duration $songDuration");
 						
-						if ($songDuration > 0 && $songDuration < maxSongLth && !$hideDuration) {$info->{duration} = $songDuration};
+						if ( $songDuration > 0 ) {
+							$calculatedPlaying->{$station}->{songlth} = $songDuration
+						} else {
+							$calculatedPlaying->{$station}->{songlth} = 0;
+						};
 					}
 					
 					# Try to update the predicted end time to give better chance for timely display of next song
-					$info->{endTime} = $expectedEndTime;
+					$calculatedPlaying->{$station}->{'songend'} = $expectedEndTime;
 					
-					$dumped =  Dumper $info;
+					$dumped =  Dumper $calculatedPlaying;
 					$dumped =~ s/\n {44}/\n/g;   
-					main::DEBUGLOG && $log->is_debug && $log->debug("Type1:$dumped");
+					main::DEBUGLOG && $log->is_debug && $log->debug("Type $dataType:$dumped");
 
 				} else {
 					# This song that is playing should have already finished so returning largely blank data should reset what is displayed
@@ -991,7 +992,7 @@ sub parseContent {
 				# print("Did not find Current Song in retrieved data");
 
 			}
-		} elsif (exists $perl_data->{'levels'}){
+		} elsif (ref($perl_data) ne "ARRAY" && exists $perl_data->{'levels'}){
 			# France Musique type
 				# France Musique-style json
 			# curl "https://www.francemusique.fr/livemeta/pull/407"
@@ -1156,7 +1157,7 @@ sub parseContent {
 					      # "expressionDescription": "Jusqu'\u00e0 r\u00e9cemment, on nous pr\u00e9sentait l'Arabie Saoudite comme un pays g\u00e9nial"
 					    # },
 
-
+			$dataType = '2';
 			my $nowplaying;
 			my $parentItem = '';
 			my $thisItem;
@@ -1204,25 +1205,26 @@ sub parseContent {
 											# If there is a title but no authors/performers/composers OR too long for a song then this is a show not a song
 											$progDuration = $thisItem->{'end'} - $thisItem->{'start'};
 											main::DEBUGLOG && $log->is_debug && $log->debug("$station Found programme: $thisItem->{'title'} - duration: $progDuration");
+											$calculatedPlaying->{$station}->{'progtitle'} = $thisItem->{'title'};
+											$calculatedPlaying->{$station}->{'progsubtitle'} = '';
 											
 											my $parentTitle = '';
+											$calculatedPlaying->{$station}->{progsynopsis} = '';
 											
-											if (!$prefs->get('excludesynopsis') && (!exists $info->{album} || $info->{album} eq '')){
+											if (!exists $calculatedPlaying->{$station}->{'progsynopsis'} || $calculatedPlaying->{$station}->{'progsynopsis'} eq ''){
 												if (exists $thisItem->{'expressionDescription'} && 
 												   $thisItem->{'expressionDescription'} ne '' && 
 												   $thisItem->{'expressionDescription'} ne '.' && 
 												   $thisItem->{'expressionDescription'} ne '...')
 												{
-													# If not already collected an "album" (synopsis in this case) then take this one
-													$info->{album} = $thisItem->{'expressionDescription'};
+													# If not already collected a synopsis then take this one
+													$calculatedPlaying->{$station}->{'progsynopsis'} = $thisItem->{'expressionDescription'};
 												} elsif (exists $thisItem->{'description'} && $thisItem->{'description'} ne ''){
 													# Try Description instead
-													$info->{album} = $thisItem->{'description'};
+													$calculatedPlaying->{$station}->{'progsynopsis'} = $thisItem->{'description'};
 												}
 											}
 
-											if (exists $thisItem->{'title'}) {$info->{remote_title} = $thisItem->{'title'}};
-											
 											if (exists $thisItem->{'titleConcept'} && $thisItem->{'titleConcept'} ne ''){
 												# titleConcept (if present) is the name of the show as a whole and then title is the episode/instance name
 												$parentTitle = $thisItem->{'titleConcept'};
@@ -1242,17 +1244,17 @@ sub parseContent {
 														}
 													}
 													
-													if (!$prefs->get('excludesynopsis') && (!exists $info->{album} || $info->{album} eq '')){
+													if (!exists $calculatedPlaying->{$station}->{'progsynopsis'} || $calculatedPlaying->{$station}->{'progsynopsis'}){
 														if (exists $perl_data->{steps}->{$parentItem}->{'expressionDescription'} && 
 														    $perl_data->{steps}->{$parentItem}->{'expressionDescription'} ne '' && 
 														    $perl_data->{steps}->{$parentItem}->{'expressionDescription'} ne '.' && 
 														    $perl_data->{steps}->{$parentItem}->{'expressionDescription'} ne '...')
 														{
-															# If not already collected an "album" (synopsis in this case) then take this one
-															$info->{album} = $perl_data->{steps}->{$parentItem}->{'expressionDescription'};
+															# If not already collected a synopsis then take this one
+															$calculatedPlaying->{$station}->{'progsynopsis'} = $perl_data->{steps}->{$parentItem}->{'expressionDescription'};
 														} elsif (exists $perl_data->{steps}->{$parentItem}->{'description'} && $perl_data->{steps}->{$parentItem}->{'description'} ne ''){
 															# Try Description instead
-															$info->{album} = $perl_data->{steps}->{$parentItem}->{'description'};
+															$calculatedPlaying->{$station}->{'progsynopsis'} = $perl_data->{steps}->{$parentItem}->{'description'};
 														}
 													}
 												}
@@ -1260,20 +1262,18 @@ sub parseContent {
 											
 											if ($parentTitle ne ''){
 												# Have both fields - but only include first if not already included in second to reduce line length to reduce chance of scrolling
-												if ($thisItem->{'title'} !~ /^\Q$parentTitle\E/i ){
-													$info->{remote_title} = $parentTitle." / ".$thisItem->{'title'};
-												}
-											
-												main::DEBUGLOG && $log->is_debug && $log->debug("$station Found subprogramme: ".$info->{remote_title});
+												# if ($thisItem->{'title'} !~ /^\Q$parentTitle\E/i ){
+												# 	$calculatedPlaying->{$station}->{'progtitle'} = $parentTitle." / ".$thisItem->{'title'};
+												# }
+												$calculatedPlaying->{$station}->{'progtitle'} = $parentTitle;
+												$calculatedPlaying->{$station}->{'progsubtitle'} = $thisItem->{'title'};
+												main::DEBUGLOG && $log->is_debug && $log->debug("$station Found subprogramme: ".$calculatedPlaying->{$station}->{'progsubtitle'});
 											}
 											
-											$info->{remotetitle} = $info->{remote_title};
-											# Also set it at the track title for now - since the others above do not have any visible effect on device displays
-											# Will be overwritten if there is a real song available
-											$info->{title} = $info->{remote_title};
+											if (exists $thisItem->{'start'}){ $calculatedPlaying->{$station}->{'progstart'} = $thisItem->{'start'}};
+											if (exists $thisItem->{'end'}){ $calculatedPlaying->{$station}->{'progend'} = $thisItem->{'end'}};
 											
-											if (exists $thisItem->{'start'}){ $info->{startTime} = $thisItem->{'start'}};
-											if (exists $thisItem->{'end'}){ $info->{endTime} = $thisItem->{'end'}};
+											$calculatedPlaying->{$station}->{'proglth'} = 0;
 											
 											if ( exists $thisItem->{'end'} && exists $thisItem->{'start'} ){
 												# Work out programme duration and return if plausible
@@ -1281,24 +1281,19 @@ sub parseContent {
 												
 												# main::DEBUGLOG && $log->is_debug && $log->debug("$station - Show Duration $progDuration");
 												
-												if ($progDuration > 0 && $progDuration < maxShowLth && !$hideDuration) {$info->{duration} = $progDuration};
+												if ( $progDuration > 0 ) {$calculatedPlaying->{$station}->{'proglth'} = $progDuration};
 											}
 											
 											# Artwork - only include if not one of the defaults - to give chance for something else to add it
 											# Regex check to see if present using $iconsIgnoreRegex
 											
-											if ($prefs->get('showprogimage')){
-												my $thisartwork = '';
+											my $thisartwork = '';
 												
-												$thisartwork = getcover($thisItem, $station, $info);
-												
-												if ($thisartwork ne '') {
-													$info->{cover} = $thisartwork;
-												}
-												
-											}	# Requested programme image
+											$thisartwork = getcover($thisItem, $station, $info);
+
+											$calculatedPlaying->{$station}->{'proglogo'} = $thisartwork;
 											
-											main::DEBUGLOG && $log->is_debug && $log->debug("Found show name in Type2: $info->{title}\n");
+											main::DEBUGLOG && $log->is_debug && $log->debug("Found show name in Type $dataType: $calculatedPlaying->{$station}->{'progtitle'}");
 										} else {
 											$nowplaying = $thisItem;
 											$info->{isSong} = true;
@@ -1331,7 +1326,7 @@ sub parseContent {
 				# main::DEBUGLOG && $log->is_debug && $log->debug("Current artist: ".$nowplaying->{'performers'}." song: ".$nowplaying->{'title'});
 				# main::DEBUGLOG && $log->is_debug && $log->debug("Image: ".$nowplaying->{'visual'});
 				
-				if (exists $nowplaying->{'start'}){ $info->{startTime} = $nowplaying->{'start'}};
+				if (exists $nowplaying->{'start'}){ $calculatedPlaying->{$station}->{'songstart'} = $nowplaying->{'start'}};
 				
 				my $expectedEndTime = $hiResTime;
 				
@@ -1342,31 +1337,26 @@ sub parseContent {
 					# This requires that the time on the machine running LMS should be accurate - and timezone set correctly
 
 					if (exists $nowplaying->{'performers'} && $nowplaying->{'performers'} ne '') {
-						$info->{artist} = _lowercase($nowplaying->{'performers'});
+						$calculatedPlaying->{$station}->{'songartist'} = _lowercase($nowplaying->{'performers'});
 					} elsif (exists $nowplaying->{'authors'} && $nowplaying->{'authors'} ne ''){
-						$info->{artist} = _lowercase($nowplaying->{'authors'});
+						$calculatedPlaying->{$station}->{'songartist'} = _lowercase($nowplaying->{'authors'});
 					} elsif (exists $nowplaying->{'composers'} && $nowplaying->{'composers'} ne '') {
-						$info->{artist} = _lowercase($nowplaying->{'composers'});
+						$calculatedPlaying->{$station}->{'songartist'} = _lowercase($nowplaying->{'composers'});
 					};
 					
 					if (exists $nowplaying->{'titleConcept'} && $nowplaying->{'titleConcept'} ne ''){
 						# titleConcept used for programmes in a series - in which case title is the episode/instance name
 						# No need to fiddle with the case as they do use mixed for this so all lowercase probably deliberate
-						$info->{title} = $nowplaying->{'titleConcept'};
+						$calculatedPlaying->{$station}->{'songtitle'} = $nowplaying->{'titleConcept'};
 					} else {
-						if (exists $nowplaying->{'title'}) {$info->{title} = _lowercase($nowplaying->{'title'})};
+						if (exists $nowplaying->{'title'}) {$calculatedPlaying->{$station}->{'songtitle'} = _lowercase($nowplaying->{'title'})};
 					}
 					
-					if (exists $nowplaying->{'anneeEditionMusique'}) {$info->{year} = $nowplaying->{'anneeEditionMusique'}};
-					if (exists $nowplaying->{'label'}) {$info->{label} = _lowercase($nowplaying->{'label'})};
-					
-					# Force the album name ... just in case one was collected as part of programme details but now in a song
-					if (exists $info->{album}) {delete $info->{album}};
+					if (exists $nowplaying->{'anneeEditionMusique'}) {$calculatedPlaying->{$station}->{'songyear'} = $nowplaying->{'anneeEditionMusique'}};
+					if (exists $nowplaying->{'label'}) {$calculatedPlaying->{$station}->{'songlabel'} = _lowercase($nowplaying->{'label'})};
 					
 					# main::DEBUGLOG && $log->is_debug && $log->debug('Preferences: DisableAlbumName='.$prefs->get('disablealbumname'));
-					if (!$prefs->get('disablealbumname')){
-						if (exists $nowplaying->{'titreAlbum'}) {$info->{album} = _lowercase($nowplaying->{'titreAlbum'})};
-					}
+					if (exists $nowplaying->{'titreAlbum'}) {$calculatedPlaying->{$station}->{'songalbum'} = _lowercase($nowplaying->{'titreAlbum'})};
 					
 					# Artwork - only include if not one of the defaults - to give chance for something else to add it
 					# Regex check to see if present using $iconsIgnoreRegex
@@ -1375,7 +1365,7 @@ sub parseContent {
 					$thisartwork = getcover($nowplaying, $station, $info);
 					
 					if ($thisartwork ne ''){
-						$info->{cover} = $thisartwork;
+						$calculatedPlaying->{$station}->{'songcover'} = $thisartwork;
 					}
 					
 					if ( exists $nowplaying->{'end'} && exists $nowplaying->{'start'} ){
@@ -1384,14 +1374,11 @@ sub parseContent {
 						
 						# main::DEBUGLOG && $log->is_debug && $log->debug("$station - Duration $songDuration");
 						
-						if ($songDuration > 0 && $songDuration < maxSongLth && !$hideDuration) {$info->{duration} = $songDuration};
+						if ($songDuration > 0) {$calculatedPlaying->{$station}->{'songlth'} = $songDuration};
 					}
 					
-					$info->{remote_title} = $info->{title};
-					$info->{remotetitle} = $info->{title};
-					
 					# Try to update the predicted end time to give better chance for timely display of next song
-					$info->{endTime} = $expectedEndTime;
+					$calculatedPlaying->{$station}->{'songend'} = $expectedEndTime;
 					
 				} else {
 					# This song that is playing should have already finished so returning largely blank data should reset what is displayed
@@ -1404,11 +1391,11 @@ sub parseContent {
 
 			}
 			
-			$dumped =  Dumper $info;
+			$dumped =  Dumper $calculatedPlaying->{$station};
 			$dumped =~ s/\n {44}/\n/g;   
-			main::DEBUGLOG && $log->is_debug && $log->debug("Type2:$dumped");
+			main::DEBUGLOG && $log->is_debug && $log->debug("Type $dataType:$dumped");
 
-		} elsif (exists $perl_data->{'data'}->{'now'}->{'playing_item'}) {
+		} elsif (ref($perl_data) ne "ARRAY" && exists $perl_data->{'data'}->{'now'}->{'playing_item'}) {
 			# Sample response from Mouv' additional stations (from Feb-2019)
 			# Note - do not know where the sha1 ref for the persistent search comes from but seems to be consistent across stations
 			# https://www.mouv.fr/latest/api/graphql?operationName=NowWebradio&variables=%7B%22stationId%22%3A605%7D&extensions=%7B%22persistedQuery%22%3A%7B%22version%22%3A1%2C%22sha256Hash%22%3A%22a6f39630b68ceb8e56340a4478e099d05c9f5fc1959eaccdfb81e2ce295d82a5%22%7D%7D
@@ -1431,6 +1418,7 @@ sub parseContent {
 			  # }
 			# }
 
+			$dataType = '3';
 			my $nowplaying;
 			my $thisItem;
 			
@@ -1449,14 +1437,10 @@ sub parseContent {
 				
 					main::DEBUGLOG && $log->is_debug && $log->debug("$station Found programme: ".$thisItem->{'subtitle'});
 					
-					$info->{remote_title} = $thisItem->{'subtitle'};
-					$info->{remotetitle} = $info->{remote_title};
-					# Also set it at the track title for now - since the others above do not have any visible effect on device displays
-					# Will be overwritten if there is a real song available
-					$info->{title} = $info->{remote_title};
+					$calculatedPlaying->{$station}->{'progtitle'} = $thisItem->{'subtitle'};
 					
-					if (exists $thisItem->{'start_time'}){ $info->{startTime} = $thisItem->{'start_time'}};
-					if (exists $thisItem->{'end_time'}){ $info->{endTime} = $thisItem->{'end_time'}};
+					if (exists $thisItem->{'start_time'}){ $calculatedPlaying->{$station}->{'progstart'} = $thisItem->{'start_time'}};
+					if (exists $thisItem->{'end_time'}){ $calculatedPlaying->{$station}->{'progend'} = $thisItem->{'end_time'}};
 					
 					if ( exists $thisItem->{'end_time'} && exists $thisItem->{'start_time'} ){
 						# Work out programme duration and return if plausible
@@ -1464,11 +1448,11 @@ sub parseContent {
 						
 						# main::DEBUGLOG && $log->is_debug && $log->debug("$station - Show Duration $progDuration");
 						
-						if ($progDuration > 0 && $progDuration < maxShowLth && !$hideDuration) {$info->{duration} = $progDuration};
+						if ($progDuration > 0) {$calculatedPlaying->{$station}->{'proglth'} = $progDuration};
 					}
 
 					
-					main::DEBUGLOG && $log->is_debug && $log->debug("Found show name in Type3: $info->{title}\n");
+					main::DEBUGLOG && $log->is_debug && $log->debug("Found show name in Type $dataType: $calculatedPlaying->{$station}->{'progtitle'}");
 				} else {
 					$nowplaying = $thisItem;
 					$info->{isSong} = true;
@@ -1485,7 +1469,7 @@ sub parseContent {
 				# main::DEBUGLOG && $log->is_debug && $log->debug("Current artist: ".$nowplaying->{'title'}." song: ".$nowplaying->{'subtitle'});
 				# main::DEBUGLOG && $log->is_debug && $log->debug("Image: ".$nowplaying->{'cover'});
 				
-				if (exists $nowplaying->{'start_time'}){ $info->{startTime} = $nowplaying->{'start_time'}};
+				if (exists $nowplaying->{'start_time'}){ $calculatedPlaying->{$station}->{'songstart'} = $nowplaying->{'start_time'}};
 				
 				my $expectedEndTime = $hiResTime;
 				
@@ -1496,10 +1480,10 @@ sub parseContent {
 					# This requires that the time on the machine running LMS should be accurate - and timezone set correctly
 
 					if (exists $nowplaying->{'title'} && defined($nowplaying->{'title'}) && $nowplaying->{'title'} ne '') {
-						$info->{artist} = _lowercase($nowplaying->{'title'});
+						$calculatedPlaying->{$station}->{'songartist'} = _lowercase($nowplaying->{'title'});
 					}
 					
-					if (exists $nowplaying->{'subtitle'} && defined($nowplaying->{'subtitle'}) && $nowplaying->{'subtitle'} ne '') {$info->{title} = _lowercase($nowplaying->{'subtitle'})};
+					if (exists $nowplaying->{'subtitle'} && defined($nowplaying->{'subtitle'}) && $nowplaying->{'subtitle'} ne '') {$calculatedPlaying->{$station}->{'songtitle'} = _lowercase($nowplaying->{'subtitle'})};
 					
 					# Artwork - only include if not one of the defaults - to give chance for something else to add it
 					# Regex check to see if present using $iconsIgnoreRegex
@@ -1508,7 +1492,7 @@ sub parseContent {
 					$thisartwork = getcover($nowplaying, $station, $info);
 					
 					if ($thisartwork ne ''){
-						$info->{cover} = $thisartwork;
+						$calculatedPlaying->{$station}->{'songcover'} = $thisartwork;
 					}
 					
 					if ( exists $nowplaying->{'end_time'} && exists $nowplaying->{'start_time'} ){
@@ -1517,14 +1501,11 @@ sub parseContent {
 						
 						# main::DEBUGLOG && $log->is_debug && $log->debug("$station - Duration $songDuration");
 						
-						if ($songDuration > 0 && $songDuration < maxSongLth && !$hideDuration) {$info->{duration} = $songDuration};
+						if ($songDuration > 0) {$calculatedPlaying->{$station}->{'songlth'} = $songDuration};
 					}
 					
-					$info->{remote_title} = $info->{title};
-					$info->{remotetitle} = $info->{title};
-					
 					# Try to update the predicted end time to give better chance for timely display of next song
-					$info->{endTime} = $expectedEndTime;
+					$calculatedPlaying->{$station}->{'songend'} = $expectedEndTime;
 					
 				} else {
 					# This song that is playing should have already finished so returning largely blank data should reset what is displayed
@@ -1537,10 +1518,9 @@ sub parseContent {
 
 			}
 			
-			$dumped =  Dumper $info;
+			$dumped =  Dumper $calculatedPlaying->{$station};
 			$dumped =~ s/\n {44}/\n/g;   
-			main::DEBUGLOG && $log->is_debug && $log->debug("Type3:$dumped");
-
+			main::DEBUGLOG && $log->is_debug && $log->debug("Type $dataType:$dumped");
 		
 		} else {
 			# Do not know how to parse this - probably a mistake in setup of $meta or $station
@@ -1554,7 +1534,99 @@ sub parseContent {
 	}
 
 	# Beyond this point should not use information from the data that was pulled because the code below is generic
+	$dumped = Dumper $calculatedPlaying->{$station};
+	# print $dumped;
+	main::DEBUGLOG && $log->is_debug && $log->debug("$station - Info collected $dumped");
 
+	# Note - the calculatedPlaying info contains historic data from previous runs
+	# Calculate from what is thought to be playing (programme or song) and put it into $info (which reflects what we want to show)
+	if ($calculatedPlaying->{$station}->{'songtitle'} ne '' && $calculatedPlaying->{$station}->{'songartist'} ne '' &&
+	    $calculatedPlaying->{$station}->{'songstart'} < $hiResTime && $calculatedPlaying->{$station}->{'songend'} >= $hiResTime ) {
+		# We appear to know about a song
+		$info->{title} = $calculatedPlaying->{$station}->{'songtitle'};
+		$info->{remote_title} = $info->{title};
+		# $info->{remotetitle} = $info->{title};
+		
+		$info->{artist} = $calculatedPlaying->{$station}->{'songartist'};
+		
+		if (!$prefs->get('disablealbumname')){
+			$info->{album} = $calculatedPlaying->{$station}->{'songalbum'};
+		} else {$info->{album} = '';}
+		
+		$info->{label} = $calculatedPlaying->{$station}->{'songlabel'};
+		$info->{year} = $calculatedPlaying->{$station}->{'songyear'};
+		$info->{cover} = $calculatedPlaying->{$station}->{'songcover'};
+		
+		if ($info->{cover} eq '') {$info->{cover} = $icons->{$station}}
+		
+		$info->{startTime} = $calculatedPlaying->{$station}->{'songstart'};
+		$info->{endTime} = $calculatedPlaying->{$station}->{'songend'};
+		
+		if ($calculatedPlaying->{$station}->{'songlth'} > 0 && $calculatedPlaying->{$station}->{'songlth'} <= maxSongLth && !$hideDuration) {
+			# Provide duration if explcitly given because the songend time might have been guestimated
+			$info->{duration} = $calculatedPlaying->{$station}->{'songlth'};
+		}
+		
+		main::DEBUGLOG && $log->is_debug && $log->debug("$station - song found");
+		
+	} elsif ($calculatedPlaying->{$station}->{'progtitle'} ne '' &&
+	         $calculatedPlaying->{$station}->{'progstart'} < $hiResTime && $calculatedPlaying->{$station}->{'progend'} >= $hiResTime ) {
+		# We appear to know about a programme
+		
+		my $thisTitle;
+		my $thisSubtitle;
+		
+		$thisTitle = $calculatedPlaying->{$station}->{'progtitle'};
+		$thisSubtitle = $calculatedPlaying->{$station}->{'progsubtitle'};
+		
+		$info->{album} = '';
+		if ( $thisSubtitle ne '' ){
+			# Subtitle (segment) given so add to title or put in album (synopsis) if no synopsis given
+			if ($calculatedPlaying->{$station}->{'progsynopsis'} ne '' || $prefs->get('excludesynopsis')){
+				# There is a synopsis or we should not use the album field then append subtitle to title (if not the same)
+				if ($thisTitle !~ /^\Q$thisSubtitle\E/i ){
+					$thisTitle = $thisTitle." / ".$thisSubtitle;
+				}
+			} else {
+				$info->{album} = $thisSubtitle;
+			}
+		}
+
+		$info->{title} = $thisTitle;
+		$info->{remote_title} = $info->{title};
+		# $info->{remotetitle} = $info->{title};
+		
+		$info->{artist} = '';
+		
+		if ( !$prefs->get('excludesynopsis') && $calculatedPlaying->{$station}->{'progsynopsis'} ne '' ){
+			$info->{album} = $calculatedPlaying->{$station}->{'progsynopsis'};
+		}
+		
+		undef $info->{label};
+		undef $info->{year};
+		
+		if ($prefs->get('showprogimage')){
+			$info->{cover} = $calculatedPlaying->{$station}->{'proglogo'};
+		} else {
+			$info->{cover} = '';
+		}
+		if ($info->{cover} eq '') {$info->{cover} = $icons->{$station}}
+		
+		$info->{startTime} = $calculatedPlaying->{$station}->{'progstart'};
+		$info->{endTime} = $calculatedPlaying->{$station}->{'progend'};
+		
+		if ($calculatedPlaying->{$station}->{'proglth'} > 0 && $calculatedPlaying->{$station}->{'proglth'} <= maxShowLth && !$hideDuration) {
+			# Provide duration if explcitly given because the progend time might have been guestimated
+			$info->{duration} = $calculatedPlaying->{$station}->{'proglth'};
+		}
+		
+		main::DEBUGLOG && $log->is_debug && $log->debug("$station - programme found");
+	}
+
+	$dumped = Dumper $info;
+	# print $dumped;
+	main::DEBUGLOG && $log->is_debug && $log->debug("$station - Info collected $dumped");
+	
 	my $dataChanged = false;
 	
 	if ($meta->{$station}->{busy} > 0){
@@ -1598,9 +1670,21 @@ sub parseContent {
 				main::DEBUGLOG && $log->is_debug && $log->debug("$station - Client: $deviceName - Preserving previously collected label name: ".$info->{label});
 			}
 
+			if ( (defined $info->{album} && !defined $meta->{$station}->{album}) ||
+			     (!defined $info->{album} && defined $meta->{$station}->{album}) ){
+				# Album presence has changed
+				main::DEBUGLOG && $log->is_debug && $log->debug("$station - Client: $deviceName - Album presence changed");
+				$dataChanged = true;
+			} elsif (defined $info->{album} && defined $meta->{$station}->{album} &&
+				$info->{album} ne $meta->{$station}->{album} ){
+				# Album value changed
+				$dataChanged = true;
+				main::DEBUGLOG && $log->is_debug && $log->debug("$station - Client: $deviceName - Album contents changed");
+			}
+
 			# Just in case ...
 			if ( defined $info->{year} && !defined $meta->{$station}->{year} ){
-				# looks like we have label and did not before
+				# looks like we have year and did not before
 				main::DEBUGLOG && $log->is_debug && $log->debug("$station - Client: $deviceName - Enriching with year: ".$info->{year});
 				$dataChanged = true;
 			} elsif (!defined $info->{year} && defined $meta->{$station}->{year}){
@@ -1685,13 +1769,15 @@ sub updateClient {
 	my $thistitle = '';
 	my $thiscover = '';
 	my $thisicon = '';
+	my $thisalbum = '';
 		
 	if (defined $info->{artist}) {$thisartist = $info->{artist}};
 	if (defined $info->{title}) {$thistitle = $info->{title}};
 	if (defined $info->{cover}) {$thiscover = $info->{cover}};
 	if (defined $info->{icon}) {$thisicon = $info->{icon}};
+	if (defined $info->{album}) {$thisalbum = $info->{album}};
 
-	if ($prefs->get('appendlabel') && defined $info->{album} && defined $info->{label}){
+	if ($prefs->get('appendlabel') && defined $info->{album} && defined $info->{label} && $info->{label} ne ''){
 		# Been asked to add the record label name to album name if present
 		my $appendStr = ' / '.$info->{label};
 		# Only add it if not already there (could happen when more than one data source)
@@ -1701,7 +1787,7 @@ sub updateClient {
 		}
 	}
 
-	if ($prefs->get('appendyear') && defined $info->{album} && defined $info->{year}){
+	if ($prefs->get('appendyear') && defined $info->{album} && defined $info->{year} && $info->{year} ne ''){
 		# Been asked to add the year to album name if present
 		my $appendStr = ' / '.$info->{year};
 		# Only add it if not already there (could happen when more than one data source)
@@ -1722,11 +1808,14 @@ sub updateClient {
 	my $lastartist = '';
 	my $lasttitle = '';
 	my $lastcover = '';
+	my $lastalbum = '';
 	if (defined $myClientInfo->{$deviceName}->{lastartist}) {$lastartist = $myClientInfo->{$deviceName}->{lastartist}};
 	if (defined $myClientInfo->{$deviceName}->{lasttitle}) {$lasttitle = $myClientInfo->{$deviceName}->{lasttitle}};
 	if (defined $myClientInfo->{$deviceName}->{lastcover}) {$lastcover = $myClientInfo->{$deviceName}->{lastcover}};
+	if (defined $myClientInfo->{$deviceName}->{lastalbum}) {$lastalbum = $myClientInfo->{$deviceName}->{lastalbum}};
 	
-	if ($song && ($lastartist ne $thisartist || $lasttitle ne $thistitle || $lastcover ne $thiscover)) {
+	if ($song && ($lastartist ne $thisartist || $lasttitle ne $thistitle ||
+		      $lastcover ne $thiscover || $lastalbum ne $thisalbum)) {
 			main::DEBUGLOG && $log->is_debug && $log->debug("Client: $deviceName - pushing Now Playing $thisartist - $thistitle");
 			# main::DEBUGLOG && $log->is_debug && $log->debug("Client: $deviceName - pushing cover: $thiscover icon: $thisicon");
 			if (defined $info->{startTime}){main::DEBUGLOG && $log->is_debug && $log->debug("Client: $deviceName - Now: $hiResTime Scheduled start: $info->{startTime}")};
@@ -1747,6 +1836,8 @@ sub updateClient {
 						# $info->duration( $song->{duration} );
 					# };
 					$startOffset = $info->{startTime}-$hiResTime if defined $info->{startTime};
+				} else {
+					$song->duration( 0 );
 				};
 
 				# However, might need some adjusting to allow for joining song in the middle and stream delays
@@ -1780,6 +1871,7 @@ sub updateClient {
 			$myClientInfo->{$deviceName}->{lastartist} = $thisartist;
 			$myClientInfo->{$deviceName}->{lasttitle} = $thistitle;
 			$myClientInfo->{$deviceName}->{lastcover} = $thiscover;
+			$myClientInfo->{$deviceName}->{lastalbum} = $thisalbum;
 	}
 }
 
