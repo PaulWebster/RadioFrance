@@ -7,20 +7,20 @@
 	
 	<plugins>
 		
-		<plugin name="RadioFrance" version="0.1.27" minTarget="7.4" maxTarget="*">
+		<plugin name="RadioFrance" version="0.1.28" minTarget="7.5" maxTarget="*">
 			<title lang="EN">Radio France</title>
 			<desc  lang="EN">Radio France track information</desc>
 			<desc  lang="FR">Radio France - info sur le morceau de musique</desc>
 			<creator>Paul Webster</creator>
 			<email></email>
 			<changes lang="EN">
-				- Inconsistent use of metadata across stations so use different way to show track names when inside a programme like Jazz A Fip
+				- Use "album" field for programme segment name
 			</changes>
 			<changes lang="FR">
-				- Utilisation incohérente des métadonnées entre les stations, utilisez donc différentes méthodes pour afficher les noms de piste dans un programme tel que Jazz A Fip
+				- Utilisez le champ "album" pour le nom du segment de programme
 			</changes>
-			<url>https://paulwebster.github.io/RadioFrance/RadioFrance-0.1.27.zip</url>
-			<sha>f7e1a9c71e84fdef0c042f509e95462737e450c7</sha>
+			<url>https://paulwebster.github.io/RadioFrance/RadioFrance-0.1.28.zip</url>
+			<sha>7c82d8b0f790e91e6f40113e96156c5a57fec657</sha>
 		</plugin>
 
 	</plugins>
