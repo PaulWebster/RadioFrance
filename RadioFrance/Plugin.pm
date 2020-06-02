@@ -28,6 +28,8 @@ use HTML::Entities;
 use Digest::SHA1;
 use HTTP::Request;
 
+use Date::Parse;
+
 use Slim::Networking::SimpleAsyncHTTP;
 use Slim::Utils::Log;
 use Slim::Utils::Prefs;
@@ -42,20 +44,25 @@ $Data::Dumper::Sortkeys = 1;
 use constant false => 0;
 use constant true  => 1;
 
-
+my $pluginName = 'radiofrance';
 
 my $log = Slim::Utils::Log->addLogCategory({
-	'category'     => 'plugin.radiofrance',
+	'category'     => 'plugin.'.$pluginName,
 	'description'  => 'PLUGIN_RADIOFRANCE',
 });
 
-my $prefs = preferences('plugin.radiofrance');
+my $prefs = preferences('plugin.'.$pluginName);
 
 use constant cacheTTL => 20;
 use constant maxSongLth => 900;		# Assumed maximum song length in seconds - if appears longer then no duration shown
 use constant maxShowLth => 3600;	# Assumed maximum programme length in seconds - if appears longer then no duration shown
 					# because might be a problem with the data
 					# Having no duration should mean earlier call back to try again
+					
+					# Where images of different sizes are available (and can be determined) from the source then
+					# try to keep them to no more than indicated - applies to cover art and programme logo
+use constant maxImgWidth => 340;
+use constant maxImgHeight => 340;
 					
 # If no image provided in return then try to create one from 'visual' or 'visualbanner'
 my $imageapiprefix = 'https://api.radiofrance.fr/v1/services/embed/image/';
@@ -64,8 +71,75 @@ my $imageapisuffix = '?preset=400x400';
 my $type3suffix = 'extensions=%7B%22persistedQuery%22%3A%7B%22version%22%3A1%2C%22sha256Hash%22%3A%22a6f39630b68ceb8e56340a4478e099d05c9f5fc1959eaccdfb81e2ce295d82a5%22%7D%7D';
 
 # URL for remote web site that is polled to get the information about what is playing
+#
+my $progListPerStation = true;	# Flag if programme list fetches are per station or for all stations (optimises fetches)
+
+my $trackInfoPrefix = '';
+my $trackInfoSuffix = '';
+
+my $progInfoPrefix = '';
+my $progInfoSuffix = '';
+
+my $progDetailsURL = '';
+
+my $stationSet = { # Take extra care if pasting in from external spreadsheet ... station name with single quote, TuneIn ids, longer match1 for duplicate
+	fipradio => { fullname => 'FIP', stationid => '', region => '', tuneinid => 's15200', notexcludable => true, match1 => '', match2 => 'fip-' },
+	fipbordeaux => { fullname => 'FIP Bordeaux', stationid => '', region => '', tuneinid => 's50706', notexcludable => true, match1 => 'fipbordeaux-', match2 => '' },
+	fipnantes => { fullname => 'FIP Nantes', stationid => '', region => '', tuneinid => 's50770', notexcludable => true, match1 => 'fipnantes-', match2 => '' },
+	fipstrasbourg => { fullname => 'FIP Strasbourg', stationid => '', region => '', tuneinid => 's111944', notexcludable => true, match1 => 'fipstrasbourg-', match2 => '' },
+	fiprock => { fullname => 'FIP Rock', stationid => '', region => '', tuneinid => 's262528', notexcludable => true, match1 => 'fip-webradio1.', match2 => 'fiprock-' },
+	fipjazz => { fullname => 'FIP Jazz', stationid => '', region => '', tuneinid => 's262533', notexcludable => true, match1 => 'fip-webradio2.', match2 => 'fipjazz-' },
+	fipgroove => { fullname => 'FIP Groove', stationid => '', region => '', tuneinid => 's262537', notexcludable => true, match1 => 'fip-webradio3.', match2 => 'fipgroove-' },
+	fipmonde => { fullname => 'FIP Monde', stationid => '', region => '', tuneinid => 's262538', notexcludable => true, match1 => 'fip-webradio4.', match2 => 'fipworld-' },
+	fipnouveau => { fullname => 'Tout nouveau, tout Fip', stationid => '', region => '', tuneinid => 's262540', notexcludable => true, match1 => 'fip-webradio5.', match2 => 'fipnouveautes-' },
+	fipreggae => { fullname => 'FIP Reggae', stationid => '', region => '', tuneinid => 's293090', notexcludable => true, match1 => 'fip-webradio6.', match2 => 'fipreggae-' },
+	fipelectro => { fullname => 'FIP Electro', stationid => '', region => '', tuneinid => 's293089', notexcludable => true, match1 => 'fip-webradio8.', match2 => 'fipelectro-' },
+	fipmetal => { fullname => 'FIP L\'été Metal', stationid => '', region => '', tuneinid => 's308366', notexcludable => true, match1 => 'fip-webradio7.', match2 => 'fipmetal-' },
+	fmclassiqueeasy => { fullname => 'France Musique Classique Easy', stationid => '', region => '', tuneinid => 's283174', notexcludable => true, match1 => 'francemusiqueeasyclassique-', match2 => '' },
+	fmclassiqueplus => { fullname => 'France Musique Classique Plus', stationid => '', region => '', tuneinid => 's283175', notexcludable => true, match1 => 'francemusiqueclassiqueplus-', match2 => '' },
+	fmconcertsradiofrance => { fullname => 'France Musique Concerts', stationid => '', region => '', tuneinid => 's283176', notexcludable => true, match1 => 'francemusiqueconcertsradiofrance-', match2 => '' },
+	fmlajazz => { fullname => 'France Musique La Jazz', stationid => '', region => '', tuneinid => 's283178', notexcludable => true, match1 => 'francemusiquelajazz-', match2 => '' },
+	fmlacontemporaine => { fullname => 'France Musique La Contemporaine', stationid => '', region => '', tuneinid => 's283179', notexcludable => true, match1 => 'francemusiquelacontemporaine-', match2 => '' },
+	fmocoramonde => { fullname => 'France Musique Ocora Monde', stationid => '', region => '', tuneinid => 's283177', notexcludable => true, match1 => 'francemusiqueocoramonde-', match2 => '' },
+	fmevenementielle => { fullname => 'France Musique B.O.', stationid => '', region => '', tuneinid => 's285660&|id=s306575', notexcludable => true, match1 => 'francemusiquelevenementielle-', match2 => '' }, # Special case ... 2 TuneIn Id
+	mouv => { fullname => 'Mouv\'', stationid => '', region => '', tuneinid => 's6597', notexcludable => true, match1 => 'mouv-', match2 => '' },
+	mouvxtra => { fullname => 'Mouv\' Xtra', stationid => '', region => '', tuneinid => '', notexcludable => true, match1 => 'mouvxtra-', match2 => '' },
+	mouvclassics => { fullname => 'Mouv\' Classics', stationid => '', region => '', tuneinid => 's307696', notexcludable => true, match1 => 'mouvclassics-', match2 => '' },
+	mouvdancehall => { fullname => 'Mouv\' Dancehall', stationid => '', region => '', tuneinid => 's307697', notexcludable => true, match1 => 'mouvdancehall-', match2 => '' },
+	mouvrnb => { fullname => 'Mouv\' R\'N\'B', stationid => '', region => '', tuneinid => 's307695', notexcludable => true, match1 => 'mouvrnb-', match2 => '' },
+	mouvrapus => { fullname => 'Mouv\' RAP US', stationid => '', region => '', tuneinid => 's307694', notexcludable => true, match1 => 'mouvrapus-', match2 => '' },
+	mouvrapfr => { fullname => 'Mouv\' RAP Français', stationid => '', region => '', tuneinid => 's307693', notexcludable => true, match1 => 'mouvrapfr-', match2 => '' },
+	mouv100mix => { fullname => 'Mouv\' 100\% Mix', stationid => '', region => '', tuneinid => 's244069', notexcludable => true, match1 => 'mouv100p100mix-', match2 => '' },
+	franceinter => { fullname => 'France Inter', stationid => '', region => '', tuneinid => 's24875', notexcludable => false, match1 => 'franceinter-', match2 => '' },
+	franceinfo => { fullname => 'France Info', stationid => '', region => '', tuneinid => 's9948', notexcludable => false, match1 => 'franceinfo-', match2 => '' },
+	francemusique => { fullname => 'France Musique', stationid => '', region => '', tuneinid => 's15198', notexcludable => false, match1 => 'francemusique-', match2 => '' },
+	franceculture => { fullname => 'France Culture', stationid => '', region => '', tuneinid => 's2442', notexcludable => false, match1 => 'franceculture-', match2 => '' },
+};
+
+
+# $programmeMeta contains data about the scheduled programmes.
+# Fetched when programme data is needed but the current time slot & station has none
+# fetcheddata to contain programme information by station id (not necessarily same the the playing station ...)
+# this allows stations to share programme data - e.g. kcrw and kcrwsb
+my $programmeMeta = {
+	whenfetchedbroadcaster => '',
+	whenfetched => { allservices => '',
+			 },
+	whenfetchedsonglist => '',
+	fetcheddata => { 
+			 },
+};
+
+
+# URL for remote web site that is polled to get the information about what is playing
 # Old URLs that used to work but were phased out are commented out as they might help in future if Radio France changes things again
+
 my $urls = {
+	radiofranceprogdata => '', # 
+	radiofranceprogdata_alt => '',
+	radiofrancebroadcasterdata => '',
+	
+	# Note - loop below adds one hash for each station
 # finished 1521553005 - 2018-03-20 13:36:45	fipradio_alt => 'http://www.fipradio.fr/sites/default/files/import_si/si_titre_antenne/FIP_player_current.json',
 	fipradio => 'https://api.radiofrance.fr/livemeta/pull/7',
 # finished 1521553005 - 2018-03-20 13:36:45	fipbordeaux_alt => 'http://www.fipradio.fr/sites/default/files/import_si/si_titre_antenne/FIP_player_current.json',
@@ -111,6 +185,14 @@ my $urls = {
 	franceculture => 'https://api.radiofrance.fr/livemeta/pull/5',
 };
 
+foreach my $metakey (keys(%$stationSet)){
+	# Inialise the URL table - do not replace items that are already present (to allow override)
+	# main::DEBUGLOG && $log->is_debug && $log->debug("Initialising urls - $metakey");
+	if ( not exists $urls->{$metakey} ){
+		$urls->{$metakey} = '';
+	}
+}
+
 my $icons = {
 	fipradio => 'http://mediateur.radiofrance.fr/wp-content/themes/radiofrance/img/fip.png',
 	fipbordeaux => 'http://mediateur.radiofrance.fr/wp-content/themes/radiofrance/img/fip.png',
@@ -144,6 +226,16 @@ my $icons = {
 	francemusique => 'http://mediateur.radiofrance.fr/wp-content/themes/radiofrance/img/france-musique.png',
 	franceculture => 'http://mediateur.radiofrance.fr/wp-content/themes/radiofrance/img/france-culture.png',
 };
+
+foreach my $metakey (keys(%$stationSet)){
+	# Inialise the icons table - do not replace items that are already present (to allow override)
+	# main::DEBUGLOG && $log->is_debug && $log->debug("Initialising icons - $metakey");
+	if ( not exists $icons->{$metakey} ){
+		# Customise this if necessary per plugin
+		$icons->{$metakey} = '';
+	}
+}
+
 
 my $iconsIgnoreRegex = {
 	fipradio => '(fond_titres_diffuses_degrade.png|direct_default_cover_medium.png)',
@@ -179,119 +271,177 @@ my $iconsIgnoreRegex = {
 	franceculture => '(dummy)',
 };
 
+foreach my $metakey (keys(%$stationSet)){
+	# Inialise the iconsIgnoreRegex table
+	# main::DEBUGLOG && $log->is_debug && $log->debug("Initialising iconsIgnoreRegex - $metakey");
+	if ( not exists $iconsIgnoreRegex->{$metakey} ){
+		# Customise this if necessary per plugin
+		$iconsIgnoreRegex->{$metakey} = '(dummy)';
+	}
+}
+
+
 # Uses match group 1 from regex call to try to find station
 my %stationMatches = (
-	"id=s15200&", "fipradio",
-	"id=s50706&", "fipbordeaux",
-	"id=s50770&", "fipnantes",
-	"id=s111944&", "fipstrasbourg",
-	"id=s262528&", "fiprock",
-	"id=s262533&", "fipjazz",
-	"id=s262537&", "fipgroove",
-	"id=s262538&", "fipmonde",
-	"id=s262540&", "fipnouveau",
-	"id=s293090&", "fipreggae",
-	"id=s293089&", "fipelectro",
-	"id=s308366&", "fipmetal",
-	"id=s283174&", "fmclassiqueeasy",
-	"id=s283175&", "fmclassiqueplus",
-	"id=s283176&", "fmconcertsradiofrance",
-	"id=s283178&", "fmlajazz",
-	"id=s283179&", "fmlacontemporaine",
-	"id=s283177&", "fmocoramonde",
-	"id=s285660&", "fmevenementielle",
-	"id=s306575&", "fmevenementielle",	# France Musique B.O.
-	"id=s6597&", "mouv",
-	# gone - taken over by Mouv 100% Mix "id=s244069&", "mouvxtra",
-	"id=s307696&", "mouvclassics",
-	"id=s307697&", "mouvdancehall",
-	"id=s307695&", "mouvrnb",
-	"id=s307694&", "mouvrapus",
-	"id=s307693&", "mouvrapfr",
-	"id=s244069&", "mouv100mix",
-	"id=s24875&", "franceinter",
-	"id=s9948&", "franceinfo",
-	"id=s15198&", "francemusique",
-	"id=s2442&", "franceculture",
+	# "id=s15200&", "fipradio",
+	# "id=s50706&", "fipbordeaux",
+	# "id=s50770&", "fipnantes",
+	# "id=s111944&", "fipstrasbourg",
+	# "id=s262528&", "fiprock",
+	# "id=s262533&", "fipjazz",
+	# "id=s262537&", "fipgroove",
+	# "id=s262538&", "fipmonde",
+	# "id=s262540&", "fipnouveau",
+	# "id=s293090&", "fipreggae",
+	# "id=s293089&", "fipelectro",
+	# "id=s308366&", "fipmetal",
+	# "id=s283174&", "fmclassiqueeasy",
+	# "id=s283175&", "fmclassiqueplus",
+	# "id=s283176&", "fmconcertsradiofrance",
+	# "id=s283178&", "fmlajazz",
+	# "id=s283179&", "fmlacontemporaine",
+	# "id=s283177&", "fmocoramonde",
+	# "id=s285660&", "fmevenementielle",
+	# "id=s306575&", "fmevenementielle",	# France Musique B.O.
+	# "id=s6597&", "mouv",
+	# # gone - taken over by Mouv 100% Mix "id=s244069&", "mouvxtra",
+	# "id=s307696&", "mouvclassics",
+	# "id=s307697&", "mouvdancehall",
+	# "id=s307695&", "mouvrnb",
+	# "id=s307694&", "mouvrapus",
+	# "id=s307693&", "mouvrapfr",
+	# "id=s244069&", "mouv100mix",
+	# "id=s24875&", "franceinter",
+	# "id=s9948&", "franceinfo",
+	# "id=s15198&", "francemusique",
+	# "id=s2442&", "franceculture",
 	
 	
-	"fip-", "fipradio",
-	"fipbordeaux-", "fipbordeaux",
-	"fipnantes-", "fipnantes",
-	"fipstrasbourg-", "fipstrasbourg",
-	"fip-webradio1.", "fiprock",
-	"fiprock-", "fiprock",
-	"fip-webradio2.", "fipjazz",
-	"fipjazz-", "fipjazz",
-	"fip-webradio3.", "fipgroove",
-	"fipgroove-", "fipgroove",
-	"fip-webradio4.", "fipmonde",
-	"fipworld-", "fipmonde",
-	"fip-webradio5.", "fipnouveau",
-	"fipnouveautes-", "fipnouveau",
-	"fip-webradio6.", "fipreggae",
-	"fipreggae-", "fipreggae",
-	"fip-webradio8.", "fipelectro",
-	"fipelectro-", "fipelectro",
-	"fip-webradio7.", "fipmetal",
-	"fipmetal-", "fipmetal",
-	"francemusiqueeasyclassique-", "fmclassiqueeasy",
-	"francemusiqueclassiqueplus-", "fmclassiqueplus",
-	"francemusiqueconcertsradiofrance-", "fmconcertsradiofrance",
-	"francemusiquelajazz-", "fmlajazz",
-	"francemusiquelacontemporaine-", "fmlacontemporaine",
-	"francemusiqueocoramonde-", "fmocoramonde",
-	"francemusiquelevenementielle-", "fmevenementielle",
-	"mouv-", "mouv",
-	"mouvxtra-", "mouvxtra",
-	"mouvclassics-", "mouvclassics",
-	"mouvdancehall-", "mouvdancehall",
-	"mouvrnb-", "mouvrnb",
-	"mouvrapus-", "mouvrapus",
-	"mouvrapfr-", "mouvrapfr",
-	"mouv100p100mix-", "mouv100mix",
-	"franceinter-","franceinter",
-	"franceinfo-","franceinfo",
-	"francemusique-","francemusique",
-	"franceculture-","franceculture",
+	# "fip-", "fipradio",
+	# "fipbordeaux-", "fipbordeaux",
+	# "fipnantes-", "fipnantes",
+	# "fipstrasbourg-", "fipstrasbourg",
+	# "fip-webradio1.", "fiprock",
+	# "fiprock-", "fiprock",
+	# "fip-webradio2.", "fipjazz",
+	# "fipjazz-", "fipjazz",
+	# "fip-webradio3.", "fipgroove",
+	# "fipgroove-", "fipgroove",
+	# "fip-webradio4.", "fipmonde",
+	# "fipworld-", "fipmonde",
+	# "fip-webradio5.", "fipnouveau",
+	# "fipnouveautes-", "fipnouveau",
+	# "fip-webradio6.", "fipreggae",
+	# "fipreggae-", "fipreggae",
+	# "fip-webradio8.", "fipelectro",
+	# "fipelectro-", "fipelectro",
+	# "fip-webradio7.", "fipmetal",
+	# "fipmetal-", "fipmetal",
+	# "francemusiqueeasyclassique-", "fmclassiqueeasy",
+	# "francemusiqueclassiqueplus-", "fmclassiqueplus",
+	# "francemusiqueconcertsradiofrance-", "fmconcertsradiofrance",
+	# "francemusiquelajazz-", "fmlajazz",
+	# "francemusiquelacontemporaine-", "fmlacontemporaine",
+	# "francemusiqueocoramonde-", "fmocoramonde",
+	# "francemusiquelevenementielle-", "fmevenementielle",
+	# "mouv-", "mouv",
+	# "mouvxtra-", "mouvxtra",
+	# "mouvclassics-", "mouvclassics",
+	# "mouvdancehall-", "mouvdancehall",
+	# "mouvrnb-", "mouvrnb",
+	# "mouvrapus-", "mouvrapus",
+	# "mouvrapfr-", "mouvrapfr",
+	# "mouv100p100mix-", "mouv100mix",
+	# "franceinter-","franceinter",
+	# "franceinfo-","franceinfo",
+	# "francemusique-","francemusique",
+	# "franceculture-","franceculture",
 );
+
+my $thisMatchStr = '';
+foreach my $metakey (keys(%$stationSet)){
+	# Inialise the stationMatches table - do not replace items that are already present (to allow override)
+	# main::DEBUGLOG && $log->is_debug && $log->debug("Initialising stationMatches - $metakey");
+	if ( exists $stationSet->{$metakey}->{'tuneinid'} && $stationSet->{$metakey}->{'tuneinid'} ne ''){
+		# TuneIn id given so add it in (if not already there)
+		$thisMatchStr = 'id='.$stationSet->{$metakey}->{'tuneinid'}.'&';
+		
+		if ( not exists $stationMatches{$thisMatchStr} ){
+			# main::DEBUGLOG && $log->is_debug && $log->debug("Adding to stationMatches - $thisMatchStr - $metakey");
+			$stationMatches{$thisMatchStr} = $metakey;
+		}
+	}
+	
+	if ( exists $stationSet->{$metakey}->{'match1'} && $stationSet->{$metakey}->{'match1'} ne ''){
+		# match1 given so add it in (if not already there)
+		$thisMatchStr = $stationSet->{$metakey}->{'match1'};
+		
+		if ( not exists $stationMatches{lc($thisMatchStr)} ){
+			# main::DEBUGLOG && $log->is_debug && $log->debug("Adding to stationMatches - $thisMatchStr - $metakey");
+			$stationMatches{lc($thisMatchStr)} = $metakey;
+		}
+	}
+	
+	if ( exists $stationSet->{$metakey}->{'match2'} && $stationSet->{$metakey}->{'match2'} ne ''){
+		# match2 given so add it in (if not already there)
+		$thisMatchStr = $stationSet->{$metakey}->{'match2'};
+		
+		if ( not exists $stationMatches{lc($thisMatchStr)} ){
+			# main::DEBUGLOG && $log->is_debug && $log->debug("Adding to stationMatches - $thisMatchStr - $metakey");
+			$stationMatches{lc($thisMatchStr)} = $metakey;
+		}
+	}
+}
+
+my $dumped;
+	
+$dumped = Dumper \%stationMatches;
+# print $dumped;
+# main::DEBUGLOG && $log->is_debug && $log->debug("Initial stationMatches $dumped");
+
 
 # $meta holds info about station that is playing - note - the structure is returned to others parts of LMS where particular field names are expected
 # If you add fields to this then you probably will have to preserve it in parseContent
 my $meta = {
     dummy => { title => '' },
-	fipradio => { busy => 0, title => 'FIP', icon => $icons->{fipradio}, cover => $icons->{fipradio}, ttl => 0, endTime => 0 },
-	fipbordeaux => { busy => 0, title => 'FIP Bordeaux', icon => $icons->{fipbordeaux}, cover => $icons->{fipbordeaux}, ttl => 0, endTime => 0 },
-	fipnantes => { busy => 0, title => 'FIP Nantes', icon => $icons->{fipnantes}, cover => $icons->{fipnantes}, ttl => 0, endTime => 0 },
-	fipstrasbourg => { busy => 0, title => 'FIP Strasbourg', icon => $icons->{fipstrasbourg}, cover => $icons->{fipstrasbourg}, ttl => 0, endTime => 0 },
-	fiprock => { busy => 0, title => 'FIP Rock', icon => $icons->{fiprock}, cover => $icons->{fiprock}, ttl => 0, endTime => 0 },
-	fipjazz => { busy => 0, title => 'FIP Jazz', icon => $icons->{fipjazz}, cover => $icons->{fipjazz}, ttl => 0, endTime => 0 },
-	fipgroove => { busy => 0, title => 'FIP Groove', icon => $icons->{fipgroove}, cover => $icons->{fipgroove}, ttl => 0, endTime => 0 },
-	fipmonde => { busy => 0, title => 'FIP Monde', icon => $icons->{fipmonde}, cover => $icons->{fipmonde}, ttl => 0, endTime => 0 },
-	fipnouveau => { busy => 0, title => 'Tout nouveau, tout Fip', icon => $icons->{fipnouveau}, cover => $icons->{fipnouveau}, ttl => 0, endTime => 0 },
-	fipreggae => { busy => 0, title => 'FIP Reggae', icon => $icons->{fipreggae}, cover => $icons->{fipreggae}, ttl => 0, endTime => 0 },
-	fipelectro => { busy => 0, title => 'FIP Electro', icon => $icons->{fipelectro}, cover => $icons->{fipelectro}, ttl => 0, endTime => 0 },
-	fipmetal => { busy => 0, title => 'FIP L\'été Metal', icon => $icons->{fipmetal}, cover => $icons->{fipmetal}, ttl => 0, endTime => 0 },
-	fmclassiqueeasy => { busy => 0, title => 'France Musique Classique Easy', icon => $icons->{fmclassiqueeasy}, cover => $icons->{fmclassiqueeasy}, ttl => 0, endTime => 0 },
-	fmclassiqueplus => { busy => 0, title => 'France Musique Classique Plus', icon => $icons->{fmclassiqueplus}, cover => $icons->{fmclassiqueplus}, ttl => 0, endTime => 0 },
-	fmconcertsradiofrance => { busy => 0, title => 'France Musique Concerts', icon => $icons->{fmconcertsradiofrance}, cover => $icons->{fmconcertsradiofrance}, ttl => 0, endTime => 0 },
-	fmlajazz => { busy => 0, title => 'France Musique La Jazz', icon => $icons->{fmlajazz}, cover => $icons->{fmlajazz}, ttl => 0, endTime => 0 },
-	fmlacontemporaine => { busy => 0, title => 'France Musique La Contemporaine', icon => $icons->{fmlacontemporaine}, cover => $icons->{fmlacontemporaine}, ttl => 0, endTime => 0 },
-	fmocoramonde => { busy => 0, title => 'France Musique Ocora Monde', icon => $icons->{fmocoramonde}, cover => $icons->{fmocoramonde}, ttl => 0, endTime => 0 },
-	fmevenementielle => { busy => 0, title => 'France Musique B.O.', icon => $icons->{fmevenementielle}, cover => $icons->{fmevenementielle}, ttl => 0, endTime => 0 },
-	mouv => { busy => 0, title => 'Mouv\'', icon => $icons->{mouv}, cover => $icons->{mouv}, ttl => 0, endTime => 0 },
-	mouvxtra => { busy => 0, title => 'Mouv\' Xtra', icon => $icons->{mouvxtra}, cover => $icons->{mouvxtra}, ttl => 0, endTime => 0 },
-	mouvclassics => { busy => 0, title => 'Mouv\' Classics', icon => $icons->{mouvclassics}, cover => $icons->{mouvclassics}, ttl => 0, endTime => 0 },
-	mouvdancehall => { busy => 0, title => 'Mouv\' Dancehall', icon => $icons->{mouvdancehall}, cover => $icons->{mouvdancehall}, ttl => 0, endTime => 0 },
-	mouvrnb => { busy => 0, title => 'Mouv\' R\'N\'B', icon => $icons->{mouvrnb}, cover => $icons->{mouvrnb}, ttl => 0, endTime => 0 },
-	mouvrapus => { busy => 0, title => 'Mouv\' RAP US', icon => $icons->{mouvrapus}, cover => $icons->{mouvrapus}, ttl => 0, endTime => 0 },
-	mouvrapfr => { busy => 0, title => 'Mouv\' RAP Français', icon => $icons->{mouvrapfr}, cover => $icons->{mouvrapfr}, ttl => 0, endTime => 0 },
-	mouv100mix => { busy => 0, title => 'Mouv\' 100\% Mix', icon => $icons->{mouv100mix}, cover => $icons->{mouv100mix}, ttl => 0, endTime => 0 },
-	franceinter => { busy => 0, title => 'France Inter', icon => $icons->{franceinter}, cover => $icons->{franceinter}, ttl => 0, endTime => 0 },
-	franceinfo => { busy => 0, title => 'France Info', icon => $icons->{franceinfo}, cover => $icons->{franceinfo}, ttl => 0, endTime => 0 },
-	francemusique => { busy => 0, title => 'France Musique', icon => $icons->{francemusique}, cover => $icons->{francemusique}, ttl => 0, endTime => 0 },
-	franceculture => { busy => 0, title => 'France Culture', icon => $icons->{franceculture}, cover => $icons->{franceculture}, ttl => 0, endTime => 0 },
+	# fipradio => { busy => 0, title => 'FIP', icon => $icons->{fipradio}, cover => $icons->{fipradio}, ttl => 0, endTime => 0 },
+	# fipbordeaux => { busy => 0, title => 'FIP Bordeaux', icon => $icons->{fipbordeaux}, cover => $icons->{fipbordeaux}, ttl => 0, endTime => 0 },
+	# fipnantes => { busy => 0, title => 'FIP Nantes', icon => $icons->{fipnantes}, cover => $icons->{fipnantes}, ttl => 0, endTime => 0 },
+	# fipstrasbourg => { busy => 0, title => 'FIP Strasbourg', icon => $icons->{fipstrasbourg}, cover => $icons->{fipstrasbourg}, ttl => 0, endTime => 0 },
+	# fiprock => { busy => 0, title => 'FIP Rock', icon => $icons->{fiprock}, cover => $icons->{fiprock}, ttl => 0, endTime => 0 },
+	# fipjazz => { busy => 0, title => 'FIP Jazz', icon => $icons->{fipjazz}, cover => $icons->{fipjazz}, ttl => 0, endTime => 0 },
+	# fipgroove => { busy => 0, title => 'FIP Groove', icon => $icons->{fipgroove}, cover => $icons->{fipgroove}, ttl => 0, endTime => 0 },
+	# fipmonde => { busy => 0, title => 'FIP Monde', icon => $icons->{fipmonde}, cover => $icons->{fipmonde}, ttl => 0, endTime => 0 },
+	# fipnouveau => { busy => 0, title => 'Tout nouveau, tout Fip', icon => $icons->{fipnouveau}, cover => $icons->{fipnouveau}, ttl => 0, endTime => 0 },
+	# fipreggae => { busy => 0, title => 'FIP Reggae', icon => $icons->{fipreggae}, cover => $icons->{fipreggae}, ttl => 0, endTime => 0 },
+	# fipelectro => { busy => 0, title => 'FIP Electro', icon => $icons->{fipelectro}, cover => $icons->{fipelectro}, ttl => 0, endTime => 0 },
+	# fipmetal => { busy => 0, title => 'FIP L\'été Metal', icon => $icons->{fipmetal}, cover => $icons->{fipmetal}, ttl => 0, endTime => 0 },
+	# fmclassiqueeasy => { busy => 0, title => 'France Musique Classique Easy', icon => $icons->{fmclassiqueeasy}, cover => $icons->{fmclassiqueeasy}, ttl => 0, endTime => 0 },
+	# fmclassiqueplus => { busy => 0, title => 'France Musique Classique Plus', icon => $icons->{fmclassiqueplus}, cover => $icons->{fmclassiqueplus}, ttl => 0, endTime => 0 },
+	# fmconcertsradiofrance => { busy => 0, title => 'France Musique Concerts', icon => $icons->{fmconcertsradiofrance}, cover => $icons->{fmconcertsradiofrance}, ttl => 0, endTime => 0 },
+	# fmlajazz => { busy => 0, title => 'France Musique La Jazz', icon => $icons->{fmlajazz}, cover => $icons->{fmlajazz}, ttl => 0, endTime => 0 },
+	# fmlacontemporaine => { busy => 0, title => 'France Musique La Contemporaine', icon => $icons->{fmlacontemporaine}, cover => $icons->{fmlacontemporaine}, ttl => 0, endTime => 0 },
+	# fmocoramonde => { busy => 0, title => 'France Musique Ocora Monde', icon => $icons->{fmocoramonde}, cover => $icons->{fmocoramonde}, ttl => 0, endTime => 0 },
+	# fmevenementielle => { busy => 0, title => 'France Musique B.O.', icon => $icons->{fmevenementielle}, cover => $icons->{fmevenementielle}, ttl => 0, endTime => 0 },
+	# mouv => { busy => 0, title => 'Mouv\'', icon => $icons->{mouv}, cover => $icons->{mouv}, ttl => 0, endTime => 0 },
+	# mouvxtra => { busy => 0, title => 'Mouv\' Xtra', icon => $icons->{mouvxtra}, cover => $icons->{mouvxtra}, ttl => 0, endTime => 0 },
+	# mouvclassics => { busy => 0, title => 'Mouv\' Classics', icon => $icons->{mouvclassics}, cover => $icons->{mouvclassics}, ttl => 0, endTime => 0 },
+	# mouvdancehall => { busy => 0, title => 'Mouv\' Dancehall', icon => $icons->{mouvdancehall}, cover => $icons->{mouvdancehall}, ttl => 0, endTime => 0 },
+	# mouvrnb => { busy => 0, title => 'Mouv\' R\'N\'B', icon => $icons->{mouvrnb}, cover => $icons->{mouvrnb}, ttl => 0, endTime => 0 },
+	# mouvrapus => { busy => 0, title => 'Mouv\' RAP US', icon => $icons->{mouvrapus}, cover => $icons->{mouvrapus}, ttl => 0, endTime => 0 },
+	# mouvrapfr => { busy => 0, title => 'Mouv\' RAP Français', icon => $icons->{mouvrapfr}, cover => $icons->{mouvrapfr}, ttl => 0, endTime => 0 },
+	# mouv100mix => { busy => 0, title => 'Mouv\' 100\% Mix', icon => $icons->{mouv100mix}, cover => $icons->{mouv100mix}, ttl => 0, endTime => 0 },
+	# franceinter => { busy => 0, title => 'France Inter', icon => $icons->{franceinter}, cover => $icons->{franceinter}, ttl => 0, endTime => 0 },
+	# franceinfo => { busy => 0, title => 'France Info', icon => $icons->{franceinfo}, cover => $icons->{franceinfo}, ttl => 0, endTime => 0 },
+	# francemusique => { busy => 0, title => 'France Musique', icon => $icons->{francemusique}, cover => $icons->{francemusique}, ttl => 0, endTime => 0 },
+	# franceculture => { busy => 0, title => 'France Culture', icon => $icons->{franceculture}, cover => $icons->{franceculture}, ttl => 0, endTime => 0 },
 };
+
+foreach my $metakey (keys(%$stationSet)){
+	# Inialise the meta table
+	# main::DEBUGLOG && $log->is_debug && $log->debug("Initialising meta - $metakey");
+	$meta->{$metakey} = { busy => 0, title => $stationSet->{'fullname'}, icon => $icons->{$metakey}, cover => $icons->{$metakey}, ttl => 0, endTime => 0 },
+}
 
 
 # calculatedPlaying holds information about what is calculated as playing now
@@ -299,34 +449,127 @@ my $meta = {
 my $calculatedPlaying = {
 };
 
-foreach my $metakey (keys(%$meta)){
+foreach my $metakey (keys(%$stationSet)){
 	# Inialise the calculatedPlaying table
 	# main::DEBUGLOG && $log->is_debug && $log->debug("Initialising calculatedPlaying - $metakey");
-	$calculatedPlaying->{$metakey} = { progtitle => '', progstart => 0, progend => 0, proglth => 0, proglogo => '', progsynopsis => '', progsubtitle => '',
+	$calculatedPlaying->{$metakey} = { progtitle => '', progstart => 0, progend => 0, proglth => 0, proglogo => '', progsynopsis => '', progsubtitle => '', progid => '',
 			  songtitle => '', songartist => '', songalbum => '', songstart => 0, songend => 0, songlth => 0, songcover => '', songlabel => '', songyear => '' };
 }
+
+# $coverFieldsArr contains the names of the fields from the source that hold the song cover / album art
+# Ordered list with the highest priority (typical highest resolution) first
+
+# Radio France cover, visual, coverUuid, visualBanner
+
+my @coverFieldsArr = ( "cover", "visual", "coverUuid", "visualBanner" );
+
 
 # $myClientInfo holds data about the clients/devices using this plugin - used to schedule next poll
 my $myClientInfo = {};
 
+# Customise this if necessary per plugin
 # FIP via TuneIn
 # http://opml.radiotime.com/Tune.ashx?id=s15200&formats=aac,ogg,mp3,wmpro,wma,wmvoice&partnerId=16
 # Played via direct URL like ... http://direct.fipradio.fr/live/fip-midfi.mp3 which redirects to something with same suffix
 # Match group 1 is used to find station id in %stationMatches - "fip-" last because it is a substring of others
 # local variables used to help keep the lines shorter and easier to read
-my $tmpstr1 = 'fipbordeaux-|fipnantes-|fipstrasbourg-|fip-webradio1\.|fiprock-|fip-webradio2\.|fipjazz-|fip-webradio3\.|fipgroove-|fip-webradio4\.|fipworld-|fip-webradio5\.|';
-my $tmpstr2 = 'fipnouveautes-|fip-webradio6\.|fipreggae-|fip-webradio8\.|fipelectro-|fip-webradio7\.|fipmetal-|fip-|';
-my $tmpstr3 = 'francemusiqueeasyclassique-|francemusiqueclassiqueplus-|francemusiqueconcertsradiofrance-|francemusiquelajazz-|francemusiquelacontemporaine-|francemusiqueocoramonde-|francemusiquelevenementielle-|';
-my $tmpstr4 = 'mouv-|mouvxtra-|mouvclassics-|mouvdancehall-|mouvrnb-|mouvrapus-|mouvrapfr-|mouv100p100mix-|franceinter-';
+#my $tmpstr1 = 'fipbordeaux-|fipnantes-|fipstrasbourg-|fip-webradio1\.|fiprock-|fip-webradio2\.|fipjazz-|fip-webradio3\.|fipgroove-|fip-webradio4\.|fipworld-|fip-webradio5\.|';
+#my $tmpstr2 = 'fipnouveautes-|fip-webradio6\.|fipreggae-|fip-webradio8\.|fipelectro-|fip-webradio7\.|fipmetal-|fip-|';
+#my $tmpstr3 = 'francemusiqueeasyclassique-|francemusiqueclassiqueplus-|francemusiqueconcertsradiofrance-|francemusiquelajazz-|francemusiquelacontemporaine-|francemusiqueocoramonde-|francemusiquelevenementielle-|';
+#my $tmpstr4 = 'mouv-|mouvxtra-|mouvclassics-|mouvdancehall-|mouvrnb-|mouvrapus-|mouvrapfr-|mouv100p100mix-|franceinter-';
+#my $tmpstr1 = '';
+my $tmpstr1 = '';
+foreach my $metakey (keys(%$stationSet)){
+	if ( exists $stationSet->{$metakey}->{'match1'} && $stationSet->{$metakey}->{'match1'} ne '' &&
+	     $stationSet->{$metakey}->{'notexcludable'} ){
+		# match1 given so add it in (if not already there)
+		if ( $tmpstr1 ne '' ) { $tmpstr1 .='|';	}	# Add in an OR divider if was not empty so that list is built correctly
+		$tmpstr1 .= $stationSet->{$metakey}->{'match1'};
+	}
+}
+
+#Add in 2nd set ... could be for a 2nd match set or for items that need to be after the first set for the matching logic to work
+foreach my $metakey (keys(%$stationSet)){
+	if ( exists $stationSet->{$metakey}->{'match2'} && $stationSet->{$metakey}->{'match2'} ne '' &&
+	     $stationSet->{$metakey}->{'notexcludable'} ){
+		# match2 given so add it in (if not already there)
+		if ( $tmpstr1 ne '' ) { $tmpstr1 .='|';	}	# Add in an OR divider if was not empty so that list is built correctly
+		$tmpstr1 .= $stationSet->{$metakey}->{'match2'};
+	}
+}
+# main::DEBUGLOG && $log->is_debug && $log->debug("Constructed match2 string1 $tmpstr1");
+# If extras are required then put them in here (start with |)
+my $tmpstr2 = '';
+my $tmpstr3 = '';
+my $tmpstr4 = '';
+
+my $tmptunein1 = '';
+foreach my $metakey (keys(%$stationSet)){
+	if ( exists $stationSet->{$metakey}->{'tuneinid'} && $stationSet->{$metakey}->{'tuneinid'} ne '' &&
+	     $stationSet->{$metakey}->{'notexcludable'} ){
+		# match1 given so add it in (if not already there)
+		if ( $tmptunein1 ne '' ) { $tmptunein1 .='|';	}	# Add in an OR divider if was not empty so that list is built correctly
+		$tmptunein1 .= 'id='.$stationSet->{$metakey}->{'tuneinid'}.'&';
+	}
+}
+# main::DEBUGLOG && $log->is_debug && $log->debug("Constructed tunein1 string1 $tmptunein1");
+# If extras are required then put them in here (start with |)
+my $tmptunein2 = '';
+my $tmptunein3 = '';
+my $tmptunein4 = '';
+
 
 my @urlRegexSet = ( qr/(?:\/)($tmpstr1$tmpstr2$tmpstr3$tmpstr4)(?:midfi|lofi|hifi|)/i,
 # Selected via TuneIn base|bordeaux|nantes|strasbourg|rock|jazz|groove|monde|nouveau|reggae|electro|metal FranceMusique - ClassicEasy|ClassicPlus|Concerts|Contemporaine|OcoraMonde|ClassiqueKids/Evenementielle/B.O. - Mouv|classics|dancehall|rnb|rapus|rapfr|100mix
-					qr/(?:radiotime|tunein)\.com.*(id=s15200&|id=s50706&|id=s50770&|id=s111944&|id=s262528&|id=s262533&|id=s262537&|id=s262538&|id=s262540&|id=s293090&|id=s293089&|id=s308366&|id=s283174&|id=s283175&|id=s283176&|id=s283178&|id=s283179&|id=s283177&|id=s285660|id=s306575&|id=s6597&|id=s244069&|id=s307693&|id=s307694&|id=s307695&|id=s307696&|id=s307697&)/i,
+					# qr/(?:radiotime|tunein)\.com.*(id=s15200&|id=s50706&|id=s50770&|id=s111944&|id=s262528&|id=s262533&|id=s262537&|id=s262538&|id=s262540&|id=s293090&|id=s293089&|id=s308366&|id=s283174&|id=s283175&|id=s283176&|id=s283178&|id=s283179&|id=s283177&|id=s285660|id=s306575&|id=s6597&|id=s244069&|id=s307693&|id=s307694&|id=s307695&|id=s307696&|id=s307697&)/i,
+					qr/(?:radiotime|tunein)\.com.*($tmptunein1$tmptunein2$tmptunein3$tmptunein4)/i,
 );
-# 2nd pair is for non-song-based stations so that they can be optionally disabled
-my @urlRegexNonSongSet = ( qr/(?:\/)(franceinter-|franceinfo-|francemusique-|franceculture-)(?:midfi|lofi|hifi|)/i,
+# 2nd set is for non-song-based stations so that they can be optionally disabled
+$tmpstr1 = '';
+foreach my $metakey (keys(%$stationSet)){
+	if ( exists $stationSet->{$metakey}->{'match1'} && $stationSet->{$metakey}->{'match1'} ne '' &&
+	     ( (not exists $stationSet->{$metakey}->{'notexcludable'}) || $stationSet->{$metakey}->{'notexcludable'} == false )){
+		# match1 given so add it in (if not already there)
+		if ( $tmpstr1 ne '' ) { $tmpstr1 .='|';	}	# Add in an OR divider if was not empty so that list is built correctly
+		$tmpstr1 .= $stationSet->{$metakey}->{'match1'};
+	}
+}
+# main::DEBUGLOG && $log->is_debug && $log->debug("Constructed excludable match2 string1 $tmpstr1");
+# If extras are required then put them in here (start with |)
+$tmpstr2 = '';
+$tmpstr3 = '';
+$tmpstr4 = '';
+
+# Add in 2nd set ... could be for a 2nd match set or for items that need to be after the first set for the matching logic to work
+foreach my $metakey (keys(%$stationSet)){
+	if ( exists $stationSet->{$metakey}->{'match2'} && $stationSet->{$metakey}->{'match2'} ne '' &&
+	     ( (not exists $stationSet->{$metakey}->{'notexcludable'}) || $stationSet->{$metakey}->{'notexcludable'} == false )){
+		# match1 given so add it in (if not already there)
+		if ( $tmpstr1 ne '' ) { $tmpstr1 .='|';	}	# Add in an OR divider if was not empty so that list is built correctly
+		$tmpstr1 .= $stationSet->{$metakey}->{'match2'};
+	}
+}
+
+$tmptunein1 = '';
+foreach my $metakey (keys(%$stationSet)){
+	if ( exists $stationSet->{$metakey}->{'tuneinid'} && $stationSet->{$metakey}->{'tuneinid'} ne '' &&
+	     ( (not exists $stationSet->{$metakey}->{'notexcludable'}) || $stationSet->{$metakey}->{'notexcludable'} == false )){
+		# match1 given so add it in (if not already there)
+		if ( $tmptunein1 ne '' ) { $tmptunein1 .='|';	}	# Add in an OR divider if was not empty so that list is built correctly
+		$tmptunein1 .= 'id='.$stationSet->{$metakey}->{'tuneinid'}.'&';
+	}
+}
+# main::DEBUGLOG && $log->is_debug && $log->debug("Constructed excludable tunein1 string1 $tmptunein1");
+# If extras are required then put them in here (start with |)
+$tmptunein2 = '';
+$tmptunein3 = '';
+$tmptunein4 = '';
+
+my @urlRegexNonSongSet = ( #qr/(?:\/)(franceinter-|franceinfo-|francemusique-|franceculture-)(?:midfi|lofi|hifi|)/i,
+			    qr/(?:\/)($tmpstr1$tmpstr2$tmpstr3$tmpstr4)(?:midfi|lofi|hifi|)/i,
 							# Selected via TuneIn franceinter|franceinfo|francemusique|franceculture
-						   qr/(?:radiotime|tunein)\.com.*(id=s24875&|id=s9948&|id=s15198&|id=s2442&)/i,
+			   #qr/(?:radiotime|tunein)\.com.*(id=s24875&|id=s9948&|id=s15198&|id=s2442&)/i,
+			   qr/(?:radiotime|tunein)\.com.*($tmptunein1$tmptunein2$tmptunein3$tmptunein4)/i,
 );
 
 sub getDisplayName {
@@ -417,7 +660,7 @@ sub parser {
 	main::DEBUGLOG && $log->is_debug && $log->debug("parser - for client ".$client->name." Been called to parse data: $metadata with URL $url");
 	
 	# Get the current preferences just in case they were changed recently
-	$prefs = preferences('plugin.radiofrance');
+	$prefs = preferences('plugin.'.$pluginName);
 	
 	if ($url ne '') {
 		
@@ -461,14 +704,28 @@ sub matchStation {
 			if (defined($1)) {$testUrl = $1};
 		}
 		
-		# main::DEBUGLOG && $log->is_debug && $log->debug("Try $1");
+		# main::DEBUGLOG && $log->is_debug && $log->debug("Try $testUrl");
 		
 		if ($testUrl && exists $stationMatches{$testUrl}) {
 			# Found a match so take this station
 			$station = $stationMatches{$testUrl};
-			
+			# main::DEBUGLOG && $log->is_debug && $log->debug("matchStation - Found $station via urlRegexSet");
 			last;	# Found it
+		} else {
+			# Check against the list of broadcaster ids (this check is for stations that are not in the excludable set)
+			foreach my $stationkey (keys(%$stationSet)){
+				# main::DEBUGLOG && $log->is_debug && $log->debug("matchStation - checking $stationkey in stationSet");
+				if ( ref($stationSet->{$stationkey}) eq "HASH" &&
+				     exists $stationSet->{$stationkey}->{notexcludable} && $stationSet->{$stationkey}->{notexcludable} &&
+				     exists $stationSet->{$stationkey}->{extramatch} && $stationSet->{$stationkey}->{extramatch} eq $testUrl ) {
+					$station = $stationkey;
+					main::DEBUGLOG && $log->is_debug && $log->debug("matchStation - Found $station in stationSet");
+					last;	# Found it
+				}
+			}
 		}
+		
+		last if $station ne '';
 	}
 
 	if ($station eq '' && !$prefs->get('excludesomestations')){
@@ -490,9 +747,22 @@ sub matchStation {
 			if ($testUrl && exists $stationMatches{$testUrl}) {
 				# Found a match so take this station
 				$station = $stationMatches{$testUrl};
-				
+				# main::DEBUGLOG && $log->is_debug && $log->debug("matchStation - Found $station via urlRegexNonSongSet");
 				last;	# Found it
+			} else {
+				# Check against the list of broadcaster ids (this check is for all stations including those are in the excludable set)
+				foreach my $stationkey (keys(%$stationSet)){
+					# main::DEBUGLOG && $log->is_debug && $log->debug("matchStation - checking $stationkey in stationSet");
+					if ( ref($stationSet->{$stationkey}) eq "HASH" &&
+					     exists $stationSet->{$stationkey}->{extramatch} && $stationSet->{$stationkey}->{extramatch} eq $testUrl ) {
+						$station = $stationkey;
+						main::DEBUGLOG && $log->is_debug && $log->debug("matchStation - Found $station in full stationSet");
+						last;	# Found it
+					}
+				}
 			}
+			
+			last if $station ne '';
 		}
 	}
 
@@ -522,18 +792,67 @@ sub getcover {
 	my ( $playinginfo, $station, $info ) = @_;
 	
 	my $thisartwork = '';
-	
-	if ( exists $playinginfo->{'cover'} && $playinginfo->{'cover'} ne '' ){
-		$thisartwork = $playinginfo->{'cover'};
-	} elsif ( exists $playinginfo->{'visual'} && $playinginfo->{'visual'} ne '' ){
-		$thisartwork = $playinginfo->{'visual'};
-	} elsif (exists $playinginfo->{'coverUuid'} && $playinginfo->{'coverUuid'} ne ''){
-		$thisartwork = $playinginfo->{'coverUuid'};
-	} elsif (exists $playinginfo->{'visualBanner'} && $playinginfo->{'visualBanner'} ne ''){
-		$thisartwork = $playinginfo->{'visualBanner'};
+
+	foreach my $fieldName ( @coverFieldsArr ) {
+		# Loop through the list of field names and take first (if any) match
+		if ( exists $playinginfo->{$fieldName} && defined($playinginfo->{$fieldName}) && $playinginfo->{$fieldName} ne '' ){
+			$thisartwork = $playinginfo->{$fieldName};
+			last;
+		}
 	}
-	
-	if (($thisartwork ne '' && ($thisartwork !~ /$iconsIgnoreRegex->{$station}/ || $thisartwork eq $info->{icon})) &&
+
+	# Now check to see if there are any size issues and replace if possible
+	# Note - this uses attributes found in ABC Australia data so would need changing for other sources
+	if ( exists $playinginfo->{width} && defined($playinginfo->{width}) &&
+	     exists $playinginfo->{height} && defined($playinginfo->{height}) &&
+	     ($playinginfo->{width} > maxImgWidth || $playinginfo->{height} > maxImgHeight) ){
+		# Default image is too big so try for another one
+		# main::DEBUGLOG && $log->is_debug && $log->debug("$station - getcover - image too big");
+		
+		if ( exists $playinginfo->{sizes} && ref($playinginfo->{sizes}) eq "ARRAY" ){
+			# Array of sizes given so loop through trying to find the largest inside the limit
+			my @images = @{ $playinginfo->{sizes} };
+			
+			# Set to minimum that willing to accept
+			my $bestFitWidth = 64;
+			my $bestFitHeight = 64;
+			my $bestFitArtwork = '';
+			
+			foreach my $thisImage ( @images ) {
+				if ( exists $thisImage->{width} && defined($thisImage->{width}) &&
+				     exists $thisImage->{height} && defined($thisImage->{height}) &&
+				     ($thisImage->{width} <= maxImgWidth && $thisImage->{height} <= maxImgHeight) ){
+					# Candidate ... see if bigger than one we already have (if any)
+					if ( $thisImage->{width} > $bestFitWidth && $thisImage->{height} > $bestFitHeight ){
+						# Take it (for now)
+						$bestFitWidth = $thisImage->{width};
+						$bestFitHeight = $thisImage->{height};
+						foreach my $fieldName ( @coverFieldsArr ) {
+							# Loop through the list of field names and take first (if any) match
+							if ( exists $thisImage->{$fieldName} && defined($thisImage->{$fieldName}) && $thisImage->{$fieldName} ne '' ){
+								$bestFitArtwork = $thisImage->{$fieldName};
+								last;
+							}
+						}
+					}
+				}
+			}
+			
+			if ( $bestFitArtwork ne '' ){
+				# Found one
+				$thisartwork = $bestFitArtwork;
+				# main::DEBUGLOG && $log->is_debug && $log->debug("$station - getcover - replaced with smaller image ($bestFitWidth x $bestFitHeight) $thisartwork");
+			}
+		}
+	}
+
+	if ( $thisartwork =~ m/\{.*\}/ ){
+		# Keyword replacement
+		$thisartwork =~ s/\$?\{width\}/${\maxImgWidth}/g;
+		$thisartwork =~ s/\$?\{ratio\}/1x1/g;
+	}
+
+	if (($thisartwork ne '' && ($thisartwork !~ /$iconsIgnoreRegex/ || ($info ne '' && $thisartwork eq $info->{icon}))) &&
 	     ($thisartwork =~ /^https?:/i) || $thisartwork =~ /^.*-.*-.*-.*-/){
 	     # There is something, it is not excluded, it is not the station logo and (it appears to be a URL or an id)
 	     # example id "visual": "38fab9df-91cc-4e50-adc4-eb3a9f2a017a",
@@ -555,7 +874,7 @@ sub getmeta {
 	
 	my ( $client, $url, $fromProvider) = @_;
 	
-	$prefs = preferences('plugin.radiofrance');
+	$prefs = preferences('plugin.'.$pluginName);
 	
 	my $deviceName = "";
 
@@ -575,7 +894,8 @@ sub getmeta {
 		my $hiResTime = getLocalAdjustedTime;
 		
 		# don't query the remote meta data every time we're called
-		if ( $client->isPlaying && (!$meta->{$station} || $meta->{$station}->{ttl} <= $hiResTime) && !$meta->{$station}->{busy} ) {
+		if ( $client->isPlaying && (!$meta->{$station} || $meta->{$station}->{ttl} <= $hiResTime) &&
+		     !$meta->{$station}->{busy} && $urls->{$station} ne '' ) {
 			
 			$meta->{$station}->{busy} = $meta->{$station}->{busy}+1;
 
@@ -594,7 +914,7 @@ sub getmeta {
 			main::DEBUGLOG && $log->is_debug && $log->debug("$station - Fetching data from $sourceUrl");
 			$http->get($sourceUrl);
 			
-			if (exists $urls->{$station."_alt"}){
+			if (exists $urls->{$station."_alt"} && $urls->{$station."_alt"} ne ''){
 				# If there is an alternate URL - do an additional fetch for it
 				
 				my $httpalt = Slim::Networking::SimpleAsyncHTTP->new(
@@ -613,6 +933,9 @@ sub getmeta {
 				$httpalt->get($sourceUrl);
 			}
 
+		} elsif ( $urls->{$station} eq '' ){
+			# No song info URL ... so maybe needs to be kicked off with a programme fetch
+			&getprogrammemeta( $client, $url, false, $progListPerStation );
 		}
 
 		# Get information about what this device is playing
@@ -660,6 +983,179 @@ sub getmeta {
 }
 
 
+sub getprogrammemeta {
+	
+	my ( $client, $url, $fromProvider, $perStation ) = @_;
+	
+	$prefs = preferences('plugin.'.$pluginName);
+
+	my $whenFetchedKey = 'allservices';
+	my $deviceName = "";
+
+	my $station = &matchStation( $url );
+	
+	if (!$client->name){
+		# No name present - this is odd
+		main::DEBUGLOG && $log->is_debug && $log->debug("$station - getprogrammemeta - no device name");
+	} else {
+		$deviceName = $client->name;
+	};
+	
+
+	if ($station ne '' && exists $urls->{'radiofranceprogdata'} && $urls->{'radiofranceprogdata'} ne ''){
+		# main::DEBUGLOG && $log->is_debug && $log->debug("$station - Client: $deviceName - IsPlaying=".$client->isPlaying." getmeta called with URL $url");
+
+		my $hiResTime = getLocalAdjustedTime;
+		
+		# don't query the remote meta data every time we're called
+		if ( $perStation ) { $whenFetchedKey = $station; }
+
+		if ( not exists $programmeMeta->{'whenfetched'}->{$whenFetchedKey} ){
+			$programmeMeta->{'whenfetched'}->{$whenFetchedKey} = '';
+		}
+		
+		
+		if ( $client->isPlaying && ($programmeMeta->{'whenfetched'}->{$whenFetchedKey} eq '' || $programmeMeta->{'whenfetched'}->{$whenFetchedKey} <= $hiResTime - 60)) {
+			
+			$programmeMeta->{'whenfetched'}->{$whenFetchedKey} = $hiResTime;	# Say we have fetched it now - even if it fails
+
+			my $http = Slim::Networking::SimpleAsyncHTTP->new(
+				sub {
+					$meta->{ $station } = parseContent($client, shift->content, $station, $url);
+				},
+				sub {
+					# in case of an error, don't try too hard...
+					$meta->{ $station } = parseContent($client, '', $station, $url);
+				},
+			);
+			
+			my $sourceUrl = $urls->{'radiofranceprogdata'};
+
+			if ( $sourceUrl =~ /\$\{.*\}/ ){
+				# Special string to be replaced
+				$sourceUrl =~ s/\$\{stationid\}/$stationSet->{$station}->{'stationid'}/g;
+				$sourceUrl =~ s/\$\{region\}/$stationSet->{$station}->{'region'}/g;
+			}
+			
+			main::DEBUGLOG && $log->is_debug && $log->debug("$station - Fetching programme data from $sourceUrl");
+			$http->get($sourceUrl);
+			
+			if (exists $urls->{'radiofranceprogdata'."_alt"} && $urls->{'radiofranceprogdata'."_alt"} ne ''){
+				# If there is an alternate URL - do an additional fetch for it
+				
+				
+				my $httpalt = Slim::Networking::SimpleAsyncHTTP->new(
+					sub {
+						$meta->{ $station } = parseContent($client, shift->content, $station, $url);
+					},
+					sub {
+						# in case of an error, don't try too hard...
+						$meta->{ $station } = parseContent($client, '', $station, $url);
+					},
+				);
+			
+				$sourceUrl = ($urls->{'radiofranceprogdata'."_alt"});
+				
+				if ( $sourceUrl =~ /\$\{.*\}/ ){
+					$sourceUrl =~ s/\$\{stationid\}/$stationSet->{$station}->{'stationid'}/g;
+					$sourceUrl =~ s/\$\{region\}/$stationSet->{$station}->{'region'}/g;
+					$sourceUrl =~ s/\$\{stationid\}/$calculatedPlaying->{$station}->{'progid'}/g;
+				}
+
+				main::DEBUGLOG && $log->is_debug && $log->debug("$station - Fetching alternate programme data from $sourceUrl");
+				$httpalt->get($sourceUrl);
+			}
+
+		}
+
+		# No need to set up a timer for this as the song fetch will trigger a new one if needed
+		return $meta->{$station};
+
+	} else {
+		# Not fatal since might not have been configured
+		# main::INFOLOG && $log->is_info && $log->info("progdata provider not found $station for URL $url");
+		return $meta->{'dummy'}
+	}
+}
+
+
+sub getbroadcastermeta {
+	
+	my ( $client, $url, $fromProvider) = @_;
+	
+	$prefs = preferences('plugin.'.$pluginName);
+	
+	my $deviceName = "";
+
+	my $station = &matchStation( $url );
+	
+	if (!$client->name){
+		# No name present - this is odd
+		main::DEBUGLOG && $log->is_debug && $log->debug("$station - getbroadcastermeta - no device name");
+	} else {
+		$deviceName = $client->name;
+	};
+	
+
+	if ($station ne '' && exists $urls->{'radiofrancebroadcasterdata'} && $urls->{'radiofrancebroadcasterdata'} ne ''){
+		# main::DEBUGLOG && $log->is_debug && $log->debug("$station - Client: $deviceName - IsPlaying=".$client->isPlaying." getbroadcastermeta called with URL $url");
+
+		my $hiResTime = getLocalAdjustedTime;
+		
+		# don't query the remote meta data every time we're called
+		if ( $client->isPlaying && ($programmeMeta->{'whenfetchedbroadcaster'} eq '' || $programmeMeta->{'whenfetchedbroadcaster'} <= $hiResTime - (24*60*60))) {
+			
+			main::DEBUGLOG && $log->is_debug && $log->debug("$station - Broadcaster data last fetched $programmeMeta->{'whenfetchedbroadcaster'}");
+			
+			$programmeMeta->{'whenfetchedbroadcaster'} = $hiResTime;	# Say we have fetched it now - even if it fails
+
+			my $http = Slim::Networking::SimpleAsyncHTTP->new(
+				sub {
+					$meta->{ $station } = parseContent($client, shift->content, $station, $url);
+				},
+				sub {
+					# in case of an error, don't try too hard...
+					$meta->{ $station } = parseContent($client, '', $station, $url);
+				},
+			);
+			
+			my $sourceUrl = $urls->{'radiofrancebroadcasterdata'};
+			
+			main::DEBUGLOG && $log->is_debug && $log->debug("$station - Fetching broadcaster data from $sourceUrl");
+			$http->get($sourceUrl);
+			
+			if (exists $urls->{'radiofrancebroadcasterdata'."_alt"}){
+				# If there is an alternate URL - do an additional fetch for it
+				
+				my $httpalt = Slim::Networking::SimpleAsyncHTTP->new(
+					sub {
+						$meta->{ $station } = parseContent($client, shift->content, $station, $url);
+					},
+					sub {
+						# in case of an error, don't try too hard...
+						$meta->{ $station } = parseContent($client, '', $station, $url);
+					},
+				);
+			
+				$sourceUrl = ($urls->{'radiofrancebroadcasterdata'."_alt"});
+				main::DEBUGLOG && $log->is_debug && $log->debug("$station - Fetching alternate broadcaster data from $sourceUrl");
+				$httpalt->get($sourceUrl);
+			}
+
+		}
+
+		# No need to set up a timer for this as the song fetch will trigger a new one if needed
+		return $meta->{$station};
+
+	} else {
+		# Station not found - or not configured
+		if ($station eq '' ){
+			main::INFOLOG && $log->is_info && $log->info("provider not found station for URL $url");
+		}
+		return $meta->{'dummy'}
+	}
+}
+
 sub timerReturn {
 	my ( $client, $url ) = @_;
 	
@@ -684,7 +1180,20 @@ sub timerReturn {
 		# Given stream URL not the same now as we had before implies listener has changed station
 		main::DEBUGLOG && $log->is_debug && $log->debug("$station - timerReturn - client ".$client->name." stream changed to $playingURL");
 		# However, it might be an alternative that leads to the same station (redirects) or another in the family so check
-		$station = &matchStation( $playingURL );
+		my $newStation = &matchStation( $playingURL );
+		
+		if ( $station ne $newStation ){
+			# Station changed ... so wipe out "old" info ... note ... this timer could have happened after new details were
+			# collected for the new stream so this could result in a 2nd push of same info (not an issue)
+			# Done because update not sent if new station is simulcast of previous one but loading the new one caused new base info to be loaded by LMS/TuneIn
+			main::DEBUGLOG && $log->is_debug && $log->debug("$station - timerReturn - Client: $deviceName - station changed from $station to $newStation");
+			undef $meta->{$station}->{title};
+			undef $meta->{$station}->{artist};
+			$station = $newStation;
+		}
+
+		$url = $playingURL;
+		main::DEBUGLOG && $log->is_debug && $log->debug("timerReturn - Now set to - $station");
 	} else {
 		# If streamUrl not found then something is odd - so report it to help determine issue
 		if (!$song || !$song->streamUrl || !$song->streamUrl ne ""){
@@ -713,6 +1222,11 @@ sub timerReturn {
 			Slim::Utils::Timers::killTimers($client, \&timerReturn);
 			$myClientInfo->{$deviceName}->{nextpoll} = 0;
 			$myClientInfo->{$deviceName}->{cover} = "";	# Wipe out the cover info to try to make old cover disappear on resume where no artwork present in fetched data
+			# Remove artist and title to force a new push if same details collected on resume
+			undef $myClientInfo->{$deviceName}->{title};
+			undef $myClientInfo->{$deviceName}->{artist};
+			undef $meta->{$station}->{title};
+			undef $meta->{$station}->{artist};
 		}
 	} else {
 		main::DEBUGLOG && $log->is_debug && $log->debug("$station - timerReturn - Just ignored timer expiry because wrong or no station");
@@ -741,6 +1255,7 @@ sub parseContent {
 	
 	my $deviceName = "";
 	my $dataType = '';
+	my $thismeta;
 	
 	if (!$client->name){
 		# No name present - this is odd
@@ -1399,6 +1914,7 @@ sub parseContent {
 			# Sample response from Mouv' additional stations (from Feb-2019)
 			# Note - do not know where the sha1 ref for the persistent search comes from but seems to be consistent across stations
 			# https://www.mouv.fr/latest/api/graphql?operationName=NowWebradio&variables=%7B%22stationId%22%3A605%7D&extensions=%7B%22persistedQuery%22%3A%7B%22version%22%3A1%2C%22sha256Hash%22%3A%22a6f39630b68ceb8e56340a4478e099d05c9f5fc1959eaccdfb81e2ce295d82a5%22%7D%7D
+			# Note 2: returned data seen with 0 for start_time/end_time ... so treat that as Now
 			# {
 			  # "data": {
 				# "now": {
@@ -1428,8 +1944,9 @@ sub parseContent {
 			# main::DEBUGLOG && $log->is_debug && $log->debug("Now: $hiResTime Start: ".$thisitem->{'start_time'}." End: $thisitem->{'end_time'}");
 			
 			if ( exists $thisItem->{'start_time'} && $thisItem->{'start_time'} <= $hiResTime && 
-				exists $thisItem->{'end_time'} && $thisItem->{'end_time'} >= $hiResTime ) {
-				# This is in range
+				exists $thisItem->{'end_time'} && 
+				( $thisItem->{'end_time'} >= $hiResTime || $thisItem->{'end_time'} == 0 )) {
+				# This is in range (special case with 0 end_time)
 				# main::DEBUGLOG && $log->is_debug && $log->debug("Current playing $thisItem");
 				if ((!exists $thisItem->{'title'} || !defined($thisItem->{'title'}) || $thisItem->{'title'} eq '') && 
 					exists $thisItem->{'subtitle'} && defined($thisItem->{'subtitle'}) && $thisItem->{'subtitle'} ne '' )
@@ -1473,7 +1990,7 @@ sub parseContent {
 				
 				my $expectedEndTime = $hiResTime;
 				
-				if (exists $nowplaying->{'end_time'}){ $expectedEndTime = $nowplaying->{'end_time'}};
+				if ( exists $nowplaying->{'end_time'} && $nowplaying->{'end_time'} > 0 ){ $expectedEndTime = $nowplaying->{'end_time'}};
 				
 				if ( $expectedEndTime > $hiResTime-30 ){
 					# If looks like this should not have already finished (allowing for some leniency for clock drift and other delays) then get the details
@@ -1536,12 +2053,16 @@ sub parseContent {
 	# Beyond this point should not use information from the data that was pulled because the code below is generic
 	$dumped = Dumper $calculatedPlaying->{$station};
 	# print $dumped;
-	main::DEBUGLOG && $log->is_debug && $log->debug("$station - Info collected $dumped");
+	main::DEBUGLOG && $log->is_debug && $log->debug("$station - now $hiResTime data collected $dumped");
 
+	# Hack to get around multiple stations playing the same show at the same time but info not being updated when switching to the 2nd
+	# because it is the same base data
+	$info->{stationid} = $station;
+	
 	# Note - the calculatedPlaying info contains historic data from previous runs
 	# Calculate from what is thought to be playing (programme or song) and put it into $info (which reflects what we want to show)
 	if ($calculatedPlaying->{$station}->{'songtitle'} ne '' && $calculatedPlaying->{$station}->{'songartist'} ne '' &&
-	    $calculatedPlaying->{$station}->{'songstart'} < $hiResTime && $calculatedPlaying->{$station}->{'songend'} >= $hiResTime ) {
+	    $calculatedPlaying->{$station}->{'songstart'} < $hiResTime && $calculatedPlaying->{$station}->{'songend'} >= $hiResTime - cacheTTL ) {
 		# We appear to know about a song
 		$info->{title} = $calculatedPlaying->{$station}->{'songtitle'};
 		$info->{remote_title} = $info->{title};
@@ -1570,7 +2091,7 @@ sub parseContent {
 		main::DEBUGLOG && $log->is_debug && $log->debug("$station - song found");
 		
 	} elsif ($calculatedPlaying->{$station}->{'progtitle'} ne '' &&
-	         $calculatedPlaying->{$station}->{'progstart'} < $hiResTime && $calculatedPlaying->{$station}->{'progend'} >= $hiResTime ) {
+	         $calculatedPlaying->{$station}->{'progstart'} < $hiResTime && $calculatedPlaying->{$station}->{'progend'} >= $hiResTime + cacheTTL ) {
 		# We appear to know about a programme
 		
 		my $thisTitle;
@@ -1583,9 +2104,11 @@ sub parseContent {
 		if ( $thisSubtitle ne '' ){
 			# Subtitle (segment) given so add to title or put in album (synopsis) if no synopsis given
 			if ($calculatedPlaying->{$station}->{'progsynopsis'} ne '' || $prefs->get('excludesynopsis')){
-				# There is a synopsis or we should not use the album field then append subtitle to title (if not the same)
-				if ($thisTitle !~ /^\Q$thisSubtitle\E/i ){
+				# There is a synopsis or we should not use the album field then append subtitle to title (if title not at the start of the subtitle)
+				if ($thisSubtitle !~ /^\Q$thisTitle\E/i ){
 					$thisTitle = $thisTitle." / ".$thisSubtitle;
+				} else {
+					$thisTitle = $thisSubtitle;
 				}
 			} else {
 				$info->{album} = $thisSubtitle;
@@ -1621,6 +2144,10 @@ sub parseContent {
 		}
 		
 		main::DEBUGLOG && $log->is_debug && $log->debug("$station - programme found");
+	} else {
+		main::DEBUGLOG && $log->is_debug && $log->debug("$station - Not found something for $hiResTime");
+		# Did not find a programme so maybe we need a fresh set of programme data
+		$thismeta = &getprogrammemeta( $client, $url, false, $progListPerStation );
 	}
 
 	$dumped = Dumper $info;
@@ -1692,7 +2219,16 @@ sub parseContent {
 				$info->{year} = $meta->{$station}->{year};
 				main::DEBUGLOG && $log->is_debug && $log->debug("$station - Client: $deviceName - Preserving previously collected year: ".$info->{year});
 			}
-		} 
+			
+			if ( defined $meta->{$station}->{stationid} && $meta->{$station}->{stationid} ne $info->{stationid} ){
+				# Details appear to be the same but it is a different station ... simulcast
+				# so say data has changed to try to force an update
+				main::DEBUGLOG && $log->is_debug && $log->debug("$station - Client: $deviceName - Station changed from $meta->{$station}->{stationid}");
+				$dataChanged = true;
+			}
+		} else {
+			main::DEBUGLOG && $log->is_debug && $log->debug("$station - Client: $deviceName - appears to be the same as before");
+		}
 	}
 	
 	if (!defined $info->{title} || !defined $info->{artist}){
@@ -1770,12 +2306,13 @@ sub updateClient {
 	my $thiscover = '';
 	my $thisicon = '';
 	my $thisalbum = '';
+	my $thisstationid = '';
 		
 	if (defined $info->{artist}) {$thisartist = $info->{artist}};
 	if (defined $info->{title}) {$thistitle = $info->{title}};
 	if (defined $info->{cover}) {$thiscover = $info->{cover}};
 	if (defined $info->{icon}) {$thisicon = $info->{icon}};
-	if (defined $info->{album}) {$thisalbum = $info->{album}};
+	if (defined $info->{stationid}) {$thisicon = $info->{stationid}};
 
 	if ($prefs->get('appendlabel') && defined $info->{album} && defined $info->{label} && $info->{label} ne ''){
 		# Been asked to add the record label name to album name if present
@@ -1795,6 +2332,8 @@ sub updateClient {
 			$info->{album} .= $appendStr;
 		}
 	}
+	# Set $thisalbum here because it might have been modified above
+	if (defined $info->{album}) {$thisalbum = $info->{album}};
 	
 	my $deviceName = "";
 	
@@ -1809,13 +2348,16 @@ sub updateClient {
 	my $lasttitle = '';
 	my $lastcover = '';
 	my $lastalbum = '';
+	my $laststationid = '';
 	if (defined $myClientInfo->{$deviceName}->{lastartist}) {$lastartist = $myClientInfo->{$deviceName}->{lastartist}};
 	if (defined $myClientInfo->{$deviceName}->{lasttitle}) {$lasttitle = $myClientInfo->{$deviceName}->{lasttitle}};
 	if (defined $myClientInfo->{$deviceName}->{lastcover}) {$lastcover = $myClientInfo->{$deviceName}->{lastcover}};
 	if (defined $myClientInfo->{$deviceName}->{lastalbum}) {$lastalbum = $myClientInfo->{$deviceName}->{lastalbum}};
+	if (defined $myClientInfo->{$deviceName}->{stationid}) {$laststationid = $myClientInfo->{$deviceName}->{stationid}};
 	
 	if ($song && ($lastartist ne $thisartist || $lasttitle ne $thistitle ||
-		      $lastcover ne $thiscover || $lastalbum ne $thisalbum)) {
+		      $lastcover ne $thiscover || $lastalbum ne $thisalbum ||
+		      $laststationid ne $thisstationid ) ) {
 			main::DEBUGLOG && $log->is_debug && $log->debug("Client: $deviceName - pushing Now Playing $thisartist - $thistitle");
 			# main::DEBUGLOG && $log->is_debug && $log->debug("Client: $deviceName - pushing cover: $thiscover icon: $thisicon");
 			if (defined $info->{startTime}){main::DEBUGLOG && $log->is_debug && $log->debug("Client: $deviceName - Now: $hiResTime Scheduled start: $info->{startTime}")};
@@ -1880,11 +2422,41 @@ sub deviceTimer {
 
 	my ( $client, $info, $url ) = @_;
 	
+	my $dumped;
+	
 	my $hiResTime = getLocalAdjustedTime+$prefs->get('streamdelay');	# Use real time (not adjusted) because will be setting real timer
 	
 	my $station = &matchStation( $url );
+	my $originalStation = $station;
 	
 	my $deviceName = "";
+
+	my $song = $client->playingSong();
+	
+	# Warning .... "song" is huge so do not leave this enabled unless doing very specific debugging
+	#$dumped =  Dumper $song;
+	#$dumped =~ s/\n {44}/\n/g;   
+	#main::DEBUGLOG && $log->is_debug && $log->debug("$station - deviceTime - Song:$dumped");
+	
+	my $playingURL = "";
+	if ( $song && $song->streamUrl ) { $playingURL = $song->streamUrl}
+
+	if ($playingURL ne $url){
+		# Given stream URL not the same now as we had before implies listener has changed station
+		# main::DEBUGLOG && $log->is_debug && $log->debug("$station - deviceTimer - client ".$client->name." stream changed to $playingURL from $url");
+		# However, it might be an alternative that leads to the same station (redirects) or another in the family so check
+		$station = &matchStation( $playingURL );
+		$url = $playingURL;
+		if ($originalStation ne $station) {
+			main::DEBUGLOG && $log->is_debug && $log->debug("deviceTimer - Now set to - $station - was $originalStation - URL $playingURL");
+		}
+	} else {
+		# If streamUrl not found then something is odd - so report it to help determine issue
+		if (!$song || !$song->streamUrl || !$song->streamUrl ne ""){
+			# Odd?
+			main::DEBUGLOG && $log->is_debug && $log->debug("$station - deviceTimer - Client: $deviceName - streamUrl issue $playingURL");
+		}
+	}
 	
 	if (!$client->name){
 		# No name present - this is odd
@@ -1920,7 +2492,8 @@ sub deviceTimer {
 		# If there is already a poll outstanding then skip setting up a new one
 		$nextPollInt = $deviceNextPoll-$hiResTime+$prefs->get('streamdelay');
 		# main::DEBUGLOG && $log->is_debug && $log->debug("$station - Client: $deviceName - Skipping setting poll $nextPoll - already one ".$myClientInfo->{$deviceName}->{nextpoll}." Due in: $nextPollInt");
-	} else {
+	} elsif ( $station ne '' && $client->isPlaying ) {
+		# If there is still a station and still playing then set up new timer
 		main::DEBUGLOG && $log->is_debug && $log->debug("$station - Client: $deviceName - Setting next poll to fire at $nextPoll Interval: $nextPollInt");
 
 		Slim::Utils::Timers::killTimers($client, \&timerReturn);

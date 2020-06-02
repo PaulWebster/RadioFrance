@@ -1,6 +1,6 @@
 PLUGIN_RADIOFRANCE
-	EN	Radio France track information
-	FR	Radio France - info sur le morceau de musique
+	EN	Radio France track and programme information
+	FR	Radio France - info sur le programme et le morceau de musique
 	
 PLUGIN_RADIOFRANCE_DESC
 	EN	Display artist, track, cover and, optionally, album name for Radio France (http://www.radiofrance.fr) stations - France Musique (web radios only), FIP (including webradios) and Mouv'
