@@ -7,20 +7,20 @@
 	
 	<plugins>
 		
-		<plugin name="RadioFrance" version="0.1.28" minTarget="7.5" maxTarget="*">
+		<plugin name="RadioFrance" version="0.1.29" minTarget="7.5" maxTarget="*">
 			<title lang="EN">Radio France</title>
-			<desc  lang="EN">Radio France track information</desc>
-			<desc  lang="FR">Radio France - info sur le morceau de musique</desc>
+			<desc  lang="EN">Radio France programme and track information</desc>
+			<desc  lang="FR">Radio France - info sur le programme et morceau de musique</desc>
 			<creator>Paul Webster</creator>
 			<email></email>
 			<changes lang="EN">
-				- Use "album" field for programme segment name
+				- Mouv stations sometimes have 0 start/end time
 			</changes>
 			<changes lang="FR">
-				- Utilisez le champ "album" pour le nom du segment de programme
+				- Les stations de Mouv ont parfois 0 pour le début/fin
 			</changes>
-			<url>https://paulwebster.github.io/RadioFrance/RadioFrance-0.1.28.zip</url>
-			<sha>7c82d8b0f790e91e6f40113e96156c5a57fec657</sha>
+			<url>https://paulwebster.github.io/RadioFrance/RadioFrance-0.1.29.zip</url>
+			<sha>c5f8b178d3c94a89b2625913c924b4b0f42afe9b</sha>
 		</plugin>
 
 	</plugins>
