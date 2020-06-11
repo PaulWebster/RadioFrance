@@ -83,37 +83,37 @@ my $progInfoSuffix = '';
 my $progDetailsURL = '';
 
 my $stationSet = { # Take extra care if pasting in from external spreadsheet ... station name with single quote, TuneIn ids, longer match1 for duplicate
-	fipradio => { fullname => 'FIP', stationid => '', region => '', tuneinid => 's15200', notexcludable => true, match1 => '', match2 => 'fip-' },
-	fipbordeaux => { fullname => 'FIP Bordeaux', stationid => '', region => '', tuneinid => 's50706', notexcludable => true, match1 => 'fipbordeaux-', match2 => '' },
-	fipnantes => { fullname => 'FIP Nantes', stationid => '', region => '', tuneinid => 's50770', notexcludable => true, match1 => 'fipnantes-', match2 => '' },
-	fipstrasbourg => { fullname => 'FIP Strasbourg', stationid => '', region => '', tuneinid => 's111944', notexcludable => true, match1 => 'fipstrasbourg-', match2 => '' },
-	fiprock => { fullname => 'FIP Rock', stationid => '', region => '', tuneinid => 's262528', notexcludable => true, match1 => 'fip-webradio1.', match2 => 'fiprock-' },
-	fipjazz => { fullname => 'FIP Jazz', stationid => '', region => '', tuneinid => 's262533', notexcludable => true, match1 => 'fip-webradio2.', match2 => 'fipjazz-' },
-	fipgroove => { fullname => 'FIP Groove', stationid => '', region => '', tuneinid => 's262537', notexcludable => true, match1 => 'fip-webradio3.', match2 => 'fipgroove-' },
-	fipmonde => { fullname => 'FIP Monde', stationid => '', region => '', tuneinid => 's262538', notexcludable => true, match1 => 'fip-webradio4.', match2 => 'fipworld-' },
-	fipnouveau => { fullname => 'Tout nouveau, tout Fip', stationid => '', region => '', tuneinid => 's262540', notexcludable => true, match1 => 'fip-webradio5.', match2 => 'fipnouveautes-' },
-	fipreggae => { fullname => 'FIP Reggae', stationid => '', region => '', tuneinid => 's293090', notexcludable => true, match1 => 'fip-webradio6.', match2 => 'fipreggae-' },
-	fipelectro => { fullname => 'FIP Electro', stationid => '', region => '', tuneinid => 's293089', notexcludable => true, match1 => 'fip-webradio8.', match2 => 'fipelectro-' },
-	fipmetal => { fullname => 'FIP L\'été Metal', stationid => '', region => '', tuneinid => 's308366', notexcludable => true, match1 => 'fip-webradio7.', match2 => 'fipmetal-' },
-	fmclassiqueeasy => { fullname => 'France Musique Classique Easy', stationid => '', region => '', tuneinid => 's283174', notexcludable => true, match1 => 'francemusiqueeasyclassique-', match2 => '' },
-	fmclassiqueplus => { fullname => 'France Musique Classique Plus', stationid => '', region => '', tuneinid => 's283175', notexcludable => true, match1 => 'francemusiqueclassiqueplus-', match2 => '' },
-	fmconcertsradiofrance => { fullname => 'France Musique Concerts', stationid => '', region => '', tuneinid => 's283176', notexcludable => true, match1 => 'francemusiqueconcertsradiofrance-', match2 => '' },
-	fmlajazz => { fullname => 'France Musique La Jazz', stationid => '', region => '', tuneinid => 's283178', notexcludable => true, match1 => 'francemusiquelajazz-', match2 => '' },
-	fmlacontemporaine => { fullname => 'France Musique La Contemporaine', stationid => '', region => '', tuneinid => 's283179', notexcludable => true, match1 => 'francemusiquelacontemporaine-', match2 => '' },
-	fmocoramonde => { fullname => 'France Musique Ocora Monde', stationid => '', region => '', tuneinid => 's283177', notexcludable => true, match1 => 'francemusiqueocoramonde-', match2 => '' },
-	fmevenementielle => { fullname => 'France Musique B.O.', stationid => '', region => '', tuneinid => 's285660&|id=s306575', notexcludable => true, match1 => 'francemusiquelevenementielle-', match2 => '' }, # Special case ... 2 TuneIn Id
-	mouv => { fullname => 'Mouv\'', stationid => '', region => '', tuneinid => 's6597', notexcludable => true, match1 => 'mouv-', match2 => '' },
-	mouvxtra => { fullname => 'Mouv\' Xtra', stationid => '', region => '', tuneinid => '', notexcludable => true, match1 => 'mouvxtra-', match2 => '' },
-	mouvclassics => { fullname => 'Mouv\' Classics', stationid => '', region => '', tuneinid => 's307696', notexcludable => true, match1 => 'mouvclassics-', match2 => '' },
-	mouvdancehall => { fullname => 'Mouv\' Dancehall', stationid => '', region => '', tuneinid => 's307697', notexcludable => true, match1 => 'mouvdancehall-', match2 => '' },
-	mouvrnb => { fullname => 'Mouv\' R\'N\'B', stationid => '', region => '', tuneinid => 's307695', notexcludable => true, match1 => 'mouvrnb-', match2 => '' },
-	mouvrapus => { fullname => 'Mouv\' RAP US', stationid => '', region => '', tuneinid => 's307694', notexcludable => true, match1 => 'mouvrapus-', match2 => '' },
-	mouvrapfr => { fullname => 'Mouv\' RAP Français', stationid => '', region => '', tuneinid => 's307693', notexcludable => true, match1 => 'mouvrapfr-', match2 => '' },
-	mouv100mix => { fullname => 'Mouv\' 100\% Mix', stationid => '', region => '', tuneinid => 's244069', notexcludable => true, match1 => 'mouv100p100mix-', match2 => '' },
-	franceinter => { fullname => 'France Inter', stationid => '', region => '', tuneinid => 's24875', notexcludable => false, match1 => 'franceinter-', match2 => '' },
-	franceinfo => { fullname => 'France Info', stationid => '', region => '', tuneinid => 's9948', notexcludable => false, match1 => 'franceinfo-', match2 => '' },
-	francemusique => { fullname => 'France Musique', stationid => '', region => '', tuneinid => 's15198', notexcludable => false, match1 => 'francemusique-', match2 => '' },
-	franceculture => { fullname => 'France Culture', stationid => '', region => '', tuneinid => 's2442', notexcludable => false, match1 => 'franceculture-', match2 => '' },
+	fipradio => { fullname => 'FIP', stationid => '', region => '', tuneinid => 's15200', notexcludable => true, match1 => '', match2 => 'fip' },
+	fipbordeaux => { fullname => 'FIP Bordeaux', stationid => '', region => '', tuneinid => 's50706', notexcludable => true, match1 => 'fipbordeaux', match2 => '' },
+	fipnantes => { fullname => 'FIP Nantes', stationid => '', region => '', tuneinid => 's50770', notexcludable => true, match1 => 'fipnantes', match2 => '' },
+	fipstrasbourg => { fullname => 'FIP Strasbourg', stationid => '', region => '', tuneinid => 's111944', notexcludable => true, match1 => 'fipstrasbourg', match2 => '' },
+	fiprock => { fullname => 'FIP Rock', stationid => '', region => '', tuneinid => 's262528', notexcludable => true, match1 => 'fip-webradio1.', match2 => 'fiprock' },
+	fipjazz => { fullname => 'FIP Jazz', stationid => '', region => '', tuneinid => 's262533', notexcludable => true, match1 => 'fip-webradio2.', match2 => 'fipjazz' },
+	fipgroove => { fullname => 'FIP Groove', stationid => '', region => '', tuneinid => 's262537', notexcludable => true, match1 => 'fip-webradio3.', match2 => 'fipgroove' },
+	fipmonde => { fullname => 'FIP Monde', stationid => '', region => '', tuneinid => 's262538', notexcludable => true, match1 => 'fip-webradio4.', match2 => 'fipworld' },
+	fipnouveau => { fullname => 'Tout nouveau, tout Fip', stationid => '', region => '', tuneinid => 's262540', notexcludable => true, match1 => 'fip-webradio5.', match2 => 'fipnouveautes' },
+	fipreggae => { fullname => 'FIP Reggae', stationid => '', region => '', tuneinid => 's293090', notexcludable => true, match1 => 'fip-webradio6.', match2 => 'fipreggae' },
+	fipelectro => { fullname => 'FIP Electro', stationid => '', region => '', tuneinid => 's293089', notexcludable => true, match1 => 'fip-webradio8.', match2 => 'fipelectro' },
+	fipmetal => { fullname => 'FIP L\'été Metal', stationid => '', region => '', tuneinid => 's308366', notexcludable => true, match1 => 'fip-webradio7.', match2 => 'fipmetal' },
+	fmclassiqueeasy => { fullname => 'France Musique Classique Easy', stationid => '', region => '', tuneinid => 's283174', notexcludable => true, match1 => 'francemusiqueeasyclassique', match2 => '' },
+	fmclassiqueplus => { fullname => 'France Musique Classique Plus', stationid => '', region => '', tuneinid => 's283175', notexcludable => true, match1 => 'francemusiqueclassiqueplus', match2 => '' },
+	fmconcertsradiofrance => { fullname => 'France Musique Concerts', stationid => '', region => '', tuneinid => 's283176', notexcludable => true, match1 => 'francemusiqueconcertsradiofrance', match2 => '' },
+	fmlajazz => { fullname => 'France Musique La Jazz', stationid => '', region => '', tuneinid => 's283178', notexcludable => true, match1 => 'francemusiquelajazz', match2 => '' },
+	fmlacontemporaine => { fullname => 'France Musique La Contemporaine', stationid => '', region => '', tuneinid => 's283179', notexcludable => true, match1 => 'francemusiquelacontemporaine', match2 => '' },
+	fmocoramonde => { fullname => 'France Musique Ocora Monde', stationid => '', region => '', tuneinid => 's283177', notexcludable => true, match1 => 'francemusiqueocoramonde', match2 => '' },
+	fmevenementielle => { fullname => 'France Musique B.O.', stationid => '', region => '', tuneinid => 's285660&|id=s306575', notexcludable => true, match1 => 'francemusiquelevenementielle', match2 => '' }, # Special case ... 2 TuneIn Id
+	mouv => { fullname => 'Mouv\'', stationid => '', region => '', tuneinid => 's6597', notexcludable => true, match1 => 'mouv', match2 => '' },
+	mouvxtra => { fullname => 'Mouv\' Xtra', stationid => '', region => '', tuneinid => '', notexcludable => true, match1 => 'mouvxtra', match2 => '' },
+	mouvclassics => { fullname => 'Mouv\' Classics', stationid => '', region => '', tuneinid => 's307696', notexcludable => true, match1 => 'mouvclassics', match2 => '' },
+	mouvdancehall => { fullname => 'Mouv\' Dancehall', stationid => '', region => '', tuneinid => 's307697', notexcludable => true, match1 => 'mouvdancehall', match2 => '' },
+	mouvrnb => { fullname => 'Mouv\' R\'N\'B', stationid => '', region => '', tuneinid => 's307695', notexcludable => true, match1 => 'mouvrnb', match2 => '' },
+	mouvrapus => { fullname => 'Mouv\' RAP US', stationid => '', region => '', tuneinid => 's307694', notexcludable => true, match1 => 'mouvrapus', match2 => '' },
+	mouvrapfr => { fullname => 'Mouv\' RAP Français', stationid => '', region => '', tuneinid => 's307693', notexcludable => true, match1 => 'mouvrapfr', match2 => '' },
+	mouv100mix => { fullname => 'Mouv\' 100\% Mix', stationid => '', region => '', tuneinid => 's244069', notexcludable => true, match1 => 'mouv100p100mix', match2 => '' },
+	franceinter => { fullname => 'France Inter', stationid => '', region => '', tuneinid => 's24875', notexcludable => false, match1 => 'franceinter', match2 => '' },
+	franceinfo => { fullname => 'France Info', stationid => '', region => '', tuneinid => 's9948', notexcludable => false, match1 => 'franceinfo', match2 => '' },
+	francemusique => { fullname => 'France Musique', stationid => '', region => '', tuneinid => 's15198', notexcludable => false, match1 => 'francemusique', match2 => '' },
+	franceculture => { fullname => 'France Culture', stationid => '', region => '', tuneinid => 's2442', notexcludable => false, match1 => 'franceculture', match2 => '' },
 };
 
 
@@ -519,7 +519,7 @@ my $tmptunein3 = '';
 my $tmptunein4 = '';
 
 
-my @urlRegexSet = ( qr/(?:\/)($tmpstr1$tmpstr2$tmpstr3$tmpstr4)(?:midfi|lofi|hifi|)/i,
+my @urlRegexSet = ( qr/(?:\/)($tmpstr1$tmpstr2$tmpstr3$tmpstr4)[_\-](?:midfi|lofi|hifi|)/i,
 # Selected via TuneIn base|bordeaux|nantes|strasbourg|rock|jazz|groove|monde|nouveau|reggae|electro|metal FranceMusique - ClassicEasy|ClassicPlus|Concerts|Contemporaine|OcoraMonde|ClassiqueKids/Evenementielle/B.O. - Mouv|classics|dancehall|rnb|rapus|rapfr|100mix
 					# qr/(?:radiotime|tunein)\.com.*(id=s15200&|id=s50706&|id=s50770&|id=s111944&|id=s262528&|id=s262533&|id=s262537&|id=s262538&|id=s262540&|id=s293090&|id=s293089&|id=s308366&|id=s283174&|id=s283175&|id=s283176&|id=s283178&|id=s283179&|id=s283177&|id=s285660|id=s306575&|id=s6597&|id=s244069&|id=s307693&|id=s307694&|id=s307695&|id=s307696&|id=s307697&)/i,
 					qr/(?:radiotime|tunein)\.com.*($tmptunein1$tmptunein2$tmptunein3$tmptunein4)/i,
@@ -566,7 +566,7 @@ $tmptunein3 = '';
 $tmptunein4 = '';
 
 my @urlRegexNonSongSet = ( #qr/(?:\/)(franceinter-|franceinfo-|francemusique-|franceculture-)(?:midfi|lofi|hifi|)/i,
-			    qr/(?:\/)($tmpstr1$tmpstr2$tmpstr3$tmpstr4)(?:midfi|lofi|hifi|)/i,
+			    qr/(?:\/)($tmpstr1$tmpstr2$tmpstr3$tmpstr4)[_\-](?:midfi|lofi|hifi|)/i,
 							# Selected via TuneIn franceinter|franceinfo|francemusique|franceculture
 			   #qr/(?:radiotime|tunein)\.com.*(id=s24875&|id=s9948&|id=s15198&|id=s2442&)/i,
 			   qr/(?:radiotime|tunein)\.com.*($tmptunein1$tmptunein2$tmptunein3$tmptunein4)/i,

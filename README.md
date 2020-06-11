@@ -64,6 +64,10 @@ Note: Radio France does not always provide track information in a timely manner 
 - If things are not working then enable Debug logging for this plugin via LMS/Settings/Advanced/Logging interface, repeat the problem and then check the LMS logs.  
 
 ## Version History
+**0.1.30 11-Jun-2020**
+
+Match the HLS stream URLs
+
 **0.1.29 06-Jun-2020**
 
 Mouv stations sometimes have 0 start/end time
