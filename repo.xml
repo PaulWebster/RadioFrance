@@ -1,29 +1,24 @@
 <?xml version="1.0"?>
 <extensions>
-	
 	<details>
 		<title lang="EN">Paul Webster's Squeezecenter Plugin for Radio France</title>
 	</details>
-	
 	<plugins>
-		
-		<plugin name="RadioFrance" version="0.1.29" minTarget="7.5" maxTarget="*">
+		<plugin name="RadioFrance" version="0.1.30" minTarget="7.5" maxTarget="*">
 			<title lang="EN">Radio France</title>
 			<desc  lang="EN">Radio France programme and track information</desc>
 			<desc  lang="FR">Radio France - info sur le programme et morceau de musique</desc>
 			<creator>Paul Webster</creator>
 			<email></email>
 			<changes lang="EN">
-				- Mouv stations sometimes have 0 start/end time
+				- Match the HLS stream URLs
 			</changes>
 			<changes lang="FR">
-				- Les stations de Mouv ont parfois 0 pour le début/fin
+				- Faire correspondre les URL de flux HLS
 			</changes>
-			<url>https://paulwebster.github.io/RadioFrance/RadioFrance-0.1.29.zip</url>
-			<sha>c5f8b178d3c94a89b2625913c924b4b0f42afe9b</sha>
+			<url>https://paulwebster.github.io/RadioFrance/RadioFrance-0.1.30.zip</url>
+			<sha>ac2811f4ca4d4f0d1ddb17fa5c34c2b217fc91ef</sha>
 		</plugin>
-
 	</plugins>
-	
 </extensions>
 
