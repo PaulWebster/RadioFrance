@@ -518,8 +518,12 @@ my $tmptunein2 = '';
 my $tmptunein3 = '';
 my $tmptunein4 = '';
 
+# Example stream URLs
+# https://icecast.radiofrance.fr/fip-midfi.mp3
+# https://stream.radiofrance.fr/fip/fip.m3u8
+# hlsplays://stream.radiofrance.fr/fip/fip_hifi.m3u8 (special PlayHLS)
 
-my @urlRegexSet = ( qr/(?:\/)($tmpstr1$tmpstr2$tmpstr3$tmpstr4)[_\-](?:midfi|lofi|hifi|)/i,
+my @urlRegexSet = ( qr/(?:\/)($tmpstr1$tmpstr2$tmpstr3$tmpstr4)[_\-.](?:midfi|lofi|hifi|)/i,
 # Selected via TuneIn base|bordeaux|nantes|strasbourg|rock|jazz|groove|monde|nouveau|reggae|electro|metal FranceMusique - ClassicEasy|ClassicPlus|Concerts|Contemporaine|OcoraMonde|ClassiqueKids/Evenementielle/B.O. - Mouv|classics|dancehall|rnb|rapus|rapfr|100mix
 					# qr/(?:radiotime|tunein)\.com.*(id=s15200&|id=s50706&|id=s50770&|id=s111944&|id=s262528&|id=s262533&|id=s262537&|id=s262538&|id=s262540&|id=s293090&|id=s293089&|id=s308366&|id=s283174&|id=s283175&|id=s283176&|id=s283178&|id=s283179&|id=s283177&|id=s285660|id=s306575&|id=s6597&|id=s244069&|id=s307693&|id=s307694&|id=s307695&|id=s307696&|id=s307697&)/i,
 					qr/(?:radiotime|tunein)\.com.*($tmptunein1$tmptunein2$tmptunein3$tmptunein4)/i,
@@ -566,7 +570,7 @@ $tmptunein3 = '';
 $tmptunein4 = '';
 
 my @urlRegexNonSongSet = ( #qr/(?:\/)(franceinter-|franceinfo-|francemusique-|franceculture-)(?:midfi|lofi|hifi|)/i,
-			    qr/(?:\/)($tmpstr1$tmpstr2$tmpstr3$tmpstr4)[_\-](?:midfi|lofi|hifi|)/i,
+			    qr/(?:\/)($tmpstr1$tmpstr2$tmpstr3$tmpstr4)[_\-.](?:midfi|lofi|hifi|)/i,
 							# Selected via TuneIn franceinter|franceinfo|francemusique|franceculture
 			   #qr/(?:radiotime|tunein)\.com.*(id=s24875&|id=s9948&|id=s15198&|id=s2442&)/i,
 			   qr/(?:radiotime|tunein)\.com.*($tmptunein1$tmptunein2$tmptunein3$tmptunein4)/i,
