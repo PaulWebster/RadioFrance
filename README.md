@@ -36,7 +36,7 @@ Once installed and LMS has been restarted you should play one of the supported r
 If the plugin is working then you should see artist details appear around the time that a new track or programme starts.
 
 **FIP stations supported:**
-FIP (including regional variants while they last), FIP ... Rock, Jazz, Groove, Monde, Electro, Reggae, Tout Nouveau plus L'été Metal.
+FIP (including regional variants while they last), FIP ... Rock, Jazz, Groove, Monde, Electro, Reggae, Tout Nouveau, Pop plus L'été Metal (last one might not exist any more).
 
 **France Musique stations supported:**
 Classique Easy
@@ -64,6 +64,10 @@ Note: Radio France does not always provide track information in a timely manner 
 - If things are not working then enable Debug logging for this plugin via LMS/Settings/Advanced/Logging interface, repeat the problem and then check the LMS logs.  
 
 ## Version History
+**0.1.32 17-Jun-2020**
+
+Add FIP Pop
+
 **0.1.31 12-Jun-2020**
 
 Match the HLS stream URLs faster

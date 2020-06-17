@@ -68,7 +68,8 @@ use constant maxImgHeight => 340;
 my $imageapiprefix = 'https://api.radiofrance.fr/v1/services/embed/image/';
 my $imageapisuffix = '?preset=400x400';
 
-my $type3suffix = 'extensions=%7B%22persistedQuery%22%3A%7B%22version%22%3A1%2C%22sha256Hash%22%3A%22a6f39630b68ceb8e56340a4478e099d05c9f5fc1959eaccdfb81e2ce295d82a5%22%7D%7D';
+my $type3suffix    = '&extensions=%7B%22persistedQuery%22%3A%7B%22version%22%3A1%2C%22sha256Hash%22%3A%22a6f39630b68ceb8e56340a4478e099d05c9f5fc1959eaccdfb81e2ce295d82a5%22%7D%7D';
+my $type3suffixfip = '&extensions=%7B%22persistedQuery%22%3A%7B%22version%22%3A1%2C%22sha256Hash%22%3A%22151ca055b816d28507dae07f9c036c02031ed54e18defc3d16feee2551e9a731%22%7D%7D';
 
 # URL for remote web site that is polled to get the information about what is playing
 #
@@ -95,6 +96,7 @@ my $stationSet = { # Take extra care if pasting in from external spreadsheet ...
 	fipreggae => { fullname => 'FIP Reggae', stationid => '', region => '', tuneinid => 's293090', notexcludable => true, match1 => 'fip-webradio6.', match2 => 'fipreggae' },
 	fipelectro => { fullname => 'FIP Electro', stationid => '', region => '', tuneinid => 's293089', notexcludable => true, match1 => 'fip-webradio8.', match2 => 'fipelectro' },
 	fipmetal => { fullname => 'FIP L\'été Metal', stationid => '', region => '', tuneinid => 's308366', notexcludable => true, match1 => 'fip-webradio7.', match2 => 'fipmetal' },
+	fippop => { fullname => 'FIP Pop', stationid => '', region => '', tuneinid => '', notexcludable => true, match1 => 'fip-webradio8.', match2 => 'fippop' },
 	fmclassiqueeasy => { fullname => 'France Musique Classique Easy', stationid => '', region => '', tuneinid => 's283174', notexcludable => true, match1 => 'francemusiqueeasyclassique', match2 => '' },
 	fmclassiqueplus => { fullname => 'France Musique Classique Plus', stationid => '', region => '', tuneinid => 's283175', notexcludable => true, match1 => 'francemusiqueclassiqueplus', match2 => '' },
 	fmconcertsradiofrance => { fullname => 'France Musique Concerts', stationid => '', region => '', tuneinid => 's283176', notexcludable => true, match1 => 'francemusiqueconcertsradiofrance', match2 => '' },
@@ -163,6 +165,7 @@ my $urls = {
 	fipreggae => 'https://api.radiofrance.fr/livemeta/pull/71',
 	fipelectro => 'https://api.radiofrance.fr/livemeta/pull/74',
 	fipmetal => 'https://api.radiofrance.fr/livemeta/pull/77',
+	fippop => 'https://www.fip.fr/latest/api/graphql?operationName=NowList&variables=%7B%22bannerPreset%22%3A%22266x266%22%2C%22stationIds%22%3A%5B78%5D%7D'.$type3suffixfip,
 	fmclassiqueeasy => 'https://api.radiofrance.fr/livemeta/pull/401',
 	fmclassiqueplus => 'https://api.radiofrance.fr/livemeta/pull/402',
 	fmconcertsradiofrance => 'https://api.radiofrance.fr/livemeta/pull/403',
@@ -206,6 +209,7 @@ my $icons = {
 	fipreggae => 'https://cdn.radiofrance.fr/s3/cruiser-production/2019/06/15a58f25-86a5-4b1a-955e-5035d9397da3/200x200_fip-reggae_ok.jpg',
 	fipelectro => 'https://cdn.radiofrance.fr/s3/cruiser-production/2019/06/29044099-6469-4f2f-845c-54e607179806/200x200_fip-electro-ok.jpg',
 	fipmetal => 'https://cdn.radiofrance.fr/s3/cruiser-production/2019/06/f5ce2c85-3c8a-4732-8bd7-b26ef5204147/200x200_fip-ete-metal_ok.jpg',
+	fippop => 'https://cdn.radiofrance.fr/s3/cruiser-production/2020/06/538d3800-c610-4b76-9cb1-37142abd755b/801x410_logopop.jpg',
 	fmclassiqueeasy => 'https://s3-eu-west-1.amazonaws.com/cruiser-production/2016/12/aca436ad-7f99-4765-9404-1b04bf216daf/fmwebradiosnormaleasy.jpg',
 	fmclassiqueplus => 'https://s3-eu-west-1.amazonaws.com/cruiser-production/2016/12/b8213b77-465c-487e-b5b6-07ce8e2862df/fmwebradiosnormalplus.jpg',
 	fmconcertsradiofrance => 'https://s3-eu-west-1.amazonaws.com/cruiser-production/2016/12/72f1a384-5b04-4b98-b511-ac07b35c7daf/fmwebradiosnormalconcerts.jpg',
@@ -250,6 +254,7 @@ my $iconsIgnoreRegex = {
 	fipreggae => '(fond_titres_diffuses_degrade.png|direct_default_cover_medium.png)',
 	fipelectro => '(fond_titres_diffuses_degrade.png|direct_default_cover_medium.png)',
 	fipmetal => '(fond_titres_diffuses_degrade.png|direct_default_cover_medium.png)',
+	fippop => '(fond_titres_diffuses_degrade.png|direct_default_cover_medium.png)',
 	fmclassiqueeasy => '(dummy)',
 	fmclassiqueplus => '(dummy)',
 	fmconcertsradiofrance => '(dummy)',
@@ -1914,7 +1919,11 @@ sub parseContent {
 			$dumped =~ s/\n {44}/\n/g;   
 			main::DEBUGLOG && $log->is_debug && $log->debug("Type $dataType:$dumped");
 
-		} elsif (ref($perl_data) ne "ARRAY" && exists $perl_data->{'data'}->{'now'}->{'playing_item'}) {
+		} elsif (ref($perl_data) ne "ARRAY" && 
+			( exists $perl_data->{'data'}->{'now'}->{'playing_item'} ) ||
+			
+			( exists $perl_data->{'data'}->{'nowList'} && ref($perl_data->{'data'}->{'nowList'}) eq "ARRAY" &&
+			  exists($perl_data->{'data'}->{'nowList'}[0]->{'playing_item'}) ) ) {
 			# Sample response from Mouv' additional stations (from Feb-2019)
 			# Note - do not know where the sha1 ref for the persistent search comes from but seems to be consistent across stations
 			# https://www.mouv.fr/latest/api/graphql?operationName=NowWebradio&variables=%7B%22stationId%22%3A605%7D&extensions=%7B%22persistedQuery%22%3A%7B%22version%22%3A1%2C%22sha256Hash%22%3A%22a6f39630b68ceb8e56340a4478e099d05c9f5fc1959eaccdfb81e2ce295d82a5%22%7D%7D
@@ -1937,13 +1946,79 @@ sub parseContent {
 				# }
 			  # }
 			# }
+			# Sample response from FIP (from June-2020)
+			# Note - do not know where the sha1 ref for the persistent search comes from but seems to be consistent across stations
+			# https://www.fip.fr/latest/api/graphql?operationName=NowList&variables=%7B%22bannerPreset%22%3A%22266x266%22%2C%22stationIds%22%3A%5B78%5D%7D&extensions=%7B%22persistedQuery%22%3A%7B%22version%22%3A1%2C%22sha256Hash%22%3A%22151ca055b816d28507dae07f9c036c02031ed54e18defc3d16feee2551e9a731%22%7D%7D
+			# Note 2: returned data seen with 0 for start_time/end_time ... so treat that as Now
+			# {
+			  # "data": {
+			    # "nowList": [
+			      # {
+				# "__typename": "Now",
+				# "playing_item": {
+				  # "__typename": "TimelineItem",
+				  # "title": "Perfume Genius",
+				  # "subtitle": "Without you",
+				  # "cover": "https://cdn.radiofrance.fr/s3/cruiser-production/2020/05/7787e973-836a-4ba6-8a7d-0c9f2c0f3a42/266x266_rf_omm_0001859963_dnc.0091485432.jpg",
+				  # "start_time": 1592414796,
+				  # "end_time": 1592414948,
+				  # "year": 2020
+				# },
+				# "program": null,
+				# "song": {
+				  # "__typename": "SongOnAir",
+				  # "uuid": "44546d7e-71fb-495d-b597-d64727e15b9e",
+				  # "cover": "https://cdn.radiofrance.fr/s3/cruiser-production/2020/05/7787e973-836a-4ba6-8a7d-0c9f2c0f3a42/266x266_rf_omm_0001859963_dnc.0091485432.jpg",
+				  # "title": "Without you",
+				  # "interpreters": [
+				    # "Perfume Genius"
+				  # ],
+				  # "musical_kind": "Pop / pop rock ",
+				  # "label": "MATADOR",
+				  # "album": "Set my heart on fire immediately",
+				  # "year": 2020,
+				  # "external_links": {
+				    # "youtube": null,
+				    # "deezer": {
+				      # "id": "954817182",
+				      # "link": "https://www.deezer.com/track/954817182",
+				      # "image": "https://cdns-images.dzcdn.net/images/cover/250ce7730b9183b05e004257861b3330/1000x1000-000000-80-0-0.jpg",
+				      # "__typename": "ExternalLink"
+				    # },
+				    # "itunes": null,
+				    # "spotify": {
+				      # "id": "2SPxgEush9C8GS5RqgXdqi",
+				      # "link": "https://open.spotify.com/track/2SPxgEush9C8GS5RqgXdqi",
+				      # "image": "https://i.scdn.co/image/ab67616d0000b2739af34850f5125ef195d6101a",
+				      # "__typename": "ExternalLink"
+				    # },
+				    # "__typename": "ExternalLinks"
+				  # }
+				# },
+				# "server_time": 1592414926,
+				# "next_refresh": 1592414949,
+				# "mode": "song"
+			      # }
+			    # ]
+			  # }
+			# }
+
 
 			$dataType = '3';
 			my $nowplaying;
 			my $thisItem;
+			my $songItem;
 			
 			# Try to find what is playing (priority to song over programme)
-			$thisItem = $perl_data->{'data'}->{'now'}->{'playing_item'};
+			if ( exists($perl_data->{'data'}->{'now'}->{'playing_item'}) ){
+				$thisItem = $perl_data->{'data'}->{'now'}->{'playing_item'};
+			} else {
+				$thisItem = $perl_data->{'data'}->{'nowList'}[0]->{'playing_item'};
+				
+				if ( exists($perl_data->{'data'}->{'nowList'}[0]->{'song'} ) ){
+					$songItem = $perl_data->{'data'}->{'nowList'}[0]->{'song'};
+				}
+			}
 			
 			# main::DEBUGLOG && $log->is_debug && $log->debug("Now: $hiResTime Start: ".$thisitem->{'start_time'}." End: $thisitem->{'end_time'}");
 			
@@ -2003,8 +2078,17 @@ sub parseContent {
 					if (exists $nowplaying->{'title'} && defined($nowplaying->{'title'}) && $nowplaying->{'title'} ne '') {
 						$calculatedPlaying->{$station}->{'songartist'} = _lowercase($nowplaying->{'title'});
 					}
-					
+
 					if (exists $nowplaying->{'subtitle'} && defined($nowplaying->{'subtitle'}) && $nowplaying->{'subtitle'} ne '') {$calculatedPlaying->{$station}->{'songtitle'} = _lowercase($nowplaying->{'subtitle'})};
+
+					# Note - Label, Year and Album are not available in the "playing_item" but are in "song"
+					$calculatedPlaying->{$station}->{'songyear'} = '';
+					if (exists $songItem->{'year'}) {$calculatedPlaying->{$station}->{'songyear'} = $songItem->{'year'}};
+					$calculatedPlaying->{$station}->{'songlabel'} = '';
+					if (exists $songItem->{'label'}) {$calculatedPlaying->{$station}->{'songlabel'} = _lowercase($songItem->{'label'})};
+					
+					$calculatedPlaying->{$station}->{'songalbum'} = '';
+					if (exists $songItem->{'album'}) {$calculatedPlaying->{$station}->{'songalbum'} = _lowercase($songItem->{'album'})};
 					
 					# Artwork - only include if not one of the defaults - to give chance for something else to add it
 					# Regex check to see if present using $iconsIgnoreRegex
@@ -2012,6 +2096,11 @@ sub parseContent {
 					
 					$thisartwork = getcover($nowplaying, $station, $info);
 					
+					if ($thisartwork eq ''){
+						# Try to get it from the songItem instead
+						$thisartwork = getcover($songItem, $station, $info);
+					}
+
 					if ($thisartwork ne ''){
 						$calculatedPlaying->{$station}->{'songcover'} = $thisartwork;
 					}
