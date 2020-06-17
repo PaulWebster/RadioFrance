@@ -4,20 +4,20 @@
 		<title lang="EN">Paul Webster's Squeezecenter Plugin for Radio France</title>
 	</details>
 	<plugins>
-		<plugin name="RadioFrance" version="0.1.31" minTarget="7.5" maxTarget="*">
+		<plugin name="RadioFrance" version="0.1.32" minTarget="7.5" maxTarget="*">
 			<title lang="EN">Radio France</title>
 			<desc  lang="EN">Radio France programme and track information</desc>
 			<desc  lang="FR">Radio France - info sur le programme et morceau de musique</desc>
 			<creator>Paul Webster</creator>
 			<email></email>
 			<changes lang="EN">
-				- Match the HLS stream URLs faster
+				- Add FIP Pop
 			</changes>
 			<changes lang="FR">
-				- Faire correspondre les URL de flux HLS plus rapidement
+				- Ajouter FIP Pop
 			</changes>
-			<url>https://paulwebster.github.io/RadioFrance/RadioFrance-0.1.31.zip</url>
-			<sha>3ffcdc430fd95cc9711848fe0780abe1fcab87aa</sha>
+			<url>https://paulwebster.github.io/RadioFrance/RadioFrance-0.1.32.zip</url>
+			<sha>803058fd85ac830c8368a98754a8a49b4caf9579</sha>
 		</plugin>
 	</plugins>
 </extensions>
