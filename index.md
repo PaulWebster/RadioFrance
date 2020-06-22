@@ -11,7 +11,7 @@ Display artist, track, cover and, optionally, album name, label and year for:
 * France Musique (http://www.francemusique.fr) web stations (such as Ocora and Classique Plus)
 * Mouv' (http://www.mouv.fr)
 Display programme name, segment name (when available) and synopsis (when available) for:
-* France Inter, France Info, France Musique, France Culture
+* France Inter, France Info, France Musique, France Culture, France Bleu
 
 This software is licensed under the GPL.
 
@@ -36,7 +36,7 @@ Once installed and LMS has been restarted you should play one of the supported r
 If the plugin is working then you should see artist details appear around the time that a new track or programme starts.
 
 **FIP stations supported:**
-FIP (including regional variants while they last), FIP ... Rock, Jazz, Groove, Monde, Electro, Reggae, Tout Nouveau, Pop plus L'été Metal (last one might not still exist).
+FIP (including regional variants while they last), FIP ... Rock, Jazz, Groove, Monde, Electro, Reggae, Tout Nouveau, Pop --plus L'été Metal--
 
 **France Musique stations supported:**
 Classique Easy
@@ -50,13 +50,14 @@ Evenementielle / Classique Kids / B.O.
 **Mouv' stations supported:**
 Mouv'
 ~~Mouv'Xtra~~ (Replaced by 100% Mix)
-Classics, DanceHall, R'N'B, Rap US, Rap Français, 100% Mix
+Classics, DanceHall, R'N'B, Rap US, Rap Français, 100% Mix, Kids'n Family
 
 **Other Radio France (general) stations supported:**
 France Inter
 France Info
 France Musique
 France Culture
+France Blue (40+ stations)
 
 Note: Radio France does not always provide track information in a timely manner - so if you find that sometimes no new details arrive then check on the FIP site or their mobile app to see if they have the same problem.
 
