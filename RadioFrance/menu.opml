@@ -330,9 +330,9 @@
 		</outline>
 		<outline text="Breizh Izel" icon="https://www.francebleu.fr/img/station/logo/logo_francebleu_breizh-izel.jpg">
 			<outline text="France Bleu Breizh Izel (HLS)" type="audio"
-				URL="https://stream.radiofrance.fr/fbbreizhizel/fbbreizhizel.m3u8" />
+				URL="https://stream.radiofrance.fr/fbbreizizel/fbbreizizel.m3u8" />
 			<outline text="France Bleu Breizh Izel (MP3)" type="audio"
-				URL="http://direct.francebleu.fr/live/fbbreizhizel-midfi.mp3" />
+				URL="http://direct.francebleu.fr/live/fbbreizizel-midfi.mp3" />
 		</outline>
 		<outline text="Champagne-Ardenne" icon="https://www.francebleu.fr/img/station/logo/logo_francebleu_champagne-ardenne.jpg">
 			<outline text="France Bleu Champagne-Ardenne (HLS)" type="audio"
@@ -514,9 +514,9 @@
 		</outline>
 		<outline text="RCFM" icon="https://www.francebleu.fr/img/station/logo/logo_francebleu_rcfm.jpg">
 			<outline text="France Bleu RCFM (HLS)" type="audio"
-				URL="https://stream.radiofrance.fr/fbrcfm/fbrcfm.m3u8" />
+				URL="https://stream.radiofrance.fr/fbfrequenzamora/fbfrequenzamora.m3u8" />
 			<outline text="France Bleu RCFM (MP3)" type="audio"
-				URL="http://direct.francebleu.fr/live/fbrcfm-midfi.mp3" />
+				URL="http://direct.francebleu.fr/live/fbfrequenzamora-midfi.mp3" />
 		</outline>
 		<outline text="Roussillon" icon="https://www.francebleu.fr/img/station/logo/logo_francebleu_roussillon.jpg">
 			<outline text="France Bleu Roussillon (HLS)" type="audio"
@@ -527,9 +527,9 @@
 		<!-- Non-standard naming -->
 		<outline text="Saint-Étienne Loire" icon="https://www.francebleu.fr/img/station/logo/logo_francebleu_saint-etienne-loire.jpg">
 			<outline text="France Bleu Saint-Étienne Loire (HLS)" type="audio"
-				URL="https://stream.radiofrance.fr/fbsaintetienneloire/fbstetienne.m3u8" />
+				URL="https://stream.radiofrance.fr/fbstetienne/fbstetienne.m3u8" />
 			<outline text="France Bleu Saint-Étienne Loire (MP3)" type="audio"
-				URL="http://direct.francebleu.fr/live/fbsaintetienne-midfi.mp3" />
+				URL="http://direct.francebleu.fr/live/fbstetienne-midfi.mp3" />
 		</outline>
 		<outline text="Sud Lorraine" icon="https://www.francebleu.fr/img/station/logo/logo_francebleu_sud-lorraine.jpg">
 			<outline text="France Bleu Sud Lorraine (HLS)" type="audio"
