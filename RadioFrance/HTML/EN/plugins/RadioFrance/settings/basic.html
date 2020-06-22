@@ -1,4 +1,18 @@
 [% PROCESS settings/header.html %]
+[% IF show_app %]
+	[% WRAPPER setting title="PLUGIN_RADIOFRANCE_MENULOCATION" desc="PLUGIN_RADIOFRANCE_MENULOCATION_DESC" %]
+
+		<div>
+			<select class="stdedit" name="pref_menulocation" id="menulocation">
+				<option value="0" [% IF prefs.pref_menulocation == "0"; "selected"; END %]>[% "PLUGIN_RADIOFRANCE_MENULOCATION_NONE" | string %]</option>
+				<option value="1" [% IF prefs.pref_menulocation == "1"; "selected"; END %]>[% "PLUGIN_RADIOFRANCE_MENULOCATION_RADIO" | string %]</option>
+				<option value="2" [% IF prefs.pref_menulocation == "2"; "selected"; END %]>[% "PLUGIN_RADIOFRANCE_MENULOCATION_APPS" | string %]</option>
+			</select>
+		</div>
+
+	[% END %]
+
+[% END %]
 
 	[% WRAPPER setting title="PLUGIN_RADIOFRANCE_DISABLEALBUMNAME" desc="PLUGIN_RADIOFRANCE_DISABLEALBUMNAME_DESC" %]
 

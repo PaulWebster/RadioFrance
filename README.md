@@ -11,7 +11,7 @@ Display artist, track, cover and, optionally, album name, label and year for:
 * France Musique (http://www.francemusique.fr) web stations (such as Ocora and Classique Plus)
 * Mouv' (http://www.mouv.fr)
 Display programme name, segment name (when available) and synopsis (when available) for:
-* France Inter, France Info, France Musique, France Culture
+* France Inter, France Info, France Musique, France Culture and France Blue (40+ stations)
 
 This software is licensed under the GPL.
 
@@ -27,7 +27,7 @@ add the following repository to your Logitech Media Server:
 
 https://paulwebster.github.io/RadioFrance/repo.xml
 If that does not work (some installations of LMS do not support https) then try
-http://www.dabdig.com/slimserver-rep/repo.xml - but this one might contain experimental (broken) versions
+http://www.dabdig.com/slimserver-rep/repo.xml - but this one might contain experimental (broken or old) versions
 The 'RadioFrance' plugin should then be available for installation from the Plugin menu - probably after a restart of LMS.
 
 ## Usage
@@ -36,7 +36,7 @@ Once installed and LMS has been restarted you should play one of the supported r
 If the plugin is working then you should see artist details appear around the time that a new track or programme starts.
 
 **FIP stations supported:**
-FIP (including regional variants while they last), FIP ... Rock, Jazz, Groove, Monde, Electro, Reggae, Tout Nouveau, Pop plus L'été Metal (last one might not exist any more).
+FIP (including regional variants while they last), FIP ... Rock, Jazz, Groove, Monde, Electro, Reggae, Tout Nouveau, Pop --plus L'été Metal--
 
 **France Musique stations supported:**
 Classique Easy
@@ -50,13 +50,14 @@ Evenementielle / Classique Kids / B.O.
 **Mouv' stations supported:**
 Mouv'
 ~~Mouv'Xtra~~ (Replaced by 100% Mix)
-Classics, DanceHall, R'N'B, Rap US, Rap Français, 100% Mix
+Classics, DanceHall, R'N'B, Rap US, Rap Français, 100% Mix, Kids'n Family
 
 **Other Radio France (general) stations supported:**
 France Inter
 France Info
 France Musique
 France Culture
+Frnce Bleu (40+ stations)
 
 Note: Radio France does not always provide track information in a timely manner - so if you find that sometimes no new details arrive then check on the FIP site or their mobile app to see if they have the same problem.
 
@@ -64,6 +65,12 @@ Note: Radio France does not always provide track information in a timely manner 
 - If things are not working then enable Debug logging for this plugin via LMS/Settings/Advanced/Logging interface, repeat the problem and then check the LMS logs.  
 
 ## Version History
+**0.2.0 22-Jun-2020**
+- Add streaming links via LMS menu (Radio or My apps)
+- Add France Bleu 40+ stations
+- Add Mouv' Kids'n Family
+- Metadata source changed for FIP Monde
+
 **0.1.32 17-Jun-2020**
 
 Add FIP Pop
@@ -186,4 +193,3 @@ Add setting to allow programme image to replace station logo
 
 Add alternate URLs for FIP stations and make them (all in one) selectable  
 Makes more tracks have images but updates might not be as timely
-

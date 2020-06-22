@@ -22,8 +22,16 @@ sub page {
 }
 
 sub prefs {
-	return ($prefs, qw(disablealbumname showprogimage appendlabel appendyear streamdelay hidetrackduration excludesomestations excludesynopsis) );
+	return ($prefs, qw(disablealbumname showprogimage appendlabel appendyear streamdelay hidetrackduration excludesomestations excludesynopsis menulocation) );
 }
+
+sub beforeRender {
+	my $class = shift;
+	my $params= shift;
+
+	$params->{'show_app'} = Slim::Plugin::Base->can('nonSNApps');
+}
+
 
 # Always end with a 1 to make Perl happy
 1;

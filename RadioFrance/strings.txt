@@ -1,6 +1,6 @@
 PLUGIN_RADIOFRANCE
-	EN	Radio France track and programme information
-	FR	Radio France - info sur le programme et le morceau de musique
+	EN	Radio France
+	FR	Radio France
 	
 PLUGIN_RADIOFRANCE_DESC
 	EN	Display artist, track, cover and, optionally, album name for Radio France (http://www.radiofrance.fr) stations - France Musique (web radios only), FIP (including webradios) and Mouv'
@@ -73,3 +73,23 @@ PLUGIN_RADIOFRANCE_EXCLUDESYNOPSIS_DESC
 PLUGIN_RADIOFRANCE_MISSING_SSL
 	EN	RadioFrance might require the Perl module IO::Socket::SSL to fetch some of the song information. If you see no song information then please use your operating system's package manager to install it.
 	FR	RadioFrance peut avoir besoin du module Perl IO::Socket::SSL pour récupérer certaines informations. Si vous ne voyez aucune information, veuillez utiliser le gestionnaire de paquets (package manager) de votre système d'exploitation pour l'installer.
+
+PLUGIN_RADIOFRANCE_MENULOCATION
+	EN	Show in menu
+	FR	Afficher dans le menu
+
+PLUGIN_RADIOFRANCE_MENULOCATION_DESC
+	EN	Select if you want the plugin to appear and if so, whether in "My Apps" or "Radio".  Note that you will need to restart the server after changing this setting.
+	FR	Sélectionnez si vous souhaitez que le plugin apparaisse et si oui, dans le menu "Mes applications" ou "Radio". Notez que vous devrez redémarrer le serveur après avoir modifié ce paramètre.
+
+PLUGIN_RADIOFRANCE_MENULOCATION_NONE
+	EN	No
+	FR	Non
+	
+PLUGIN_RADIOFRANCE_MENULOCATION_RADIO
+	EN	Radio
+	FR	Radio
+	
+PLUGIN_RADIOFRANCE_MENULOCATION_APPS
+	EN	My Apps
+	FR	Mes applications
