@@ -4,22 +4,20 @@
 		<title lang="EN">Paul Webster's Squeezecenter Plugin for Radio France</title>
 	</details>
 	<plugins>
-		<plugin name="RadioFrance" version="0.2.1" minTarget="7.5" maxTarget="*">
+		<plugin name="RadioFrance" version="0.2.2" minTarget="7.5" maxTarget="*">
 			<title lang="EN">Radio France</title>
 			<desc  lang="EN">Radio France programme and track information</desc>
 			<desc  lang="FR">Radio France - info sur le programme et morceau de musique</desc>
 			<creator>Paul Webster</creator>
 			<email></email>
 			<changes lang="EN">
-				- Add streaming links
-				- Add Mouv' Kids'n Family
+				- Add icons for streaming links
 			</changes>
 			<changes lang="FR">
-				- ajouter des liens de streaming
-				- Ajouter Mouv' Kids'n Family
+				- ajouter des icon pour les liens de streaming
 			</changes>
-			<url>https://paulwebster.github.io/RadioFrance/RadioFrance-0.2.1.zip</url>
-			<sha>7ccf361b6b35f9246fbe7a023b17d026908619b9</sha>
+			<url>https://paulwebster.github.io/RadioFrance/RadioFrance-0.2.2.zip</url>
+			<sha>ec9ac48e10f208730ad1bf7d5b1e40705798a2ae</sha>
 		</plugin>
 	</plugins>
 </extensions>
