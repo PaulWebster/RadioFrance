@@ -65,6 +65,12 @@ Note: Radio France does not always provide track information in a timely manner 
 - If things are not working then enable Debug logging for this plugin via LMS/Settings/Advanced/Logging interface, repeat the problem and then check the LMS logs.  
 
 ## Version History
+**0.2.2 23-Jun-2020**
+- Add icon for each streaming link
+
+**0.2.1 22-Jun-2020**
+- Correct stream links for 3 France Bleu stations
+
 **0.2.0 22-Jun-2020**
 - Add streaming links via LMS menu (Radio or My apps)
 - Add France Bleu 40+ stations
