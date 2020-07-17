@@ -40,6 +40,7 @@ FIP (including regional variants while they last), FIP ... Rock, Jazz, Groove, M
 
 **France Musique stations supported:**
 Classique Easy
+La Baroque
 Classique Plus
 Concerts Radio France
 La Jazz
@@ -65,6 +66,10 @@ Note: Radio France does not always provide track information in a timely manner 
 - If things are not working then enable Debug logging for this plugin via LMS/Settings/Advanced/Logging interface, repeat the problem and then check the LMS logs.  
 
 ## Version History
+**0.2.3 17-Jul-2020**
+- Add France Musique La Baroque
+- Correct eplling from English to French ... Blue to Bleu
+
 **0.2.2 23-Jun-2020**
 - Add icon for each streaming link
 
