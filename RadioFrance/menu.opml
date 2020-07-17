@@ -123,6 +123,14 @@
 			<outline text="France Musique Classique Easy (MP3)" type="audio" icon="https://s3-eu-west-1.amazonaws.com/cruiser-production/2016/12/aca436ad-7f99-4765-9404-1b04bf216daf/fmwebradiosnormaleasy.jpg"
 					 URL="http://icecast.radiofrance.fr/francemusiqueeasyclassique-midfi.mp3" />
 		</outline>
+		<outline text="La Baroque" icon="https://www.radiofrance.fr/sites/default/files/press_releases/3086.jpg">
+			<outline text="France Musique La Baroque (HLS)" type="audio" icon="https://www.radiofrance.fr/sites/default/files/press_releases/3086.jpg"
+					 URL="https://stream.radiofrance.fr/francemusiquebaroque/francemusiquebaroque.m3u8" />
+			<outline text="France Musique La Baroque (AAC)" type="audio" icon="https://www.radiofrance.fr/sites/default/files/press_releases/3086.jpg"
+					 URL="http://icecast.radiofrance.fr/francemusiquebaroque-hifi.aac" />
+			<outline text="France Musique La Baroque (MP3)" type="audio" icon="https://www.radiofrance.fr/sites/default/files/press_releases/3086.jpg"
+					 URL="http://icecast.radiofrance.fr/francemusiquebaroque-midfi.mp3" />
+		</outline>
 		<outline text="Classique Plus" icon="https://s3-eu-west-1.amazonaws.com/cruiser-production/2016/12/b8213b77-465c-487e-b5b6-07ce8e2862df/fmwebradiosnormalplus.jpg">
 			<outline text="France Musique Classique Plus (HLS)" type="audio" icon="https://s3-eu-west-1.amazonaws.com/cruiser-production/2016/12/b8213b77-465c-487e-b5b6-07ce8e2862df/fmwebradiosnormalplus.jpg"
 					 URL="https://stream.radiofrance.fr/francemusiqueclassiqueplus/francemusiqueclassiqueplus.m3u8" />
@@ -273,7 +281,7 @@
 				 URL="http://icecast.radiofrance.fr/franceculture-midfi.mp3" />
 	</outline>
 	
-	<outline text="France Blue" icon="https://mediateur.radiofrance.fr/wp-content/themes/radiofrance/img/france-bleu.png">
+	<outline text="France Bleu" icon="https://mediateur.radiofrance.fr/wp-content/themes/radiofrance/img/france-bleu.png">
 		<outline text="Alsace" icon="https://www.francebleu.fr/img/station/logo/logo_francebleu_alsace.jpg">
 			<outline text="France Bleu Alsace (HLS)" type="audio" icon="https://www.francebleu.fr/img/station/logo/logo_francebleu_alsace.jpg"
 				URL="https://stream.radiofrance.fr/fbalsace/fbalsace.m3u8" />

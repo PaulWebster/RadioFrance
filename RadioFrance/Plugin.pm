@@ -106,6 +106,7 @@ my $stationSet = { # Take extra care if pasting in from external spreadsheet ...
 	fippop => { fullname => 'FIP Pop', stationid => '78', region => '', tuneinid => '', notexcludable => true, match1 => 'fip-webradio8.', match2 => 'fippop' },
 
 	fmclassiqueeasy => { fullname => 'France Musique Classique Easy', stationid => '401', region => '', tuneinid => 's283174', notexcludable => true, match1 => 'francemusiqueeasyclassique', match2 => '' },
+	fmbaroque => { fullname => 'France Musique La Baroque', stationid => '408', region => '', tuneinid => 's309415', notexcludable => true, match1 => 'francemusiquebaroque', match2 => '' },
 	fmclassiqueplus => { fullname => 'France Musique Classique Plus', stationid => '402', region => '', tuneinid => 's283175', notexcludable => true, match1 => 'francemusiqueclassiqueplus', match2 => '' },
 	fmconcertsradiofrance => { fullname => 'France Musique Concerts', stationid => '403', region => '', tuneinid => 's283176', notexcludable => true, match1 => 'francemusiqueconcertsradiofrance', match2 => '' },
 	fmlajazz => { fullname => 'France Musique La Jazz', stationid => '405', region => '', tuneinid => 's283178', notexcludable => true, match1 => 'francemusiquelajazz', match2 => '' },
@@ -242,6 +243,8 @@ my $urls = {
 	
 	fmclassiqueeasy => 'https://api.radiofrance.fr/livemeta/pull/${stationid}',
 	#fmclassiqueeasy_alt => $type3prefix1fip.'401'.$type3prefix2fip.$type3suffixfip,
+	fmbaroque => 'https://api.radiofrance.fr/livemeta/pull/${stationid}',
+	#fmbaroque_alt => $type3prefix1fip.'408'.$type3prefix2fip.$type3suffixfip,
 	fmclassiqueplus => 'https://api.radiofrance.fr/livemeta/pull/${stationid}',
 	#fmclassiqueplus_alt => $type3prefix1fip.'402'.$type3prefix2fip.$type3suffixfip,
 	fmconcertsradiofrance => 'https://api.radiofrance.fr/livemeta/pull/${stationid}',
@@ -352,6 +355,7 @@ my $icons = {
 	fippop => 'https://cdn.radiofrance.fr/s3/cruiser-production/2020/06/538d3800-c610-4b76-9cb1-37142abd755b/801x410_logopop.jpg',
 	
 	fmclassiqueeasy => 'https://s3-eu-west-1.amazonaws.com/cruiser-production/2016/12/aca436ad-7f99-4765-9404-1b04bf216daf/fmwebradiosnormaleasy.jpg',
+	fmbaroque => 'https://www.radiofrance.fr/sites/default/files/press_releases/3086.jpg',
 	fmclassiqueplus => 'https://s3-eu-west-1.amazonaws.com/cruiser-production/2016/12/b8213b77-465c-487e-b5b6-07ce8e2862df/fmwebradiosnormalplus.jpg',
 	fmconcertsradiofrance => 'https://s3-eu-west-1.amazonaws.com/cruiser-production/2016/12/72f1a384-5b04-4b98-b511-ac07b35c7daf/fmwebradiosnormalconcerts.jpg',
 	fmlajazz => 'https://s3-eu-west-1.amazonaws.com/cruiser-production/2016/12/a2d34823-36a1-4fce-b3fa-f0579e056552/fmwebradiosnormaljazz.jpg',
@@ -474,33 +478,20 @@ my $thisMatchStr = '';
 foreach my $metakey (keys(%$stationSet)){
 	# Inialise the stationMatches table - do not replace items that are already present (to allow override)
 	# main::DEBUGLOG && $log->is_debug && $log->debug("Initialising stationMatches - $metakey");
-	if ( exists $stationSet->{$metakey}->{'tuneinid'} && $stationSet->{$metakey}->{'tuneinid'} ne ''){
-		# TuneIn id given so add it in (if not already there)
-		$thisMatchStr = 'id='.$stationSet->{$metakey}->{'tuneinid'}.'&';
-		
-		if ( not exists $stationMatches{$thisMatchStr} ){
-			# main::DEBUGLOG && $log->is_debug && $log->debug("Adding to stationMatches - $thisMatchStr - $metakey");
-			$stationMatches{$thisMatchStr} = $metakey;
-		}
-	}
-	
-	if ( exists $stationSet->{$metakey}->{'match1'} && $stationSet->{$metakey}->{'match1'} ne ''){
-		# match1 given so add it in (if not already there)
-		$thisMatchStr = $stationSet->{$metakey}->{'match1'};
-		
-		if ( not exists $stationMatches{lc($thisMatchStr)} ){
-			# main::DEBUGLOG && $log->is_debug && $log->debug("Adding to stationMatches - $thisMatchStr - $metakey");
-			$stationMatches{lc($thisMatchStr)} = $metakey;
-		}
-	}
-	
-	if ( exists $stationSet->{$metakey}->{'match2'} && $stationSet->{$metakey}->{'match2'} ne ''){
-		# match2 given so add it in (if not already there)
-		$thisMatchStr = $stationSet->{$metakey}->{'match2'};
-		
-		if ( not exists $stationMatches{lc($thisMatchStr)} ){
-			# main::DEBUGLOG && $log->is_debug && $log->debug("Adding to stationMatches - $thisMatchStr - $metakey");
-			$stationMatches{lc($thisMatchStr)} = $metakey;
+	foreach my $matchStr ('tuneinid', 'match1', 'match2'){
+		if ( exists $stationSet->{$metakey}->{$matchStr} && $stationSet->{$metakey}->{$matchStr} ne ''){
+			
+			$thisMatchStr = $stationSet->{$metakey}->{$matchStr};
+			
+			if ($matchStr eq 'tuneinid') {
+				# TuneIn id so special format needed
+				$thisMatchStr = 'id='.$stationSet->{$metakey}->{$matchStr}.'&';
+			}
+			
+			if ( not exists $stationMatches{$thisMatchStr} ){
+				# main::DEBUGLOG && $log->is_debug && $log->debug("Adding to stationMatches - $thisMatchStr - $metakey");
+				$stationMatches{$thisMatchStr} = $metakey;
+			}
 		}
 	}
 }
@@ -1992,6 +1983,7 @@ sub parseContent {
 					# If looks like this should not have already finished (allowing for some leniency for clock drift and other delays) then get the details
 					# This requires that the time on the machine running LMS should be accurate - and timezone set correctly
 
+					$calculatedPlaying->{$station}->{'songartist'} = '';
 					if (exists $nowplaying->{'performers'} && $nowplaying->{'performers'} ne '') {
 						$calculatedPlaying->{$station}->{'songartist'} = _lowercase($nowplaying->{'performers'});
 					} elsif (exists $nowplaying->{'authors'} && $nowplaying->{'authors'} ne ''){
@@ -2000,6 +1992,7 @@ sub parseContent {
 						$calculatedPlaying->{$station}->{'songartist'} = _lowercase($nowplaying->{'composers'});
 					};
 					
+					$calculatedPlaying->{$station}->{'songtitle'} = '';
 					if (exists $nowplaying->{'titleConcept'} && $nowplaying->{'titleConcept'} ne ''){
 						# titleConcept used for programmes in a series - in which case title is the episode/instance name
 						# No need to fiddle with the case as they do use mixed for this so all lowercase probably deliberate
@@ -2008,10 +2001,13 @@ sub parseContent {
 						if (exists $nowplaying->{'title'}) {$calculatedPlaying->{$station}->{'songtitle'} = _lowercase($nowplaying->{'title'})};
 					}
 					
+					$calculatedPlaying->{$station}->{'songyear'} = '';
 					if (exists $nowplaying->{'anneeEditionMusique'}) {$calculatedPlaying->{$station}->{'songyear'} = $nowplaying->{'anneeEditionMusique'}};
+					$calculatedPlaying->{$station}->{'songlabel'} = '';
 					if (exists $nowplaying->{'label'}) {$calculatedPlaying->{$station}->{'songlabel'} = _lowercase($nowplaying->{'label'})};
 					
 					# main::DEBUGLOG && $log->is_debug && $log->debug('Preferences: DisableAlbumName='.$prefs->get('disablealbumname'));
+					$calculatedPlaying->{$station}->{'songalbum'} = '';
 					if (exists $nowplaying->{'titreAlbum'}) {$calculatedPlaying->{$station}->{'songalbum'} = _lowercase($nowplaying->{'titreAlbum'})};
 					
 					# Artwork - only include if not one of the defaults - to give chance for something else to add it
@@ -2020,9 +2016,9 @@ sub parseContent {
 					
 					$thisartwork = getcover($nowplaying, $station, $info);
 					
-					if ($thisartwork ne ''){
+					#if ($thisartwork ne ''){
 						$calculatedPlaying->{$station}->{'songcover'} = $thisartwork;
-					}
+					#}
 					
 					if ( exists $nowplaying->{'end'} && exists $nowplaying->{'start'} ){
 						# Work out song duration and return if plausible
