@@ -40,6 +40,7 @@ FIP (including regional variants while they last), FIP ... Rock, Jazz, Groove, M
 
 **France Musique stations supported:**
 Classique Easy
+La Baroque
 Classique Plus
 Concerts Radio France
 La Jazz
