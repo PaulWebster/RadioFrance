@@ -39,7 +39,9 @@ If the plugin is working then you should see artist details appear around the ti
 FIP (including regional variants while they last), FIP ... Rock, Jazz, Groove, Monde, Electro, Reggae, Tout Nouveau, Pop --plus L'été Metal--
 
 **France Musique stations supported:**
+France Musique
 Classique Easy
+Opéra
 La Baroque
 Classique Plus
 Concerts Radio France
@@ -56,7 +58,6 @@ Classics, DanceHall, R'N'B, Rap US, Rap Français, 100% Mix, Kids'n Family
 **Other Radio France (general) stations supported:**
 France Inter
 France Info
-France Musique
 France Culture
 Frnce Bleu (40+ stations)
 
@@ -66,6 +67,9 @@ Note: Radio France does not always provide track information in a timely manner 
 - If things are not working then enable Debug logging for this plugin via LMS/Settings/Advanced/Logging interface, repeat the problem and then check the LMS logs.  
 
 ## Version History
+**0.2.4 23-Oct-2020**
+- Add France Musique Opéra
+
 **0.2.3 17-Jul-2020**
 - Add France Musique La Baroque
 - Correct eplling from English to French ... Blue to Bleu

@@ -114,6 +114,7 @@ my $stationSet = { # Take extra care if pasting in from external spreadsheet ...
 	fmocoramonde => { fullname => 'France Musique Ocora Monde', stationid => '404', region => '', tuneinid => 's283177', notexcludable => true, match1 => 'francemusiqueocoramonde', match2 => '' },
 	#fmevenementielle => { fullname => 'France Musique Evenementielle', stationid => '407', region => '', tuneinid => 's285660&|id=s306575', notexcludable => true, match1 => 'francemusiquelevenementielle', match2 => '' }, # Special case ... 2 TuneIn Id
 	fmlabo => { fullname => 'France Musique La B.O. de Films', stationid => '407', region => '', tuneinid => 's306575', notexcludable => true, match1 => 'francemusiquelabo', match2 => '' }, 
+	fmopera => { fullname => 'France Musique Opéra', stationid => '409', region => '', tuneinid => '', notexcludable => true, match1 => 'francemusiqueopera', match2 => '' },
 
 	mouv => { fullname => 'Mouv\'', stationid => '6', region => '', tuneinid => 's6597', notexcludable => true, match1 => 'mouv', match2 => '' },
 	mouvxtra => { fullname => 'Mouv\' Xtra', stationid => '75', region => '', tuneinid => '', notexcludable => true, match1 => 'mouvxtra', match2 => '' },
@@ -258,6 +259,8 @@ my $urls = {
 	#fmevenementielle => 'https://api.radiofrance.fr/livemeta/pull/${stationid}',
 	fmlabo => 'https://api.radiofrance.fr/livemeta/pull/${stationid}',
 	#fmlabo_alt => $type3prefix1fip.'407'.$type3prefix2fip.$type3suffixfip,
+	fmopera => 'https://api.radiofrance.fr/livemeta/pull/${stationid}',
+	#fmopera_alt => $type3prefix1fip.'409'.$type3prefix2fip.$type3suffixfip,
 	
 	mouv => 'https://api.radiofrance.fr/livemeta/pull/${stationid}',
 	#mouv_alt => $type3prefix1fip.'6'.$type3prefix2fip.$type3suffixfip,
@@ -363,6 +366,7 @@ my $icons = {
 	fmocoramonde => 'https://s3-eu-west-1.amazonaws.com/cruiser-production/2016/12/22b8b3d6-e848-4090-8b24-141c25225861/fmwebradiosnormalocora.jpg',
 	#fmevenementielle => 'https://cdn.radiofrance.fr/s3/cruiser-production/2017/06/d2ac7a26-843d-4f0c-a497-8ddf6f3b2f0f/200x200_fmwebbotout.jpg',
 	fmlabo => 'https://cdn.radiofrance.fr/s3/cruiser-production/2017/06/d2ac7a26-843d-4f0c-a497-8ddf6f3b2f0f/200x200_fmwebbotout.jpg',
+	fmopera => 'https://cdn.radiofrance.fr/s3/cruiser-production/2020/10/c1fb2b03-5c04-42c9-b415-d56e4c61dcd9/fm-opera-webradio2x.png',
 	
 	mouv => 'https://www.radiofrance.fr/sites/default/files/styles/format_16_9/public/2019-08/logo_mouv_bloc_c.png.jpeg',
 	mouvxtra => 'http://www.mouv.fr/sites/all/modules/rf/rf_lecteur_commun/lecteur_rf/img/logo_mouv_xtra.png',

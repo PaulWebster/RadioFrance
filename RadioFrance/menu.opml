@@ -123,6 +123,14 @@
 			<outline text="France Musique Classique Easy (MP3)" type="audio" icon="https://s3-eu-west-1.amazonaws.com/cruiser-production/2016/12/aca436ad-7f99-4765-9404-1b04bf216daf/fmwebradiosnormaleasy.jpg"
 					 URL="http://icecast.radiofrance.fr/francemusiqueeasyclassique-midfi.mp3" />
 		</outline>
+		<outline text="Opéra" icon="https://cdn.radiofrance.fr/s3/cruiser-production/2020/10/c1fb2b03-5c04-42c9-b415-d56e4c61dcd9/fm-opera-webradio2x.png">
+			<outline text="France Musique Opéra (HLS)" type="audio" icon="https://cdn.radiofrance.fr/s3/cruiser-production/2020/10/c1fb2b03-5c04-42c9-b415-d56e4c61dcd9/fm-opera-webradio2x.png"
+					 URL="https://stream.radiofrance.fr/francemusiqueopera/francemusiqueopera.m3u8" />
+			<outline text="France Musique Opéra (AAC)" type="audio" icon="https://cdn.radiofrance.fr/s3/cruiser-production/2020/10/c1fb2b03-5c04-42c9-b415-d56e4c61dcd9/fm-opera-webradio2x.png"
+					 URL="http://icecast.radiofrance.fr/francemusiqueopera-hifi.aac" />
+			<outline text="France Musique Opéra (MP3)" type="audio" icon="https://cdn.radiofrance.fr/s3/cruiser-production/2020/10/c1fb2b03-5c04-42c9-b415-d56e4c61dcd9/fm-opera-webradio2x.png"
+					 URL="http://icecast.radiofrance.fr/francemusiqueopera-midfi.mp3" />
+		</outline>
 		<outline text="La Baroque" icon="https://www.radiofrance.fr/sites/default/files/press_releases/3086.jpg">
 			<outline text="France Musique La Baroque (HLS)" type="audio" icon="https://www.radiofrance.fr/sites/default/files/press_releases/3086.jpg"
 					 URL="https://stream.radiofrance.fr/francemusiquebaroque/francemusiquebaroque.m3u8" />
