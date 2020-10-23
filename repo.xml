@@ -4,20 +4,20 @@
 		<title lang="EN">Paul Webster's Squeezecenter Plugin for Radio France</title>
 	</details>
 	<plugins>
-		<plugin name="RadioFrance" version="0.2.3" minTarget="7.5" maxTarget="*">
+		<plugin name="RadioFrance" version="0.2.4" minTarget="7.5" maxTarget="*">
 			<title lang="EN">Radio France</title>
 			<desc  lang="EN">Radio France programme and track information</desc>
 			<desc  lang="FR">Radio France - info sur le programme et morceau de musique</desc>
 			<creator>Paul Webster</creator>
 			<email></email>
 			<changes lang="EN">
-				- Add France Musique La Baroque
+				- Add France Musique Opéra
 			</changes>
 			<changes lang="FR">
-				- ajouter France Musique La Baroque
+				- ajouter France Musique Opéra
 			</changes>
-			<url>https://paulwebster.github.io/RadioFrance/RadioFrance-0.2.3.zip</url>
-			<sha>91314363735e0b34113331096f6f0626001f2b09</sha>
+			<url>https://paulwebster.github.io/RadioFrance/RadioFrance-0.2.4.zip</url>
+			<sha>4f1f43003cb3c3b386b1d400dc9ba85f732f9380</sha>
 		</plugin>
 	</plugins>
 </extensions>

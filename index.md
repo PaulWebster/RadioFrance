@@ -39,7 +39,9 @@ If the plugin is working then you should see artist details appear around the ti
 FIP (including regional variants while they last), FIP ... Rock, Jazz, Groove, Monde, Electro, Reggae, Tout Nouveau, Pop --plus L'été Metal--
 
 **France Musique stations supported:**
+France Musique
 Classique Easy
+Opéra
 La Baroque
 Classique Plus
 Concerts Radio France
@@ -56,7 +58,6 @@ Classics, DanceHall, R'N'B, Rap US, Rap Français, 100% Mix, Kids'n Family
 **Other Radio France (general) stations supported:**
 France Inter
 France Info
-France Musique
 France Culture
 France Blue (40+ stations)
 
