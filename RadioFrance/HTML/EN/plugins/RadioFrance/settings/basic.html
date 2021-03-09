@@ -75,5 +75,45 @@
 		</div>
 
 	[% END %]
+
+	[% WRAPPER setting title="PLUGIN_RADIOFRANCE_SCHEDULENUMOFDAYS" desc="PLUGIN_RADIOFRANCE_SCHEDULENUMOFDAYS_DESC" %]
+
+		<input type="text" class="stdedit sliderInput_0_35_1" name="pref_schedulenumofdays" id="pref_schedulenumofdays" value="[% prefs.schedulenumofdays %]" size="2">
+
+	[% END %]
+
+	[% WRAPPER setting title="PLUGIN_RADIOFRANCE_SCHEDULEHIDENOAUDIO" desc="PLUGIN_RADIOFRANCE_SCHEDULEHIDENOAUDIO_DESC" %]
+
+		<div class="prefDesc">[% "ENABLE" | string %]
+			<input name="pref_hidenoaudio" type="checkbox" [% IF prefs.pref_hidenoaudio %] checked [% END %]>
+		</div>
+
+	[% END %]
+
+	[% WRAPPER setting title="PLUGIN_RADIOFRANCE_SCHEDULEDAYNAME" desc="PLUGIN_RADIOFRANCE_SCHEDULEDAYNAME_DESC" %]
+
+		<div>
+			<select class="stdedit" name="pref_scheduledayname" id="scheduledayname">
+				<option value="0" [% IF prefs.pref_scheduledayname == "0"; "selected"; END %]>[% "PLUGIN_RADIOFRANCE_SCHEDULEDAYNAME_NONE" | string %]</option>
+				<option value="1" [% IF prefs.pref_scheduledayname == "1"; "selected"; END %]>[% "PLUGIN_RADIOFRANCE_SCHEDULEDAYNAME_SHORT" | string %]</option>
+				<option value="2" [% IF prefs.pref_scheduledayname == "2"; "selected"; END %]>[% "PLUGIN_RADIOFRANCE_SCHEDULEDAYNAME_LONG" | string %]</option>
+			</select>
+		</div>
+
+	[% END %]
+
+	[% WRAPPER setting title="PLUGIN_RADIOFRANCE_SCHEDULEFLATTEN" desc="PLUGIN_RADIOFRANCE_SCHEDULEFLATTEN_DESC" %]
+
+		<div class="prefDesc">[% "ENABLE" | string %]
+			<input name="pref_scheduleflatten" type="checkbox" [% IF prefs.pref_scheduleflatten %] checked [% END %]>
+		</div>
+
+	[% END %]
+
+	[% WRAPPER setting title="PLUGIN_RADIOFRANCE_SCHEDULECACHETIMER" desc="PLUGIN_RADIOFRANCE_SCHEDULECACHETIMER_DESC" %]
+
+		<input type="text" class="stdedit sliderInput_0_60_1" name="pref_schedulecachetimer" id="pref_schedulecachetimer" value="[% prefs.schedulecachetimer %]" size="2">
+
+	[% END %]
 	
 [% PROCESS settings/footer.html %]

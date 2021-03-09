@@ -93,3 +93,76 @@ PLUGIN_RADIOFRANCE_MENULOCATION_RADIO
 PLUGIN_RADIOFRANCE_MENULOCATION_APPS
 	EN	My Apps
 	FR	Mes applications
+
+PLUGIN_RADIOFRANCE_LIVE
+	EN	Live
+	FR	En Direct
+
+PLUGIN_RADIOFRANCE_SCHEDULE
+	EN	Schedule
+	FR	Schedule
+
+PLUGIN_RADIOFRANCE_SCHEDULE_NOTAVAILABLE
+	EN	not available
+	FR	indisponible
+
+
+PLUGIN_RADIOFRANCE_SCHEDULENUMOFDAYS
+	EN	Number of days available in schedule
+	FR	Nombre de jours disponibles dans le programme
+
+PLUGIN_RADIOFRANCE_SCHEDULENUMOFDAYS_DESC
+	EN	A large archive is available but it can lead to a menu that is difficult to navigate
+	FR	Une grande archive est disponible mais elle peut conduire à un menu difficile à naviguer
+
+PLUGIN_RADIOFRANCE_SCHEDULEHIDENOAUDIO
+	EN	Hide scheduled programmes that have no audio available
+	FR	Masquer les emmissions programmés pour lesquels aucun son n'est disponible
+
+PLUGIN_RADIOFRANCE_SCHEDULEHIDENOAUDIO_DESC
+	EN	Some programmes are not (yet) available on demand, especially if it is the day of broadcast
+	FR	Certains emissions ne sont pas (encore) disponibles à la demande, surtout si c'est le jour de la diffusion
+
+PLUGIN_RADIOFRANCE_DAYSOFWEEK
+	EN	Sunday,Monday,Tuesday,Wednesday,Thursday,Friday,Saturday
+	FR	Dimanche,Lundi,Mardi,Mercredi,Jeudi,Vendredi,Samedi
+	
+PLUGIN_RADIOFRANCE_DAYSOFWEEKSHORT
+	EN	Sun,Mon,Tue,Wed,Thu,Fri,Sat
+	FR	Dim,Lun,Mar,Mer,Jeu,Ven,Sam
+
+PLUGIN_RADIOFRANCE_SCHEDULEDAYNAME
+	EN	Style of day name in schedule list
+	FR	Style du nom du jour dans la liste des horaires
+
+PLUGIN_RADIOFRANCE_SCHEDULEDAYNAME_DESC
+	EN	0 do not include, 1 short form (default), 2 long form
+	FR	0 ne pas inclure, 1 forme courte (par défaut), 2 forme longue
+
+PLUGIN_RADIOFRANCE_SCHEDULEDAYNAME_NONE
+	EN	None
+	FR	No
+
+PLUGIN_RADIOFRANCE_SCHEDULEDAYNAME_SHORT
+	EN	Short
+	FR	Courte
+
+PLUGIN_RADIOFRANCE_SCHEDULEDAYNAME_LONG
+	EN	Long
+	FR	Longue
+
+PLUGIN_RADIOFRANCE_SCHEDULEFLATTEN
+	EN	Flatten the schedule
+	FR	Aplatir la liste des programm
+
+PLUGIN_RADIOFRANCE_SCHEDULEFLATTEN_DESC
+	EN	Flatten the schedule so that segments look like programmes
+	FR	Aplatir la liste des programm pour que les segments ressemblent à des programmes
+
+PLUGIN_RADIOFRANCE_SCHEDULECACHETIMER
+	EN	Schedule cache period (minutes) - default 10
+	FR	Période de garder le cache de la liste des programm (minutes) - par défaut 10
+
+PLUGIN_RADIOFRANCE_SCHEDULECACHETIMER_DESC
+	EN	Number of minutes to cache items - can help performance and reduce load on radio station web server
+	FR	Nombre de minutes de mise en cache des éléments - peut améliorer les performances et réduire la charge sur le serveur Web de la station de radio

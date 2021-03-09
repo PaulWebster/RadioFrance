@@ -8,12 +8,12 @@
   <homepageURL>https://dabdig.blogspot.com</homepageURL>
   <module>Plugins::RadioFrance::Plugin</module>
   <optionsURL>plugins/RadioFrance/settings/basic.html</optionsURL>
-  <icon>plugins/RadioFrance/html/images/radiofrance.png</icon>
+  <icon>plugins/RadioFrance/html/images/radiofrance_svg.png</icon>
   <targetApplication>
     <id>SqueezeCenter</id>
     <maxVersion>*</maxVersion>
     <minVersion>7.5</minVersion>
   </targetApplication>
   <type>2</type>
-  <version>0.2.4</version>
+  <version>0.3.5</version>
 </extension>

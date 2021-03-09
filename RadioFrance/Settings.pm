@@ -22,7 +22,7 @@ sub page {
 }
 
 sub prefs {
-	return ($prefs, qw(disablealbumname showprogimage appendlabel appendyear streamdelay hidetrackduration excludesomestations excludesynopsis menulocation) );
+	return ($prefs, qw(disablealbumname showprogimage appendlabel appendyear streamdelay hidetrackduration excludesomestations excludesynopsis menulocation hidenoaudio schedulenumofdays scheduledayname scheduleflatten schedulecachetimer) );
 }
 
 sub beforeRender {

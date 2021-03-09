@@ -1,5 +1,5 @@
 # Slimerver/LMS PlugIn to get Metadata from Radio France stations
-# Copyright (C) 2017, 2018, 2019 Paul Webster
+# Copyright (C) 2017 - 2021 Paul Webster
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -16,6 +16,8 @@
 #
 # Paul Webster - paul@dabdig.com
 # This started life using ideas from DRS Meta parser by Michael Herger
+# The presentation of on-demand content is based on code from Stuart McLean (expectingtofly) https://github.com/expectingtofly/
+#
 
 package Plugins::RadioFrance::Plugin;
 
@@ -26,33 +28,40 @@ use warnings;
 use vars qw($VERSION);
 use HTML::Entities;
 use Digest::SHA1;
+use Digest::MD5 qw(md5_hex);
 use HTTP::Request;
 
 use Date::Parse;
+use POSIX qw(strftime);
 use File::Spec::Functions qw(:ALL);
 
 use base qw(Slim::Plugin::OPMLBased);
 
 
 use Slim::Networking::SimpleAsyncHTTP;
+use Slim::Utils::Strings qw(string);
 use Slim::Utils::Log;
 use Slim::Utils::Prefs;
+use Slim::Utils::Cache;
 use Plugins::RadioFrance::Settings;
 
 # use JSON;		# JSON.pm Not installed on all LMS implementations so use LMS-friendly one below
 use JSON::XS::VersionOneAndTwo;
 use Encode;
-use Data::Dumper
+use Data::Dumper;
 $Data::Dumper::Sortkeys = 1;
 
 use constant false => 0;
 use constant true  => 1;
 
+#temporary hack
+my $getschedulehack = true;
+
 my $pluginName = 'radiofrance';
 
 my $log = Slim::Utils::Log->addLogCategory({
 	'category'     => 'plugin.'.$pluginName,
-	'description'  => 'PLUGIN_RADIOFRANCE',
+	'description'  => getDisplayName(),
 });
 
 my $prefs = preferences('plugin.'.$pluginName);
@@ -67,7 +76,11 @@ use constant maxShowLth => 3600;	# Assumed maximum programme length in seconds -
 					# try to keep them to no more than indicated - applies to cover art and programme logo
 use constant maxImgWidth => 340;
 use constant maxImgHeight => 340;
-					
+
+my $cache = Slim::Utils::Cache->new();
+sub flushCache { $cache->cleanup(); }
+
+my $dumped;
 # If no image provided in return then try to create one from 'visual' or 'visualbanner'
 my $imageapiprefix = 'https://api.radiofrance.fr/v1/services/embed/image/';
 my $imageapisuffix = '?preset=400x400';
@@ -77,6 +90,9 @@ my $type3prefix1fip = 'https://www.fip.fr/latest/api/graphql?operationName=NowLi
 my $type3prefix2fip = '%5D%7D';
 my $type3suffix    = '&extensions=%7B%22persistedQuery%22%3A%7B%22version%22%3A1%2C%22sha256Hash%22%3A%22a6f39630b68ceb8e56340a4478e099d05c9f5fc1959eaccdfb81e2ce295d82a5%22%7D%7D';
 my $type3suffixfip = '&extensions=%7B%22persistedQuery%22%3A%7B%22version%22%3A1%2C%22sha256Hash%22%3A%22151ca055b816d28507dae07f9c036c02031ed54e18defc3d16feee2551e9a731%22%7D%7D';
+
+my $radiofrancescheuleurl = 'https://api.radiofrance.fr/v1/stations/${stationid}/steps?filter[depth]=1&filter[start-time]=${datestring}T00:00&filter[end-time]=${datestring}T23:59&fields[shows]=title,visuals,stationId,mainImage&fields[diffusions]=title,startTime,endTime,mainImage,visuals,stationId&include=diffusion&include=show&include=diffusion.manifestations&include=diffusion.station&include=children-steps&include=children-steps.show&include=children-steps.diffusion&include=children-steps.diffusion.manifestations';
+my %radiofranceapiondemandheaderset = ( 'x-token' => '0cbe991e-18ac-4635-ad7f-773257c63797' );	# token as used by Radio France web interface
 
 # URL for remote web site that is polled to get the information about what is playing
 #
@@ -91,7 +107,7 @@ my $progInfoSuffix = '';
 my $progDetailsURL = '';
 
 my $stationSet = { # Take extra care if pasting in from external spreadsheet ... station name with single quote, TuneIn ids, longer match1 for duplicate
-	fipradio => { fullname => 'FIP', stationid => '7', region => '', tuneinid => 's15200', notexcludable => true, match1 => '', match2 => 'fip' },
+	fipradio => { fullname => 'FIP', stationid => '7', region => '', tuneinid => 's15200', notexcludable => true, match1 => '', match2 => 'fip', ondemandurl => $radiofrancescheuleurl, ondemandheaders => \%radiofranceapiondemandheaderset },
 	fipbordeaux => { fullname => 'FIP Bordeaux', stationid => '7', region => '', tuneinid => 's50706', notexcludable => true, match1 => 'fipbordeaux', match2 => '' },
 	fipnantes => { fullname => 'FIP Nantes', stationid => '7', region => '', tuneinid => 's50770', notexcludable => true, match1 => 'fipnantes', match2 => '' },
 	fipstrasbourg => { fullname => 'FIP Strasbourg', stationid => '7', region => '', tuneinid => 's111944', notexcludable => true, match1 => 'fipstrasbourg', match2 => '' },
@@ -116,7 +132,7 @@ my $stationSet = { # Take extra care if pasting in from external spreadsheet ...
 	fmlabo => { fullname => 'France Musique La B.O. de Films', stationid => '407', region => '', tuneinid => 's306575', notexcludable => true, match1 => 'francemusiquelabo', match2 => '' }, 
 	fmopera => { fullname => 'France Musique Opéra', stationid => '409', region => '', tuneinid => '', notexcludable => true, match1 => 'francemusiqueopera', match2 => '' },
 
-	mouv => { fullname => 'Mouv\'', stationid => '6', region => '', tuneinid => 's6597', notexcludable => true, match1 => 'mouv', match2 => '' },
+	mouv => { fullname => 'Mouv\'', stationid => '6', region => '', tuneinid => 's6597', notexcludable => true, match1 => 'mouv', match2 => '', ondemandurl => $radiofrancescheuleurl, ondemandheaders => \%radiofranceapiondemandheaderset },
 	mouvxtra => { fullname => 'Mouv\' Xtra', stationid => '75', region => '', tuneinid => '', notexcludable => true, match1 => 'mouvxtra', match2 => '' },
 	mouvclassics => { fullname => 'Mouv\' Classics', stationid => '601', region => '', tuneinid => 's307696', notexcludable => true, match1 => 'mouvclassics', match2 => '' },
 	mouvdancehall => { fullname => 'Mouv\' Dancehall', stationid => '602', region => '', tuneinid => 's307697', notexcludable => true, match1 => 'mouvdancehall', match2 => '' },
@@ -126,10 +142,10 @@ my $stationSet = { # Take extra care if pasting in from external spreadsheet ...
 	mouvkidsnfamily => { fullname => 'Mouv\' Kids\'n Family', stationid => '606', region => '', tuneinid => '', notexcludable => true, match1 => 'mouvkidsnfamily', match2 => '' },
 	mouv100mix => { fullname => 'Mouv\' 100\% Mix', stationid => '75', region => '', tuneinid => 's244069', notexcludable => true, match1 => 'mouv100p100mix', match2 => '' },
 
-	franceinter => { fullname => 'France Inter', stationid => '1', region => '', tuneinid => 's24875', notexcludable => false, match1 => 'franceinter', match2 => '' },
-	franceinfo => { fullname => 'France Info', stationid => '2', region => '', tuneinid => 's9948', notexcludable => false, match1 => 'franceinfo', match2 => '' },
-	francemusique => { fullname => 'France Musique', stationid => '4', region => '', tuneinid => 's15198', notexcludable => false, match1 => 'francemusique', match2 => '' },
-	franceculture => { fullname => 'France Culture', stationid => '5', region => '', tuneinid => 's2442', notexcludable => false, match1 => 'franceculture', match2 => '' },
+	franceinter => { fullname => 'France Inter', stationid => '1', region => '', tuneinid => 's24875', notexcludable => false, match1 => 'franceinter', match2 => '', ondemandurl => $radiofrancescheuleurl, ondemandheaders => \%radiofranceapiondemandheaderset },
+	franceinfo => { fullname => 'France Info', stationid => '2', region => '', tuneinid => 's9948', notexcludable => false, match1 => 'franceinfo', match2 => '', ondemandurl => $radiofrancescheuleurl, ondemandheaders => \%radiofranceapiondemandheaderset },
+	francemusique => { fullname => 'France Musique', stationid => '4', region => '', tuneinid => 's15198', notexcludable => false, match1 => 'francemusique', match2 => '', ondemandurl => $radiofrancescheuleurl, ondemandheaders => \%radiofranceapiondemandheaderset },
+	franceculture => { fullname => 'France Culture', stationid => '5', region => '', tuneinid => 's2442', notexcludable => false, match1 => 'franceculture', match2 => '', ondemandurl => $radiofrancescheuleurl, ondemandheaders => \%radiofranceapiondemandheaderset },
 
 	fbalsace => { fullname => 'France Bleu Alsace', stationid => '12', region => '', tuneinid => 's2992', notexcludable => false, match1 => 'fbalsace', match2 => '', scheduleurl => '' },
 	fbarmorique => { fullname => 'France Bleu Armorique', stationid => '13', region => '', tuneinid => 's25492', notexcludable => false, match1 => 'fbarmorique', match2 => '', scheduleurl => '' },
@@ -151,7 +167,7 @@ my $stationSet = { # Take extra care if pasting in from external spreadsheet ...
 	fbgironde => { fullname => 'France Bleu Gironde', stationid => '27', region => '', tuneinid => 's48659', notexcludable => false, match1 => 'fbgironde', match2 => '', scheduleurl => '' },
 	fbherault => { fullname => 'France Bleu Hérault', stationid => '28', region => '', tuneinid => 's48665', notexcludable => false, match1 => 'fbherault', match2 => '', scheduleurl => '' },
 	fbisere => { fullname => 'France Bleu Isère', stationid => '29', region => '', tuneinid => 's20328', notexcludable => false, match1 => 'fbisere', match2 => '', scheduleurl => '' },
-	fblarochelle => { fullname => 'France Bleu La Rochelle', stationid => '30', region => '', tuneinid => 's48669', notexcludable => false, match1 => 'fblarochelle', match2 => '', scheduleurl => '' },  #Possible alternate for schedule https://www.francebleu.fr/grid/la-rochelle/${unixtime}
+	fblarochelle => { fullname => 'France Bleu La Rochelle', stationid => '30', region => '', tuneinid => 's48669', notexcludable => false, match1 => 'fblarochelle', match2 => '', ondemandurl => $radiofrancescheuleurl, ondemandheaders => \%radiofranceapiondemandheaderset },  #Possible alternate for schedule https://www.francebleu.fr/grid/la-rochelle/${unixtime}
 	fblimousin => { fullname => 'France Bleu Limousin', stationid => '31', region => '', tuneinid => 's48670', notexcludable => false, match1 => 'fblimousin', match2 => '', scheduleurl => '' },
 	fbloireocean => { fullname => 'France Bleu Loire Océan', stationid => '32', region => '', tuneinid => 's36096', notexcludable => false, match1 => 'fbloireocean', match2 => '', scheduleurl => '' },
 	fblorrainenord => { fullname => 'France Bleu Lorraine Nord', stationid => '50', region => '', tuneinid => 's48672', notexcludable => false, match1 => 'fblorrainenord', match2 => '', scheduleurl => '' },
@@ -203,6 +219,8 @@ my $programmeMeta = {
 my $urls = {
 	radiofranceprogdata => '', # 
 	radiofranceprogdata_alt => '',
+	radiofranceondemandurl => $radiofrancescheuleurl,
+	radiofranceondemandheaders => \%radiofranceapiondemandheaderset,
 	radiofrancebroadcasterdata => '',
 	
 	# Note - loop below adds one hash for each station
@@ -343,7 +361,8 @@ foreach my $metakey (keys(%$stationSet)){
 # Potential place for logos - https://charte.dnm.radiofrance.fr/logos.php
 # Also - https://mediateur.radiofrance.fr/wp-content/themes/radiofrance/img/radio-france.png
 my $icons = {
-	fipradio => 'http://mediateur.radiofrance.fr/wp-content/themes/radiofrance/img/fip.png',
+	#fipradio => 'http://mediateur.radiofrance.fr/wp-content/themes/radiofrance/img/fip.png',
+	fipradio => 'http://oblique.radiofrance.fr/files/charte/logos/png600/FIP.png',
 	fipbordeaux => 'http://mediateur.radiofrance.fr/wp-content/themes/radiofrance/img/fip.png',
 	fipnantes => 'http://mediateur.radiofrance.fr/wp-content/themes/radiofrance/img/fip.png',
 	fipstrasbourg => 'http://mediateur.radiofrance.fr/wp-content/themes/radiofrance/img/fip.png',
@@ -368,7 +387,8 @@ my $icons = {
 	fmlabo => 'https://cdn.radiofrance.fr/s3/cruiser-production/2017/06/d2ac7a26-843d-4f0c-a497-8ddf6f3b2f0f/200x200_fmwebbotout.jpg',
 	fmopera => 'https://cdn.radiofrance.fr/s3/cruiser-production/2020/10/c1fb2b03-5c04-42c9-b415-d56e4c61dcd9/fm-opera-webradio2x.png',
 	
-	mouv => 'https://www.radiofrance.fr/sites/default/files/styles/format_16_9/public/2019-08/logo_mouv_bloc_c.png.jpeg',
+	#mouv => 'https://www.radiofrance.fr/sites/default/files/styles/format_16_9/public/2019-08/logo_mouv_bloc_c.png.jpeg',
+	mouv => 'http://oblique.radiofrance.fr/files/charte/logos/png600/Mouv.png',
 	mouvxtra => 'http://www.mouv.fr/sites/all/modules/rf/rf_lecteur_commun/lecteur_rf/img/logo_mouv_xtra.png',
 	mouvclassics => 'https://cdn.radiofrance.fr/s3/cruiser-production/2019/01/bb8da8da-f679-405f-8810-b4a172f6a32d/300x300_mouv-classic_02.jpg',
 	mouvdancehall => 'https://cdn.radiofrance.fr/s3/cruiser-production/2019/01/9d04e918-c907-4627-a332-1071bdc2366e/300x300_dancehall.jpg',
@@ -378,10 +398,14 @@ my $icons = {
 	mouv100mix => 'https://cdn.radiofrance.fr/s3/cruiser-production/2019/01/689453b1-de6c-4c9e-9ebd-de70d0220e69/300x300_mouv-100mix-final.jpg',
 	mouvkidsnfamily => 'https://cdn.radiofrance.fr/s3/cruiser-production/2019/08/20b36ec0-fd19-4d92-b393-7977277e1452/300x300_mouv_webradio_kids_n_family.jpg',
 	
-	franceinter => 'http://mediateur.radiofrance.fr/wp-content/themes/radiofrance/img/france-inter.png',
+	franceinter => 'http://oblique.radiofrance.fr/files/charte/logos/png600/FranceInter.png',	# Note - official uses https but (for now) http works and might help legacy devices
+	#franceinter => 'http://mediateur.radiofrance.fr/wp-content/themes/radiofrance/img/france-inter.png',
+	
 	franceinfo => 'http://mediateur.radiofrance.fr/wp-content/themes/radiofrance/img/france-info.png',
-	francemusique => 'http://mediateur.radiofrance.fr/wp-content/themes/radiofrance/img/france-musique.png',
-	franceculture => 'http://mediateur.radiofrance.fr/wp-content/themes/radiofrance/img/france-culture.png',
+	#francemusique => 'http://mediateur.radiofrance.fr/wp-content/themes/radiofrance/img/france-musique.png',
+	francemusique => 'http://oblique.radiofrance.fr/files/charte/logos/png600/FranceMusique.png',
+	#franceculture => 'http://mediateur.radiofrance.fr/wp-content/themes/radiofrance/img/france-culture.png',
+	franceculture => 'http://oblique.radiofrance.fr/files/charte/logos/png600/FranceCulture.png',
 	
 	fbalsace => 'https://www.francebleu.fr/img/station/logo/logo_francebleu_alsace.jpg',
 	fbarmorique => 'https://www.francebleu.fr/img/station/logo/logo_francebleu_armorique.jpg',
@@ -500,8 +524,6 @@ foreach my $metakey (keys(%$stationSet)){
 	}
 }
 
-my $dumped;
-	
 $dumped = Dumper \%stationMatches;
 # print $dumped;
 # main::DEBUGLOG && $log->is_debug && $log->debug("Initial stationMatches $dumped");
@@ -536,8 +558,11 @@ foreach my $metakey (keys(%$stationSet)){
 # Ordered list with the highest priority (typical highest resolution) first
 
 # Radio France cover, visual, coverUuid, visualBanner
+# Extra varient to handle:
+# [ { "name": "banner", "visual_uuid": "4256a1da-f202-4cfa-8c0b-db0fb846da66" },
+#   { "name": "concept_visual", "visual_uuid": "aeb5db31-ea32-4149-8106-bc66c3ab26b7" } ]
 
-my @coverFieldsArr = ( "cover", "visual", "coverUuid", "visualBanner" );
+my @coverFieldsArr = ( 'cover', 'visual', 'coverUuid', 'visualBanner', 'mainImage', '@name|square_banner|visual_uuid', '@name|banner|visual_uuid', '@name|concept_visual|visual_uuid' );
 
 
 # $myClientInfo holds data about the clients/devices using this plugin - used to schedule next poll
@@ -666,6 +691,7 @@ sub getLocalAdjustedTime {
 
 	return $adjustedTime;
 }
+
 sub initPlugin {
 	my $class = shift;
 	
@@ -680,6 +706,11 @@ sub initPlugin {
 	$prefs->init({ excludesomestations => 0});
 	$prefs->init({ excludesynopsis => 0});
 	$prefs->init({ menulocation => 1});	# 0=No, 1=Radio, 2=My Apps
+	$prefs->init({ schedulenumofdays => 8});
+	$prefs->init({ hidenoaudio => 1});
+	$prefs->init({ scheduledayname => 1});	# 0=None, 1=Short, 2=Long
+	$prefs->init({ scheduleflatten => 0});	# Flatten the schedule (show segments like programmes)
+	$prefs->init({ schedulecachetimer => 10});	# 10 minute cache
 
 	if ( !Slim::Networking::Async::HTTP->hasSSL() ) {
 		# Warn if HTTPS support not present because some of the meta provider URLs redirect to https (since February 2018)
@@ -723,7 +754,8 @@ sub initPlugin {
 		my $file = catdir( $class->_pluginDataFor('basedir'), 'menu.opml' );
 			
 		$class->SUPER::initPlugin(
-			feed   => Slim::Utils::Misc::fileURLFromPath($file),
+			#feed   => Slim::Utils::Misc::fileURLFromPath($file),
+			feed   => \&Plugins::RadioFrance::Plugin::toplevel,
 			tag    => $pluginName,
 			is_app => $class->can('nonSNApps') && ($prefs->get('menulocation') == 2) ? 1 : undef,
 			menu   => 'radios',
@@ -888,18 +920,57 @@ sub getcover {
 	my ( $playinginfo, $station, $info ) = @_;
 	
 	my $thisartwork = '';
+	
+	#$dumped = Dumper $playinginfo;
+	#main::DEBUGLOG && $log->is_debug && $log->debug("$station - getcover - checking $dumped");
 
 	foreach my $fieldName ( @coverFieldsArr ) {
 		# Loop through the list of field names and take first (if any) match
-		if ( exists $playinginfo->{$fieldName} && defined($playinginfo->{$fieldName}) && $playinginfo->{$fieldName} ne '' ){
-			$thisartwork = $playinginfo->{$fieldName};
-			last;
+		
+		# Check for special syntax for subfield
+		my ($field1, $field2, $field3) = split('\|', $fieldName, 3);
+
+		if ( !defined $field2 ){
+			if ( ref($playinginfo) ne "ARRAY" && exists $playinginfo->{$field1} && defined($playinginfo->{$field1}) && $playinginfo->{$field1} ne '' ){
+				$thisartwork = $playinginfo->{$field1};
+				last;
+			}
+		} elsif ( !defined $field3 ) {
+			if ( ref($playinginfo) ne "ARRAY" && exists $playinginfo->{$field1} && defined($playinginfo->{$field1}) && $playinginfo->{$field1} ne '' && 
+			     exists $playinginfo->{$field2} && defined($playinginfo->{$field2}) && $playinginfo->{$field2} ne ''){
+				$thisartwork = $playinginfo->{$field2};
+				last;
+			}
+		} else {
+			if ( ref($playinginfo) eq "ARRAY" && substr( $field1,0,1 ) eq '@'){
+				# An expected array so loop through
+				my $fieldX = substr( $field1,1 );
+				foreach my $thisrow ( @$playinginfo ){
+					if ( exists $thisrow->{$fieldX} && defined($thisrow->{$fieldX}) && $thisrow->{$fieldX} ne '' && 
+					     $thisrow->{$fieldX} eq $field2 &&
+					     exists $thisrow->{$field3} && defined($thisrow->{$field3}) && $thisrow->{$field3} ne ''){
+						$thisartwork = $thisrow->{$field3};
+						last;
+					}
+				}
+				
+				if ($thisartwork ne '' ){
+					last;
+				}
+			} else {
+				if ( exists $playinginfo->{$field1} && defined($playinginfo->{$field1}) && $playinginfo->{$field1} ne '' && 
+				     $playinginfo->{$field1} eq $field2 &&
+				     exists $playinginfo->{$field3} && defined($playinginfo->{$field3}) && $playinginfo->{$field3} ne ''){
+					$thisartwork = $playinginfo->{$field3};
+					last;
+				}
+			}
 		}
 	}
 
 	# Now check to see if there are any size issues and replace if possible
 	# Note - this uses attributes found in ABC Australia data so would need changing for other sources
-	if ( exists $playinginfo->{width} && defined($playinginfo->{width}) &&
+	if ( ref($playinginfo) ne "ARRAY" && exists $playinginfo->{width} && defined($playinginfo->{width}) &&
 	     exists $playinginfo->{height} && defined($playinginfo->{height}) &&
 	     ($playinginfo->{width} > maxImgWidth || $playinginfo->{height} > maxImgHeight) ){
 		# Default image is too big so try for another one
@@ -953,7 +1024,7 @@ sub getcover {
 	     # There is something, it is not excluded, it is not the station logo and (it appears to be a URL or an id)
 	     # example id "visual": "38fab9df-91cc-4e50-adc4-eb3a9f2a017a",
 		if ($thisartwork =~ /^.*-.*-.*-.*-/ && $thisartwork !~ /^https?:/i){
-			main::DEBUGLOG && $log->is_debug && $log->debug("$station - image id $thisartwork");
+			#main::DEBUGLOG && $log->is_debug && $log->debug("$station - image id $thisartwork");
 			$thisartwork = $imageapiprefix.$thisartwork.$imageapisuffix;
 		}
 		
@@ -961,6 +1032,8 @@ sub getcover {
 		# Icon not present or matches one to be ignored
 		# main::DEBUGLOG && $log->is_debug && $log->debug("Image: ".$playinginfo->{'visual'});
 	}
+	
+	#main::DEBUGLOG && $log->is_debug && $log->debug("$station - getcover - returning: $thisartwork");
 	
 	return $thisartwork;
 }
@@ -1127,7 +1200,7 @@ sub getprogrammemeta {
 		}
 		
 		
-		if ( $client->isPlaying && ($programmeMeta->{'whenfetched'}->{$whenFetchedKey} eq '' || $programmeMeta->{'whenfetched'}->{$whenFetchedKey} <= $hiResTime - 60)) {
+		if ( $client->isPlaying && ($programmeMeta->{'whenfetched'}->{$whenFetchedKey} eq '' || $programmeMeta->{'whenfetched'}->{$whenFetchedKey} <= $hiResTime - 600)) {
 			
 			$programmeMeta->{'whenfetched'}->{$whenFetchedKey} = $hiResTime;	# Say we have fetched it now - even if it fails
 
@@ -1157,8 +1230,13 @@ sub getprogrammemeta {
 				$sourceUrl =~ s/\$\{unixtime\}/$hiResTime/g;
 			}
 			
+			my %headers = ();
+			 
+			if ( exists $stationSet->{$station}->{'progheaders'} && $stationSet->{$station}->{'progheaders'} ne ''){
+				%headers = %{ $stationSet->{$station}->{'progheaders'} };
+			}				
 			main::DEBUGLOG && $log->is_debug && $log->debug("$station - Fetching programme data from $sourceUrl");
-			$http->get($sourceUrl);
+			$http->get($sourceUrl, %headers);
 			
 			if (exists $urls->{$pluginName.'progdata'."_alt"} && $urls->{$pluginName.'progdata'."_alt"} ne ''){
 				# If there is an alternate URL - do an additional fetch for it
@@ -2051,11 +2129,11 @@ sub parseContent {
 			$dumped =~ s/\n {44}/\n/g;   
 			main::DEBUGLOG && $log->is_debug && $log->debug("Type $dataType:$dumped");
 
-		} elsif (ref($perl_data) ne "ARRAY" && 
-			( exists $perl_data->{'data'}->{'now'}->{'playing_item'} ) ||
+		} elsif (ref($perl_data) ne "ARRAY" && exists $perl_data->{'data'} && ref($perl_data->{'data'}) ne "ARRAY" &&
+			( ( exists $perl_data->{'data'}->{'now'}->{'playing_item'} ) ||
 			
 			( exists $perl_data->{'data'}->{'nowList'} && ref($perl_data->{'data'}->{'nowList'}) eq "ARRAY" &&
-			  exists($perl_data->{'data'}->{'nowList'}[0]->{'playing_item'}) ) ) {
+			  exists($perl_data->{'data'}->{'nowList'}[0]->{'playing_item'}) ) ) ) {
 			# Sample response from Mouv' additional stations (from Feb-2019)
 			# Note - do not know where the sha1 ref for the persistent search comes from but seems to be consistent across stations
 			# https://www.mouv.fr/latest/api/graphql?operationName=NowWebradio&variables=%7B%22stationId%22%3A605%7D&extensions=%7B%22persistedQuery%22%3A%7B%22version%22%3A1%2C%22sha256Hash%22%3A%22a6f39630b68ceb8e56340a4478e099d05c9f5fc1959eaccdfb81e2ce295d82a5%22%7D%7D
@@ -2288,7 +2366,11 @@ sub parseContent {
 		
 		} else {
 			# Do not know how to parse this - probably a mistake in setup of $meta or $station
-			main::INFOLOG && $log->is_info && $log->info("Called for station $station - but do know which format parser to use");
+			main::INFOLOG && $log->is_info && $log->info("Called for station $station - but do not know which format parser to use");
+			$dumped =  Dumper $perl_data;
+			$dumped =~ s/\n {44}/\n/g;
+			$dumped = substr($dumped, 0, 1000);
+			main::DEBUGLOG && $log->is_debug && $log->debug("Data starts: $dumped");
 		}
 	}
 	
@@ -2305,6 +2387,11 @@ sub parseContent {
 	# Hack to get around multiple stations playing the same show at the same time but info not being updated when switching to the 2nd
 	# because it is the same base data
 	$info->{stationid} = $station;
+	
+	#temporary hack
+	# if ( $getschedulehack ) {
+		# $thismeta = &getprogrammemeta( $client, $url, false, $progListPerStation );
+	# }
 	
 	# Note - the calculatedPlaying info contains historic data from previous runs
 	# Calculate from what is thought to be playing (programme or song) and put it into $info (which reflects what we want to show)
@@ -2748,6 +2835,2869 @@ sub deviceTimer {
 		$myClientInfo->{$deviceName}->{nextpoll} = $nextPoll;
 		Slim::Utils::Timers::setTimer($client, $nextPoll, \&timerReturn, $url);
 	}
+}
+
+sub getDayMenu {
+	my ( $client, $callback, $args, $passDict ) = @_;
+	main::DEBUGLOG && $log->is_debug && $log->debug("++getDayMenu");
+
+	my $now       = time();
+	my $stationid = $passDict->{'stationid'};
+
+	my $menu      = [];
+
+	my $daysofweek = string('PLUGIN_RADIOFRANCE_DAYSOFWEEKSHORT');
+	$daysofweek = string('PLUGIN_RADIOFRANCE_DAYSOFWEEK') if $prefs->get('scheduledayname') == 2;
+	my @daysofweek_arr = split(/,/, $daysofweek);
+
+	my $numberOfDays = $prefs->get('schedulenumofdays');
+
+	for ( my $i = 0 ; $i < $numberOfDays ; $i++ ) {
+		my $d = '';
+		my $epoch = $now - ( 86400 * $i );
+		# $d = strftime( '%a %d/%m', localtime($epoch) );
+		# Do not rely of strftime to get the day in text because it does not know
+		# which language the user is set to in LMS and they might not have set it at the OS level
+		# PLUGIN_RADIOFRANCE_DAYSOFWEEKSHORT
+		my ($sec,$min,$hour,$mday,$mon,$year,$wday,$yday,$isdst) = localtime($epoch);
+		
+		if ( $prefs->get('scheduledayname') != 0 ) { $d = $daysofweek_arr[$wday].' '};
+		$d .= sprintf("%02d",$mday).'/'.sprintf("%02d",$mon+1);
+
+		my $scheduledate = strftime( '%Y-%m-%d', localtime($epoch) );
+
+		push @$menu,
+		  {
+			name        => $d,
+			type        => 'link',
+			url         => \&getSchedulePage,
+			passthrough => [
+				{
+					scheduledate => $scheduledate,
+					stationid => $stationid
+				}
+			],
+		  };
+	}
+	$callback->( { items => $menu } );
+	main::DEBUGLOG && $log->is_debug && $log->debug("--getDayMenu");
+	return;
+}
+
+
+sub getSchedulePage {
+	my ( $client, $callback, $args, $passDict ) = @_;
+
+	main::DEBUGLOG && $log->is_debug && $log->debug("++getSchedulePage");	
+
+	$dumped = Dumper $passDict;
+	# main::DEBUGLOG && $log->is_debug && $log->debug("passDict: $dumped");
+	
+	my $station = $passDict->{'stationid'};
+	my $scheduledate = $passDict->{'scheduledate'};	# yyyy-mm-dd
+	
+	my $menu = [];
+	my $hiResTime = getLocalAdjustedTime;
+	
+	my $schedulecachetimer = $prefs->get('schedulecachetimer');
+	
+	$log->info('Getting day menu');
+
+	my $sourceUrl = '';
+	
+	if ( exists $stationSet->{$station}->{'ondemandurl'} && $stationSet->{$station}->{'ondemandurl'} ne ''){
+		$sourceUrl = $stationSet->{$station}->{'ondemandurl'};
+	} else {
+		$sourceUrl = $urls->{$pluginName.'ondemandurl'};
+	}
+
+	if ( $sourceUrl =~ /\$\{.*\}/ ){
+		# Special string to be replaced
+		$sourceUrl =~ s/\$\{stationid\}/$stationSet->{$station}->{'stationid'}/g;
+		$sourceUrl =~ s/\$\{region\}/$stationSet->{$station}->{'region'}/g;
+		$sourceUrl =~ s/\$\{progid\}/$calculatedPlaying->{$station}->{'progid'}/g;
+		$sourceUrl =~ s/\$\{unixtime\}/$hiResTime/g;
+		$sourceUrl =~ s/\$\{datestring\}/$scheduledate/g;
+	}
+	
+	my %headers = ();
+	 
+	if ( exists $stationSet->{$station}->{'ondemandheaders'} && $stationSet->{$station}->{'ondemandheaders'} ne ''){
+		%headers = %{ $stationSet->{$station}->{'ondemandheaders'} };
+	} else {
+		%headers = %{ $urls->{$pluginName.'ondemandheaders'}; };
+	}
+	
+	if ( my $cachemenu = _getCachedMenu($sourceUrl) ) {
+
+		$callback->( { items => $cachemenu } );
+		main::DEBUGLOG && $log->is_debug && $log->debug("--getSchedulePage cached menu");	
+		return;
+	}
+
+	main::DEBUGLOG && $log->is_debug && $log->debug("$station - Fetching programme data from $sourceUrl");
+
+	Slim::Networking::SimpleAsyncHTTP->new(
+		sub {
+			my $http = shift;
+
+			$log->debug('Schedule retreived');
+			_parseSchedule( $http->content,  $menu);
+			_cacheMenu($sourceUrl, $menu, $schedulecachetimer*60);			
+
+			$callback->( { items => $menu } );
+		},
+
+		# Called when no response was received or an error occurred.
+		sub {
+			$log->warn("error: $_[1]");
+			$callback->( [ { name => $_[1], type => 'text' } ] );
+		}
+	)->get($sourceUrl, %headers);
+
+	main::DEBUGLOG && $log->is_debug && $log->debug("--getSchedulePage");	
+	return;
+
+}
+
+# Radio France - edited example of schedule file
+# {
+	# "links": {
+		# "self": "/v1/stations/1/steps?fields%5Bdiffusions%5D=title%2CstartTime%2CendTime%2CmainImage%2Cvisuals%2CstationId&fields%5Bshows%5D=title%2Cvisuals%2CstationId%2CmainImage&filter%5Bdepth%5D=1&filter%5Bend-time%5D=2021-02-20T21%3A59&filter%5Bstart-time%5D=2021-02-19T22%3A00&include%5B0%5D=children-steps&include%5B1%5D=children-steps.diffusion&include%5B2%5D=children-steps.diffusion.manifestations&include%5B3%5D=children-steps.show&include%5B4%5D=diffusion&include%5B5%5D=diffusion.manifestations&include%5B6%5D=diffusion.station&include%5B7%5D=show"
+	# },
+	# "data": [
+		# {
+			# "id": "b6123089-f5c6-478b-a778-5ae0ad0f94aa",
+			# "type": "steps",
+			# "attributes": {
+				# "title": "Le journal de 23h",
+				# "startTime": 1613772000,
+				# "endTime": 1613772600,
+				# "depth": 1,
+				# "embedType": "expression",
+				# "multiDiffusion": false,
+				# "radioMetadata": {
+					# "id": "64159e5b-64ab-4dbd-88c4-729ea55a5ae3_1"
+				# }
+			# },
+			# "relationships": {
+				# "diffusion": {
+					# "data": {
+						# "type": "diffusions",
+						# "id": "769f81d8-23a8-4678-bbb8-866fc002f8eb"
+					# }
+				# },
+				# "show": {
+					# "data": {
+						# "type": "shows",
+						# "id": "2510ac6e-d25a-11e0-b8ee-842b2b72cd1d"
+					# }
+				# },
+				# "station": {
+					# "data": {
+						# "type": "stations",
+						# "id": "1"
+					# }
+				# }
+			# }
+		# },
+
+# ...
+
+	# ],
+	# "included": [
+# ...
+		# {
+			# "id": "769f81d8-23a8-4678-bbb8-866fc002f8eb",
+			# "type": "diffusions",
+			# "attributes": {
+				# "title": "Le journal de 23h du vendredi 19 février 2021",
+				# "startTime": 1613772000,
+				# "endTime": 1613772600,
+				# "visuals": [
+					# {
+						# "name": "banner",
+						# "visual_uuid": "4256a1da-f202-4cfa-8c0b-db0fb846da66"
+					# },
+					# {
+						# "name": "concept_visual",
+						# "visual_uuid": "aeb5db31-ea32-4149-8106-bc66c3ab26b7"
+					# }
+				# ]
+			# },
+			# "relationships": {
+				# "bouquets": {
+					# "data": [
+						# {
+							# "type": "shows",
+							# "id": "6618e8fd-8297-4eac-800c-c6707ff5c879"
+						# }
+					# ]
+				# },
+				# "manifestations": {
+					# "data": [
+						# {
+							# "type": "manifestations",
+							# "id": "2c181ccd-cebd-4f49-88cc-32753c4c7e7e"
+						# },
+						# {
+							# "type": "manifestations",
+							# "id": "99c96fe1-4aa1-4a6f-8dac-1b387308c3ea"
+						# },
+						# {
+							# "type": "manifestations",
+							# "id": "527b604d-88e6-46f8-a075-2fa95418bcb9"
+						# },
+						# {
+							# "type": "manifestations",
+							# "id": "f84ccc0f-f076-4f67-88ae-75ac98a0c087"
+						# }
+					# ]
+				# },
+				# "show": {
+					# "data": {
+						# "type": "shows",
+						# "id": "2510ac6e-d25a-11e0-b8ee-842b2b72cd1d"
+					# }
+				# },
+				# "station": {
+					# "data": {
+						# "type": "stations",
+						# "id": "1"
+					# }
+				# },
+				# "steps": {
+					# "data": [
+						# {
+							# "type": "steps",
+							# "id": "b6123089-f5c6-478b-a778-5ae0ad0f94aa"
+						# }
+					# ]
+				# },
+				# "themes": {
+					# "data": [
+						# {
+							# "type": "taxonomies",
+							# "id": "b14ae358-460b-493a-a7c6-e9ffc23d3d11"
+						# }
+					# ]
+				# }
+			# }
+		# },
+# ...
+		# {
+			# "id": "2c181ccd-cebd-4f49-88cc-32753c4c7e7e",
+			# "type": "manifestations",
+			# "attributes": {
+				# "title": "Le journal de 23h",
+				# "type": "complet",
+				# "mediaType": "mp3",
+				# "url": "https://rf.proxycast.org/2c181ccd-cebd-4f49-88cc-32753c4c7e7e/21003-19.02.2021-ITEMA_22579387-2021F10770S0050.mp3",
+				# "duration": 651,
+				# "principal": false,
+				# "isDeleted": false,
+				# "date": 1613772600,
+				# "isStreamable": false,
+				# "isDownloadable": true,
+				# "downloadExpirationDate": 1645225200,
+				# "isStreamableOutsideFrance": false,
+				# "isDownloadableOutsideFrance": true,
+				# "podcastId": 21003,
+				# "radioMetadata": {
+					# "magnetothequeId": "2021F10770S0050"
+				# }
+			# },
+			# "relationships": {
+				# "diffusions": {
+					# "data": [
+						# {
+							# "type": "diffusions",
+							# "id": "769f81d8-23a8-4678-bbb8-866fc002f8eb"
+						# }
+					# ]
+				# },
+				# "station": {
+					# "data": {
+						# "type": "stations",
+						# "id": "1"
+					# }
+				# }
+			# }
+		# },
+# ...
+	# ]
+# }
+
+
+sub _parseSchedule {
+	my $content     = shift;
+	my $menu        = shift;
+
+	main::DEBUGLOG && $log->is_debug && $log->debug("++_parseSchedule");	
+
+	my $station = '';
+	
+	my @data = ();
+	my @included = ();
+	my @menuPrepare = ();
+	# Hashes for easier lookups
+	my %data_hash = ();
+	my %included_hash = ();
+
+
+	my $__getItemDetails = sub  {
+		my $entry = shift;
+		
+		my %progInfo = ();
+		# Arrays of references to data elsewhere in the structure
+		my @proglinksbroadcast = ();
+		my @proglinkssegments = ();
+		my @streamUrls = ();
+		my $progstreamset = [];
+		my $progstreamurl = '';
+		my $progid = '';
+		my $diffusionid = '';
+		
+		my $id_manifestation = '';
+
+		$dumped = Dumper $entry;
+		main::DEBUGLOG && $log->is_debug && $log->debug("__getItemDetails checking: $dumped");
+		
+		my $attributes = $entry->{attributes};
+		
+		$progInfo{'title'} = '';
+		$progInfo{'episodetitle'} = '';
+		$progInfo{'start'} = 0;
+
+		if ( exists $attributes->{title} ) {
+			if ( exists $entry->{type} && $entry->{type} eq 'shows' ) {
+				$progInfo{'title'} = $attributes->{title};
+			} else {
+				$progInfo{'episodetitle'} = $attributes->{title};
+			}
+		}
+		
+		if ( exists $entry->{relationships}->{show}->{data}->{type} && $entry->{relationships}->{show}->{data}->{type} eq 'shows' &&
+		     exists $entry->{relationships}->{show}->{data}->{id} && $entry->{relationships}->{show}->{data}->{id} ne '' ){
+			$progid = $entry->{relationships}->{show}->{data}->{id};
+			
+			if ( exists $included_hash{ $progid }->{attributes}->{title} ) {
+				$progInfo{'title'} = $included_hash{ $progid }->{attributes}->{title};
+			}
+		}
+		#main::DEBUGLOG && $log->is_debug && $log->debug("-prog1: $progInfo{'title'} / $progInfo{'episodetitle'}");
+
+		# Replace non-breaking space with space (seen in France Inter "Grand bien vous fasse\x{a0}!"
+		$progInfo{'title'} =~ s/\x{a0}/ /g;
+		$progInfo{'title'} =~ s/\x{2019}/'/g;
+		$progInfo{'episodetitle'} =~ s/\x{a0}/ /g;
+		$progInfo{'episodetitle'} =~ s/\x{2019}/'/g;
+		
+		if ( exists $attributes->{startTime} ) {$progInfo{'start'} = $attributes->{startTime};}
+
+		if ( exists $entry->{relationships}->{show}->{data}->{type} &&
+		    $entry->{relationships}->{show}->{data}->{type} eq 'shows' &&
+		    exists $entry->{relationships}->{show}->{data}->{id} ) {
+			$progInfo{'proglinkshow'} = $entry->{relationships}->{show}->{data}->{id};
+			#main::DEBUGLOG && $log->is_debug && $log->debug("pushed show $entry->{relationships}->{show}->{data}->{id}");
+		}
+		
+		if ( exists $entry->{relationships}->{diffusion}->{data}->{type} &&
+		    $entry->{relationships}->{diffusion}->{data}->{type} eq 'diffusions' &&
+		    exists $entry->{relationships}->{diffusion}->{data}->{id} ) {
+			$diffusionid = $entry->{relationships}->{diffusion}->{data}->{id};
+			push @proglinksbroadcast, $diffusionid;
+			#main::DEBUGLOG && $log->is_debug && $log->debug("pushed diffusion $entry->{relationships}->{diffusion}->{data}->{id}");
+			if ( exists $included_hash{$diffusionid}->{relationships}->{manifestations}->{data} ){
+				$progstreamset = $included_hash{$diffusionid}->{relationships}->{manifestations}->{data};
+			}
+
+		}
+		
+		if ( exists $entry->{relationships}->{childrenSteps}->{data} &&
+		     ref( $entry->{relationships}->{childrenSteps}->{data} ) eq 'ARRAY' ) {
+			# "children" are segments within a programme
+			my @childEntries = @{ $entry->{relationships}->{childrenSteps}->{data} };
+			foreach my $childEntry ( @childEntries ) {
+				if (exists $childEntry->{type} && $childEntry->{type} eq 'steps' &&
+				    exists $childEntry->{id} ) {
+					#main::DEBUGLOG && $log->is_debug && $log->debug("Child found: $childEntry->{id}");
+					push @proglinkssegments, $childEntry->{id};
+				}
+			}
+		}
+
+		if ( (!exists $progInfo{'img'} || $progInfo{'img'} eq '') && exists $entry->{attributes}->{visuals} ){
+			$progInfo{'img'} = getcover($entry->{attributes}->{visuals}, $station, '');
+		}
+
+		if ( (!exists $progInfo{'img'} || $progInfo{'img'} eq '') && exists $entry->{attributes} ){	# Not found so try up one level
+			$progInfo{'img'} = getcover($entry->{attributes}, $station, '');
+		}
+
+		# Try diffusion
+		if ( (!exists $progInfo{'img'} || $progInfo{'img'} eq '') && $diffusionid ne '' && exists $included_hash{$diffusionid}->{attributes}->{visuals} ){
+			$progInfo{'img'} = getcover($included_hash{$diffusionid}->{attributes}->{visuals}, $station, '');
+		}
+
+		if ( (!exists $progInfo{'img'} || $progInfo{'img'} eq '') && $diffusionid ne '' && exists $included_hash{$diffusionid}->{attributes} ){
+			$progInfo{'img'} = getcover($included_hash{$diffusionid}->{attributes}, $station, '');
+		}
+
+		# Try show
+		if ( (!exists $progInfo{'img'} || $progInfo{'img'} eq '') && $progid ne '' && exists $included_hash{$progid}->{attributes}->{visuals} ){
+			$progInfo{'img'} = getcover($included_hash{$progid}->{attributes}->{visuals}, $station, '');
+		}
+
+		if ( (!exists $progInfo{'img'} || $progInfo{'img'} eq '') && $progid ne '' && exists $included_hash{$progid}->{attributes} ){
+			$progInfo{'img'} = getcover($included_hash{$progid}->{attributes}, $station, '');
+		}
+
+		foreach my $streamInfo ( @{$progstreamset} ){
+			$dumped = Dumper $streamInfo;
+			#main::DEBUGLOG && $log->is_debug && $log->debug("streamInfo-x: $dumped");
+			
+			if ( exists $included_hash{ $streamInfo->{id} } ){
+				if ( exists $included_hash{ $streamInfo->{id} }->{attributes}->{url} &&
+				     $included_hash{ $streamInfo->{id} }->{attributes}->{url} ne "" ){
+					$progstreamurl = $included_hash{ $streamInfo->{id} }->{attributes}->{url};
+					push @streamUrls, $progstreamurl;
+					#main::INFOLOG && $log->is_info && $log->info("$station - Found stream url: $progstreamurl");
+				} else {
+					# Not found here so see if pointer to elsewhere
+					#$dumped = Dumper $included_hash{ $progInfo->{id} };
+					#main::DEBUGLOG && $log->is_debug && $log->debug("dump3: $dumped");
+					my $thisthis = $streamInfo->{id};
+					# print("Now looking at: $thisthis\n");
+					if ( exists $included_hash{ $thisthis } && exists $included_hash{ $thisthis }->{relationships}->{manifestations}->{data} &&
+					     ref $included_hash{ $thisthis }->{relationships}->{manifestations}->{data} eq 'ARRAY' ){
+						#main::DEBUGLOG && $log->is_debug && $log->debug("trying3: $thisthis");
+						foreach my $deeptry ( @{ $included_hash{ $thisthis }->{relationships}->{manifestations}->{data} } ){
+							if ( exists $included_hash{ $deeptry->{id} }->{attributes}->{url} &&
+							     $included_hash{ $deeptry->{id} }->{attributes}->{url} ne "" ){
+								$progstreamurl = $included_hash{ $deeptry->{id} }->{attributes}->{url};
+								push @streamUrls, $progstreamurl;
+								$progInfo{'episodetitle'} = $included_hash{ $deeptry->{id} }->{attributes}->{title} if exists $included_hash{ $deeptry->{id} }->{attributes}->{title} && $included_hash{ $deeptry->{id} }->{attributes}->{title} ne '';
+								#main::DEBUGLOG && $log->is_debug && $log->debug("$station - Deep found stream url: $progstreamurl - title: $progInfo{'episodetitle'}");
+							}
+						}
+					}									
+				}
+			}
+		}	# end loop through @progstreamset
+		
+		$progInfo{'streamurls'} = [@streamUrls];
+		
+		main::DEBUGLOG && $log->is_debug && $log->debug("-prog: $progInfo{'title'} / $progInfo{'episodetitle'}");
+		
+		my $count = scalar @proglinksbroadcast;
+		#main::DEBUGLOG && $log->is_debug && $log->debug("Found $count broadcast links");
+		
+		@{$progInfo{'proglinksbroadcast'}} = @proglinksbroadcast;
+		@{$progInfo{'proglinkssegments'}} = @proglinkssegments;
+		$progInfo{'progstreamset'} = $progstreamset;
+		
+		$progInfo{'datapresent'} = 1;
+		
+		$dumped = Dumper \%progInfo;
+		#main::DEBUGLOG && $log->is_debug && $log->debug("__getItemDetails return: $dumped");
+		return %progInfo;
+	};
+	
+	
+	my $hiResTime = getLocalAdjustedTime;
+	
+	my @scheduleNodes = ();
+	my %thisProg = ();
+
+	my $hidenoaudio = $prefs->get('hidenoaudio');
+	my $hidethis = false;
+	my $scheduleflatten = $prefs->get('scheduleflatten');
+	
+	if (defined($content) && $content ne ''){
+	
+		main::DEBUGLOG && $log->is_debug && $log->debug("About to parse schedule");
+
+		my $perl_data = eval { from_json( $content ) };
+
+		#$dumped =  Dumper $content;
+		#$dumped =~ s/\n {44}/\n/g;   
+		# print $dumped;
+		#main::DEBUGLOG && $log->is_debug && $log->debug("Content: $dumped");
+
+		if (ref($perl_data) ne "ARRAY" && exists $perl_data->{'data'} && ref($perl_data->{'data'}) eq "ARRAY" &&
+		    exists $perl_data->{'data'}[0]{attributes} &&
+		    exists $perl_data->{'included'} && ref($perl_data->{'included'}) eq "ARRAY") {
+			# Looks like programme schedule
+			@data = @{ $perl_data->{'data'} };
+			# $dumped =  Dumper @data;
+			# print $dumped;
+			@included = @{ $perl_data->{'included'} };
+			%data_hash = ();
+			%included_hash = ();
+
+			foreach my $entry (@data){
+				if ( exists $entry->{id} ) {
+					$data_hash{$entry->{id}} = $entry;
+				}
+			}
+
+			#$dumped = Dumper \%data_hash;
+			#print("datahash: $dumped");
+			
+			foreach my $entry (@included){
+				if ( exists $entry->{id} ) {
+					$included_hash{$entry->{id}} = $entry;
+				}
+			}
+		
+			foreach my $dataentry (@data){
+				# Go through the source data as an array (rather than the created hashes) because the source is sorted by start time
+				# $dumped = Dumper $dataentry->{atttributes};
+				# print $dumped;
+			
+				if (exists $dataentry->{type} && $dataentry->{type} eq 'steps' &&
+				    exists $dataentry->{attributes}) {
+					my $attributes = $dataentry->{attributes};
+					
+					my @progstreamset = ();
+					# Arrays of references to data elsewhere in the structure
+					my @proglinksbroadcast = ();
+					my @proglinkssegments = ();
+					my @proglinks = ();
+					
+					%thisProg = ();
+
+					%thisProg = $__getItemDetails->( $dataentry );
+					$thisProg{'isShow'} = 1;	# This is a new show (not a segment)
+					
+					@progstreamset = @{$thisProg{'progstreamset'}};
+					
+					$dumped = Dumper \@progstreamset;
+					#main::DEBUGLOG && $log->is_debug && $log->debug("progstreamset: $dumped");
+					
+					if ( exists $thisProg{'proglinkshow'} || scalar @{$thisProg{'proglinkssegments'}} > 0){
+						# If programme link or segments found
+						#if ( $thisProg{'datapresent'} == 1 && (scalar @progstreamset > 0 || !$hidenoaudio )) {
+						if ( $thisProg{'datapresent'} == 1 ) {
+							#main::INFOLOG && $log->is_info && $log->info("$station - Found prog $thisProg{'title'} / $thisProg{'episodetitle'} at $thisProg{'start'}");
+							push @scheduleNodes, {%thisProg};
+							$thisProg{'datapresent'} = 0;
+							$thisProg{'isShow'} = 0;	# Show pushed - so anything else is a segment
+						} else {
+							# no streams and asked to be hidden
+							if ( $thisProg{'datapresent'} == 1 ){
+								#main::DEBUGLOG && $log->is_debug && $log->debug("$station - Hiding because no streams $thisProg{'title'} - at $thisProg{'start'}");
+							} else {
+								#main::DEBUGLOG && $log->is_debug && $log->debug("$station - Skipping because already handled $thisProg{'title'} - at $thisProg{'start'}");
+							}
+						}
+						
+					} else {
+						# No show links found for this item
+						main::DEBUGLOG && $log->is_debug && $log->debug("Failed to find links in this programme $thisProg{'episodetitle'}");
+					}
+					
+					# Now go through the segments
+					
+					my @segmentNodes = ();
+					
+					foreach my $segment (@{$thisProg{'proglinkssegments'}}){
+						if ( exists $included_hash{$segment} ){
+							#main::DEBUGLOG && $log->is_debug && $log->debug("segment: $segment");
+							my $savedTitle = $thisProg{'title'};
+							my $savedEpisodeTitle = $thisProg{'episodetitle'};
+							
+							%thisProg = $__getItemDetails->( $included_hash{$segment} );
+							
+							if ( $savedTitle ne '' ){
+								$thisProg{'title'} = $savedTitle;
+							} elsif ( $savedEpisodeTitle ne '' ){
+								$thisProg{'title'} = $savedEpisodeTitle;
+							}
+							$thisProg{'isShow'} = 0;	# This is a segment (not a show)
+							#main::INFOLOG && $log->is_info && $log->info("$station - Found segment $thisProg{'title'} / $thisProg{'episodetitle'} at $thisProg{'start'}");
+							#push @scheduleNodes, {%thisProg};
+							push @segmentNodes, {%thisProg};
+						} else {
+							main::INFOLOG && $log->is_info && $log->info("segment: $segment does not exists - possibly a song with no details available");
+						}
+					}
+					
+					if (scalar @segmentNodes > 0){
+						# Some segments found ... but have seen from real data that the original array is not necessarily in time order
+						# so sort it
+						my @sortedNodes = sort { $a->{start} <=> $b->{start} } @segmentNodes;
+						push @scheduleNodes, @sortedNodes;
+					}
+				}
+			}	# end loop through @data
+		} else {
+			# Expected data not present - could be a temporary comms error or they have changed their data structure
+			main::INFOLOG && $log->is_info && $log->info("$station - Failed to find expected arrays in received data");
+		}
+
+	}
+	
+
+	my $bound = (scalar @scheduleNodes)-1;
+	my $menucounter = 0;
+
+	for my $i (0..$bound) {
+
+		$hidethis = false;
+		%thisProg = %{$scheduleNodes[$i]};
+
+		#$dumped = Dumper \%thisProg;
+		#main::DEBUGLOG && $log->is_debug && $log->debug("$station - progdata - $dumped");
+		#main::DEBUGLOG && $log->is_debug && $log->debug("$station - Adding to menu - $thisProg{'title'}");
+
+		my $streamurls_ref = $thisProg{'streamurls'};
+		
+		if ( (defined($streamurls_ref) && scalar @$streamurls_ref > 0) || $thisProg{'isShow'} || !$hidenoaudio ) {
+
+			my $prefix = strftime("%H:%M",localtime($thisProg{'start'}));
+			my $name = $thisProg{'title'};
+			#my $name = strftime("%H:%M",localtime($thisProg{'start'})) . ' ' . $thisProg{'title'};
+			my $episodetitle = '';
+
+			if ( $thisProg{'episodetitle'} ne '' && lc($thisProg{'episodetitle'}) ne lc($thisProg{'title'})){
+				$episodetitle = ' - '.$thisProg{'episodetitle'}
+			}
+			
+			my $suffix = '';			
+			if ( !defined($streamurls_ref) || scalar @$streamurls_ref == 0 ){
+				# No stream URLs (might be available later)
+				$suffix .= ' - '.string('PLUGIN_RADIOFRANCE_SCHEDULE_NOTAVAILABLE');
+			} else {
+				#main::DEBUGLOG && $log->is_debug && $log->debug("streamurl: $thisProg{'streamurls'}[0]");
+			}
+
+			#main::DEBUGLOG && $log->is_debug && $log->debug("$station - Adding $thisProg{'isShow'} to menu - $name");
+			
+			if ( $thisProg{'isShow'} || $scheduleflatten ){
+				$menucounter = push @menuPrepare,
+				{
+					name => $prefix . ' '. $name . $episodetitle . $suffix,
+					image => $thisProg{'img'},
+					# url => '',
+					# type => 'a',
+					# on_select   => ''		  
+				};
+				
+				if ( defined($streamurls_ref) && scalar @$streamurls_ref > 0 ){
+					$menuPrepare[$menucounter-1]->{url} = $thisProg{'streamurls'}[0];
+					$menuPrepare[$menucounter-1]->{type} = 'audio';
+					$menuPrepare[$menucounter-1]->{on_select}  = 'play';
+				}
+			} else {
+				# Unflattened segment ... so add it to the previous show (if there was one)
+				my $submenu = ();
+				my %segment = ();
+				my $root;
+				
+				%segment = (name => $prefix . $episodetitle . $suffix,
+					    image => $thisProg{'img'},
+					    # url => '',
+					    # type => 'a',
+					    # on_select => ''
+				);
+				
+				if ( defined($streamurls_ref) && scalar @$streamurls_ref > 0 ){
+					$segment{url} = $thisProg{'streamurls'}[0];
+					$segment{type} = 'audio';
+					$segment{on_select}  = 'play';
+				}
+
+				if ( $menucounter > 0 ){
+					if ( defined $menuPrepare[$menucounter-1]->{items} ){
+						$submenu = $menuPrepare[$menucounter-1]->{items};	# Get the current set
+					} else {
+						# If there was not already an item then convert the root into first item
+						# otherwise Jive and some skins will not show the nested items
+						$root = $menuPrepare[$menucounter-1];
+						push @$submenu, {%$root};
+						delete $menuPrepare[$menucounter-1]->{url};	# Remove the parts that indicated it was playable
+						delete $menuPrepare[$menucounter-1]->{type};
+						delete $menuPrepare[$menucounter-1]->{on_select};
+						
+						if ( defined($streamurls_ref) && scalar @$streamurls_ref > 0 ){
+							# There is a stream for this segment ... so remove confusing "not available" from parent (if present)
+							my $oldSuffix = ' - '.string('PLUGIN_RADIOFRANCE_SCHEDULE_NOTAVAILABLE');
+							$menuPrepare[$menucounter-1]->{name} =~ s/\Q$oldSuffix\E$//;
+						}
+					}
+				
+					push @$submenu, {%segment};
+					$menuPrepare[$menucounter-1]->{items} = \@$submenu;
+				} else {
+					# Odd case ... no programmes yet but we have an episode (this happens sometimes with the overnight show on France Culture)
+					$menucounter = push @menuPrepare, {%segment};
+				}
+			}
+		}
+	}
+
+
+	# Second pass to tidy up
+	$bound = (scalar @menuPrepare)-1;
+	$menucounter = 0;
+
+	for my $i2 (0..$bound) {
+		if ( !defined $menuPrepare[$i2]->{url} && !defined $menuPrepare[$i2]->{items} && $hidenoaudio){
+			#main::DEBUGLOG && $log->is_debug && $log->debug("Menu: Hiding because no url and subitems for: $menuPrepare[$i2]->{name}");
+		} else {
+			push @$menu, $menuPrepare[$i2];
+		}
+		
+	}
+
+	main::DEBUGLOG && $log->is_debug && $log->debug("--_parseSchedule");
+}
+
+
+
+sub _getCachedMenu {
+	my $url = shift;
+	main::DEBUGLOG && $log->is_debug && $log->debug("++_getCachedMenu");
+
+	my $cacheKey = $pluginName . ':' . md5_hex($url);
+
+	if ( my $cachedMenu = $cache->get($cacheKey) ) {
+		my $menu = ${$cachedMenu};
+		main::DEBUGLOG && $log->is_debug && $log->debug("--_getCachedMenu got cached menu");
+		return $menu;
+	} else {
+		main::DEBUGLOG && $log->is_debug && $log->debug("--_getCachedMenu no cache");
+		return;
+	}
+}
+
+
+sub _cacheMenu {
+	my ( $url, $menu, $seconds ) = @_;	
+	main::DEBUGLOG && $log->is_debug && $log->debug("++_cacheMenu");
+	my $cacheKey = $pluginName . ':' . md5_hex($url);
+	$cache->set( $cacheKey, \$menu, $seconds );
+
+	main::DEBUGLOG && $log->is_debug && $log->debug("--_cacheMenu");
+	return;
+}
+
+
+sub toplevel {
+	my ( $client, $callback, $args ) = @_;
+	main::DEBUGLOG && $log->is_debug && $log->debug("++toplevel");
+
+
+	my $menu = [
+		{
+			name	=> string('PLUGIN_RADIOFRANCE_LIVE'),
+			image	=> 'plugins/RadioFrance/html/images/radiofrance_svg.png',
+			items	=> [
+			{
+				name	=> 'France Inter',
+				image	=> $icons->{franceinter},
+				items	=> [
+					{
+						name	=> 'France Inter (HLS)',
+						type	=> 'audio',
+						icon	=> $icons->{franceinter},
+						url	=> 'https://stream.radiofrance.fr/franceinter/franceinter.m3u8',
+						on_select	=> 'play'
+					},{
+						name	=> 'France Inter (AAC)',
+						type	=> 'audio',
+						icon	=> $icons->{franceinter},
+						url	=> 'http://icecast.radiofrance.fr/franceinter-hifi.aac',
+						on_select	=> 'play'
+					},{
+						name	=> 'France Inter (MP3)',
+						type	=> 'audio',
+						icon	=> $icons->{franceinter},
+						url	=> 'http://icecast.radiofrance.fr/franceinter-midfi.mp3',
+						on_select	=> 'play'
+					},
+				]
+			},{
+				name => 'FIP',
+				image => $icons->{fipradio},
+				items => [
+					{
+						name => 'FIP',
+						image => $icons->{fipradio},
+						items => [
+							{
+								name        => 'FIP (HLS)',
+								type        => 'audio',
+								icon        => $icons->{fipradio},
+								url         => 'https://stream.radiofrance.fr/fip/fip.m3u8',
+								on_select   => 'play'
+							},
+							{
+								name        => 'FIP (AAC)',
+								type        => 'audio',
+								icon        => $icons->{fipradio},
+								url         => 'http://icecast.radiofrance.fr/fip-hifi.aac',
+								on_select   => 'play'
+							},
+							{
+								name        => 'FIP (MP3)',
+								type        => 'audio',
+								icon        => $icons->{fipradio},
+								url         => 'http://icecast.radiofrance.fr/fip-midfi.mp3',
+								on_select   => 'play'
+							},
+						],
+					},{
+						name	=> 'Rock',
+						image	=> $icons->{fiprock},
+						items	=> [
+							{
+								name	=> 'FIP Rock (HLS)',
+								type	=> 'audio',
+								icon	=> $icons->{fiprock},
+								url	=> 'https://stream.radiofrance.fr/fiprock/fiprock.m3u8',
+								on_select	=> 'play'
+							},{
+								name	=> 'FIP Rock (AAC)',
+								type	=> 'audio',
+								icon	=> $icons->{fiprock},
+								url	=> 'http://icecast.radiofrance.fr/fiprock-hifi.aac',
+								on_select	=> 'play'
+							},{
+								name	=> 'FIP Rock (MP3)',
+								type	=> 'audio',
+								icon	=> $icons->{fiprock},
+								url	=> 'http://icecast.radiofrance.fr/fiprock-midfi.mp3',
+								on_select	=> 'play'
+							},
+						]
+					},{
+						name	=> 'Jazz',
+						image	=> $icons->{fipjazz},
+						items	=> [
+							{
+								name	=> 'FIP Jazz (HLS)',
+								type	=> 'audio',
+								icon	=> $icons->{fipjazz},
+								url	=> 'https://stream.radiofrance.fr/fipjazz/fipjazz.m3u8',
+								on_select	=> 'play'
+							},{
+								name	=> 'FIP Jazz (AAC)',
+								type	=> 'audio',
+								icon	=> $icons->{fipjazz},
+								url	=> 'http://icecast.radiofrance.fr/fipjazz-hifi.aac',
+								on_select	=> 'play'
+							},{
+								name	=> 'FIP Jazz (MP3)',
+								type	=> 'audio',
+								icon	=> $icons->{fipjazz},
+								url	=> 'http://icecast.radiofrance.fr/fipjazz-midfi.mp3',
+								on_select	=> 'play'
+							},
+						]
+					},{
+						name	=> 'Groove',
+						image	=> $icons->{fipgroove},
+						items	=> [
+							{
+								name	=> 'FIP Groove (HLS)',
+								type	=> 'audio',
+								icon	=> $icons->{fipgroove},
+								url	=> 'https://stream.radiofrance.fr/fipjazz/fipgroove.m3u8',
+								on_select	=> 'play'
+							},{
+								name	=> 'FIP Groove (AAC)',
+								type	=> 'audio',
+								icon	=> $icons->{fipgroove},
+								url	=> 'http://icecast.radiofrance.fr/fipgroove-hifi.aac',
+								on_select	=> 'play'
+							},{
+								name	=> 'FIP Groove (MP3)',
+								type	=> 'audio',
+								icon	=> $icons->{fipgroove},
+								url	=> 'http://icecast.radiofrance.fr/fipgroove-midfi.mp3',
+								on_select	=> 'play'
+							},
+						]
+					},{
+						name	=> 'Pop',
+						image	=> $icons->{fippop},
+						items	=> [
+							{
+								name	=> 'FIP Pop (HLS)',
+								type	=> 'audio',
+								icon	=> $icons->{fippop},
+								url	=> 'https://stream.radiofrance.fr/fippop/fippop.m3u8',
+								on_select	=> 'play'
+							},{
+								name	=> 'FIP Pop (AAC)',
+								type	=> 'audio',
+								icon	=> $icons->{fippop},
+								url	=> 'http://icecast.radiofrance.fr/fippop-hifi.aac',
+								on_select	=> 'play'
+							},{
+								name	=> 'FIP Pop (MP3)',
+								type	=> 'audio',
+								icon	=> $icons->{fippop},
+								url	=> 'http://icecast.radiofrance.fr/fippop-midfi.mp3',
+								on_select	=> 'play'
+							},
+						]
+					},{
+						name	=> 'Electro',
+						image	=> $icons->{fipelectro},
+						items	=> [
+							{
+								name	=> 'FIP Electro (HLS)',
+								type	=> 'audio',
+								icon	=> $icons->{fipelectro},
+								url	=> 'https://stream.radiofrance.fr/fipelectro/fipelectro.m3u8',
+								on_select	=> 'play'
+							},{
+								name	=> 'FIP Electro (AAC)',
+								type	=> 'audio',
+								icon	=> $icons->{fipelectro},
+								url	=> 'http://icecast.radiofrance.fr/fipelectro-hifi.aac',
+								on_select	=> 'play'
+							},{
+								name	=> 'FIP Electro (MP3)',
+								type	=> 'audio',
+								icon	=> $icons->{fipelectro},
+								url	=> 'http://icecast.radiofrance.fr/fipelectro-midfi.mp3',
+								on_select	=> 'play'
+							},
+						]
+					},{
+						name	=> 'Monde',
+						image	=> $icons->{fipmonde},
+						items	=> [
+							{
+								name	=> 'FIP Monde (HLS)',
+								type	=> 'audio',
+								icon	=> $icons->{fipmonde},
+								url	=> 'https://stream.radiofrance.fr/fipworld/fipworld.m3u8',
+								on_select	=> 'play'
+							},{
+								name	=> 'FIP Monde (AAC)',
+								type	=> 'audio',
+								icon	=> $icons->{fipmonde},
+								url	=> 'http://icecast.radiofrance.fr/fipworld-hifi.aac',
+								on_select	=> 'play'
+							},{
+								name	=> 'FIP Monde (MP3)',
+								type	=> 'audio',
+								icon	=> $icons->{fipmonde},
+								url	=> 'http://icecast.radiofrance.fr/fipworld-midfi.mp3',
+								on_select	=> 'play'
+							},
+						]
+					},{
+						name	=> 'Reggae',
+						image	=> $icons->{fipreggae},
+						items	=> [
+							{
+								name	=> 'FIP Reggae (HLS)',
+								type	=> 'audio',
+								icon	=> $icons->{fipreggae},
+								url	=> 'https://stream.radiofrance.fr/fipreggae/fipreggae.m3u8',
+								on_select	=> 'play'
+							},{
+								name	=> 'FIP Reggae (AAC)',
+								type	=> 'audio',
+								icon	=> $icons->{fipreggae},
+								url	=> 'http://icecast.radiofrance.fr/fipreggae-hifi.aac',
+								on_select	=> 'play'
+							},{
+								name	=> 'FIP Reggae (MP3)',
+								type	=> 'audio',
+								icon	=> $icons->{fipreggae},
+								url	=> 'http://icecast.radiofrance.fr/fipreggae-midfi.mp3',
+								on_select	=> 'play'
+							},
+						]
+					},{
+						name	=> 'Nouveautés',
+						image	=> $icons->{fipnouveau},
+						items	=> [
+							{
+								name	=> 'FIP Nouveautés (HLS)',
+								type	=> 'audio',
+								icon	=> $icons->{fipnouveau},
+								url	=> 'https://stream.radiofrance.fr/fipnouveautes/fipnouveautes.m3u8',
+								on_select	=> 'play'
+							},{
+								name	=> 'FIP Nouveautés (AAC)',
+								type	=> 'audio',
+								icon	=> $icons->{fipnouveau},
+								url	=> 'http://icecast.radiofrance.fr/fipnouveautes-hifi.aac',
+								on_select	=> 'play'
+							},{
+								name	=> 'FIP Nouveautés (MP3)',
+								type	=> 'audio',
+								icon	=> $icons->{fipnouveau},
+								url	=> 'http://icecast.radiofrance.fr/fipnouveautes-midfi.mp3',
+								on_select	=> 'play'
+							},
+						]
+					}
+				]
+			},{
+				name	=> 'France Musique',
+				image	=> $icons->{francemusique},
+				items	=> [
+					{
+					name	=> 'France Musique',
+					image	=> $icons->{francemusique},
+					items	=> [
+						{
+							name	=> 'France Musique (HLS)',
+							type	=> 'audio',
+							icon	=> $icons->{francemusique},
+							url	=> 'https://stream.radiofrance.fr/francemusique/francemusique.m3u8',
+							on_select	=> 'play'
+						},{
+							name	=> 'France Musique (AAC)',
+							type	=> 'audio',
+							icon	=> $icons->{francemusique},
+							url	=> 'http://icecast.radiofrance.fr/francemusique-hifi.aac',
+							on_select	=> 'play'
+						},{
+							name	=> 'France Musique (MP3)',
+							type	=> 'audio',
+							icon	=> $icons->{francemusique},
+							url	=> 'http://icecast.radiofrance.fr/francemusique-midfi.mp3',
+							on_select	=> 'play'
+						},
+					]
+					},{
+						name	=> 'Classique Easy',
+						image	=> $icons->{fmclassiqueeasy},
+						items	=> [
+							{
+								name	=> 'France Musique Classique Easy (HLS)',
+								type	=> 'audio',
+								icon	=> $icons->{fmclassiqueeasy},
+								url	=> 'https://stream.radiofrance.fr/francemusiqueeasyclassique/francemusiqueeasyclassique.m3u8',
+								on_select	=> 'play'
+							},{
+								name	=> 'France Musique Classique Easy (AAC)',
+								type	=> 'audio',
+								icon	=> $icons->{fmclassiqueeasy},
+								url	=> 'http://icecast.radiofrance.fr/francemusiqueeasyclassique-hifi.aac',
+								on_select	=> 'play'
+							},{
+								name	=> 'France Musique Classique Easy (MP3)',
+								type	=> 'audio',
+								icon	=> $icons->{fmclassiqueeasy},
+								url	=> 'http://icecast.radiofrance.fr/francemusiqueeasyclassique-midfi.mp3',
+								on_select	=> 'play'
+							},
+						]
+					},{
+						name	=> 'Opéra',
+						image	=> $icons->{fmopera},
+						items	=> [
+							{
+								name	=> 'France Musique Opéra (HLS)',
+								type	=> 'audio',
+								icon	=> $icons->{fmopera},
+								url	=> 'https://stream.radiofrance.fr/francemusiqueopera/francemusiqueopera.m3u8',
+								on_select	=> 'play'
+							},{
+								name	=> 'France Musique Opéra (AAC)',
+								type	=> 'audio',
+								icon	=> $icons->{fmopera},
+								url	=> 'http://icecast.radiofrance.fr/francemusiqueopera-hifi.aac',
+								on_select	=> 'play'
+							},{
+								name	=> 'France Musique Opéra (MP3)',
+								type	=> 'audio',
+								icon	=> $icons->{fmopera},
+								url	=> 'http://icecast.radiofrance.fr/francemusiqueopera-midfi.mp3',
+								on_select	=> 'play'
+							},
+						]
+					},{
+						name	=> 'La Baroque',
+						image	=> $icons->{fmbaroque},
+						items	=> [
+							{
+								name	=> 'France Musique La Baroque (HLS)',
+								type	=> 'audio',
+								icon	=> $icons->{fmbaroque},
+								url	=> 'https://stream.radiofrance.fr/francemusiquebaroque/francemusiquebaroque.m3u8',
+								on_select	=> 'play'
+							},{
+								name	=> 'France Musique La Baroque (AAC)',
+								type	=> 'audio',
+								icon	=> $icons->{fmbaroque},
+								url	=> 'http://icecast.radiofrance.fr/francemusiquebaroque-hifi.aac',
+								on_select	=> 'play'
+							},{
+								name	=> 'France Musique La Baroque (MP3)',
+								type	=> 'audio',
+								icon	=> $icons->{fmbaroque},
+								url	=> 'http://icecast.radiofrance.fr/francemusiquebaroque-midfi.mp3',
+								on_select	=> 'play'
+							},
+						]
+					},{
+						name	=> 'Classique Plus',
+						image	=> $icons->{fmclassiqueplus},
+						items	=> [
+							{
+								name	=> 'France Musique Classique Plus (HLS)',
+								type	=> 'audio',
+								icon	=> $icons->{fmclassiqueplus},
+								url	=> 'https://stream.radiofrance.fr/francemusiqueclassiqueplus/francemusiqueclassiqueplus.m3u8',
+								on_select	=> 'play'
+							},{
+								name	=> 'France Musique Classique Plus (AAC)',
+								type	=> 'audio',
+								icon	=> $icons->{fmclassiqueplus},
+								url	=> 'http://icecast.radiofrance.fr/francemusiqueclassiqueplus-hifi.aac',
+								on_select	=> 'play'
+							},{
+								name	=> 'France Musique Classique Plus (MP3)',
+								type	=> 'audio',
+								icon	=> $icons->{fmclassiqueplus},
+								url	=> 'http://icecast.radiofrance.fr/francemusiqueclassiqueplus-midfi.mp3',
+								on_select	=> 'play'
+							},
+						]
+					},{
+						name	=> 'Concerts Radio France',
+						image	=> $icons->{fmconcertsradiofrance},
+						items	=> [
+							{
+								name	=> 'France Musique Concerts Radio France (HLS)',
+								type	=> 'audio',
+								icon	=> $icons->{fmconcertsradiofrance},
+								url	=> 'https://stream.radiofrance.fr/francemusiqueconcertsradiofrance/francemusiqueconcertsradiofrance.m3u8',
+								on_select	=> 'play'
+							},{
+								name	=> 'France Musique Concerts Radio France (AAC)',
+								type	=> 'audio',
+								icon	=> $icons->{fmconcertsradiofrance},
+								url	=> 'http://icecast.radiofrance.fr/francemusiqueconcertsradiofrance-hifi.aac',
+								on_select	=> 'play'
+							},{
+								name	=> 'France Musique Concerts Radio France (MP3)',
+								type	=> 'audio',
+								icon	=> $icons->{fmconcertsradiofrance},
+								url	=> 'http://icecast.radiofrance.fr/francemusiqueconcertsradiofrance-midfi.mp3',
+								on_select	=> 'play'
+							},
+						]
+					},{
+						name	=> 'La Jazz',
+						image	=> $icons->{fmlajazz},
+						items	=> [
+							{
+								name	=> 'France Musique La Jazz (HLS)',
+								type	=> 'audio',
+								icon	=> $icons->{fmlajazz},
+								url	=> 'https://stream.radiofrance.fr/francemusiquelajazz/francemusiquelajazz.m3u8',
+								on_select	=> 'play'
+							},{
+								name	=> 'France Musique La Jazz (AAC)',
+								type	=> 'audio',
+								icon	=> $icons->{fmlajazz},
+								url	=> 'http://icecast.radiofrance.fr/francemusiquelajazz-hifi.aac',
+								on_select	=> 'play'
+							},{
+								name	=> 'France Musique La Jazz (MP3)',
+								type	=> 'audio',
+								icon	=> $icons->{fmlajazz},
+								url	=> 'http://icecast.radiofrance.fr/francemusiquelajazz-midfi.mp3',
+								on_select	=> 'play'
+							},
+						]
+					},{
+						name	=> 'La Contemporaine',
+						image	=> $icons->{fmlacontemporaine},
+						items	=> [
+							{
+								name	=> 'France Musique La Contemporaine (HLS)',
+								type	=> 'audio',
+								icon	=> $icons->{fmlacontemporaine},
+								url	=> 'https://stream.radiofrance.fr/francemusiquelacontemporaine/francemusiquelacontemporaine.m3u8',
+								on_select	=> 'play'
+							},{
+								name	=> 'France Musique La Contemporaine (AAC)',
+								type	=> 'audio',
+								icon	=> $icons->{fmlacontemporaine},
+								url	=> 'http://icecast.radiofrance.fr/francemusiquelacontemporaine-hifi.aac',
+								on_select	=> 'play'
+							},{
+								name	=> 'France Musique La Contemporaine (MP3)',
+								type	=> 'audio',
+								icon	=> $icons->{fmlacontemporaine},
+								url	=> 'http://icecast.radiofrance.fr/francemusiquelacontemporaine-midfi.mp3',
+								on_select	=> 'play'
+							},
+						]
+					},{
+						name	=> 'Ocora Musiques du Monde',
+						image	=> $icons->{fmocoramonde},
+						items	=> [
+							{
+								name	=> 'France Musique Ocora Musiques du Monde (HLS)',
+								type	=> 'audio',
+								icon	=> $icons->{fmocoramonde},
+								url	=> 'https://stream.radiofrance.fr/francemusiqueocoramonde/francemusiqueocoramonde.m3u8',
+								on_select	=> 'play'
+							},{
+								name	=> 'France Musique Ocora Musiques du Monde (AAC)',
+								type	=> 'audio',
+								icon	=> $icons->{fmocoramonde},
+								url	=> 'http://icecast.radiofrance.fr/francemusiqueocoramonde-hifi.aac',
+								on_select	=> 'play'
+							},{
+								name	=> 'France Musique Ocora Musiques du Monde (MP3)',
+								type	=> 'audio',
+								icon	=> $icons->{fmocoramonde},
+								url	=> 'http://icecast.radiofrance.fr/francemusiqueocoramonde-midfi.mp3',
+								on_select	=> 'play'
+							},
+						]
+					},{
+						name	=> 'La B.O. Musiques de Films',
+						image	=> $icons->{fmlabo},
+						items	=> [
+							{
+								name	=> 'France Musique La B.O. Musiques de Films (HLS)',
+								type	=> 'audio',
+								icon	=> $icons->{fmlabo},
+								url	=> 'https://stream.radiofrance.fr/francemusiquelabo/francemusiquelabo.m3u8',
+								on_select	=> 'play'
+							},{
+								name	=> 'France Musique La B.O. Musiques de Films (AAC)',
+								type	=> 'audio',
+								icon	=> $icons->{fmlabo},
+								url	=> 'http://icecast.radiofrance.fr/francemusiquelabo-hifi.aac',
+								on_select	=> 'play'
+							},{
+								name	=> 'France Musique La B.O. Musiques de Films (MP3)',
+								type	=> 'audio',
+								icon	=> $icons->{fmlabo},
+								url	=> 'http://icecast.radiofrance.fr/francemusiquelabo-midfi.mp3',
+								on_select	=> 'play'
+							},
+						]
+					}
+				]
+			},{
+				name	=> 'Mouv\'',
+				image	=> $icons->{mouv},
+				items	=> [
+					{
+						name	=> 'Mouv\'',
+						icon	=> $icons->{mouv},
+						items	=> [
+							{
+								name	=> 'Mouv\' (HLS)',
+								type	=> 'audio',
+								icon	=> $icons->{mouv},
+								url	=> 'https://stream.radiofrance.fr/mouv/mouv.m3u8',
+								on_select	=> 'play'
+							},{
+								name	=> 'Mouv\' (AAC)',
+								type	=> 'audio',
+								icon	=> $icons->{mouv},
+								url	=> 'http://icecast.radiofrance.fr/mouv-hifi.aac',
+								on_select	=> 'play'
+							},{
+								name	=> 'Mouv\' (MP3)',
+								type	=> 'audio',
+								icon	=> $icons->{mouv},
+								url	=> 'http://icecast.radiofrance.fr/mouv-midfi.mp3',
+								on_select	=> 'play'
+							},
+						]
+					},{
+						name	=> 'Rap Français',
+						image	=> $icons->{mouvrapfr},
+						items	=> [
+							{
+								name	=> 'Mouv\' Rap Français (HLS)',
+								type	=> 'audio',
+								icon	=> $icons->{mouvrapfr},
+								url	=> 'https://stream.radiofrance.fr/mouvrapfr/mouvrapfr.m3u8',
+								on_select	=> 'play'
+							},{
+								name	=> 'Mouv\' Rap Français (AAC)',
+								type	=> 'audio',
+								icon	=> $icons->{mouvrapfr},
+								url	=> 'http://icecast.radiofrance.fr/mouvrapfr-hifi.aac',
+								on_select	=> 'play'
+							},{
+								name	=> 'Mouv\' Rap Français (MP3)',
+								type	=> 'audio',
+								icon	=> $icons->{mouvrapfr},
+								url	=> 'http://icecast.radiofrance.fr/mouvrapfr-midfi.mp3',
+								on_select	=> 'play'
+							},
+						]
+					},{
+						name	=> '100%Mix',
+						image	=> $icons->{mouv100mix},
+						items	=> [
+							{
+								name	=> '100%Mix (HLS)',
+								type	=> 'audio',
+								icon	=> $icons->{mouv100mix},
+								url	=> 'https://stream.radiofrance.fr/mouv100p100mix/mouv100p100mix.m3u8',
+								on_select	=> 'play'
+							},{
+								name	=> '100%Mix (AAC)',
+								type	=> 'audio',
+								icon	=> $icons->{mouv100mix},
+								url	=> 'http://icecast.radiofrance.fr/mouv100p100mix-hifi.aac',
+								on_select	=> 'play'
+							},{
+								name	=> '100%Mix (MP3)',
+								type	=> 'audio',
+								icon	=> $icons->{mouv100mix},
+								url	=> 'http://icecast.radiofrance.fr/mouv100p100mix-midfi.mp3',
+								on_select	=> 'play'
+							},
+						]
+					},{
+						name	=> 'Classics',
+						image	=> $icons->{mouvclassics},
+						items	=> [
+							{
+								name	=> 'Mouv\' Classics (HLS)',
+								type	=> 'audio',
+								icon	=> $icons->{mouvclassics},
+								url	=> 'https://stream.radiofrance.fr/mouvclassics/mouvclassics.m3u8',
+								on_select	=> 'play'
+							},{
+								name	=> 'Mouv\' Classics (AAC)',
+								type	=> 'audio',
+								icon	=> $icons->{mouvclassics},
+								url	=> 'http://icecast.radiofrance.fr/mouvclassics-hifi.aac',
+								on_select	=> 'play'
+							},{
+								name	=> 'Mouv\' Classics (MP3)',
+								type	=> 'audio',
+								icon	=> $icons->{mouvclassics},
+								url	=> 'http://icecast.radiofrance.fr/mouvclassics-midfi.mp3',
+								on_select	=> 'play'
+							},
+						]
+					},{
+						name	=> 'Kids\'n Family',
+						image	=> $icons->{mouvkidsnfamily},
+						items	=> [
+							{
+								name	=> 'Mouv\' Kids\'n Family (HLS)',
+								type	=> 'audio',
+								icon	=> $icons->{mouvkidsnfamily},
+								url	=> 'https://stream.radiofrance.fr/mouvkidsnfamily/mouvkidsnfamily.m3u8',
+								on_select	=> 'play'
+							},{
+								name	=> 'Mouv\' Kids\'n Family (AAC)',
+								type	=> 'audio',
+								icon	=> $icons->{mouvkidsnfamily},
+								url	=> 'http://icecast.radiofrance.fr/mouvkidsnfamily-hifi.aac',
+								on_select	=> 'play'
+							},{
+								name	=> 'Mouv\' Kids\'n Family (MP3)',
+								type	=> 'audio',
+								icon	=> $icons->{mouvkidsnfamily},
+								url	=> 'http://icecast.radiofrance.fr/mouvkidsnfamily-midfi.mp3',
+								on_select	=> 'play'
+							},
+						]
+					},{
+						name	=> 'Rap US',
+						image	=> $icons->{mouvrapus},
+						items	=> [
+							{
+								name	=> 'Mouv\' Rap US (HLS)',
+								type	=> 'audio',
+								icon	=> $icons->{mouvrapus},
+								url	=> 'https://stream.radiofrance.fr/mouvrapus/mouvrapus.m3u8',
+								on_select	=> 'play'
+							},{
+								name	=> 'Mouv\' Rap US (AAC)',
+								type	=> 'audio',
+								icon	=> $icons->{mouvrapus},
+								url	=> 'http://icecast.radiofrance.fr/mouvrapus-hifi.aac',
+								on_select	=> 'play'
+							},{
+								name	=> 'Mouv\' Rap US (MP3)',
+								type	=> 'audio',
+								icon	=> $icons->{mouvrapus},
+								url	=> 'http://icecast.radiofrance.fr/mouvrapus-midfi.mp3',
+								on_select	=> 'play'
+							},
+						]
+					},{
+						name	=> 'R\'n\'B',
+						image	=> $icons->{mouvrnb},
+						items	=> [
+							{
+								name	=> 'Mouv\' R\'n\'B (HLS)',
+								type	=> 'audio',
+								icon	=> $icons->{mouvrnb},
+								url	=> 'https://stream.radiofrance.fr/mouvrnb/mouvrnb.m3u8',
+								on_select	=> 'play'
+							},{
+								name	=> 'Mouv\' R\'n\'B (AAC)',
+								type	=> 'audio',
+								icon	=> $icons->{mouvrnb},
+								url	=> 'http://icecast.radiofrance.fr/mouvrnb-hifi.aac',
+								on_select	=> 'play'
+							},{
+								name	=> 'Mouv\' R\'n\'B (MP3)',
+								type	=> 'audio',
+								icon	=> $icons->{mouvrnb},
+								url	=> 'http://icecast.radiofrance.fr/mouvrnb-midfi.mp3',
+								on_select	=> 'play'
+							},
+						]
+					},{
+						name	=> 'Dancehall',
+						image	=> $icons->{mouvdancehall},
+						items	=> [
+							{
+								name	=> 'Mouv\' Dancehall (HLS)',
+								type	=> 'audio',
+								icon	=> $icons->{mouvdancehall},
+								url	=> 'https://stream.radiofrance.fr/mouvdancehall/mouvdancehall.m3u8',
+								on_select	=> 'play'
+							},{
+								name	=> 'Mouv\' Dancehall (AAC)',
+								type	=> 'audio',
+								icon	=> $icons->{mouvdancehall},
+								url	=> 'http://icecast.radiofrance.fr/mouvdancehall-hifi.aac',
+								on_select	=> 'play'
+							},{
+								name	=> 'Mouv\' Dancehall (MP3)',
+								type	=> 'audio',
+								icon	=> $icons->{mouvdancehall},
+								url	=> 'http://icecast.radiofrance.fr/mouvdancehall-midfi.mp3',
+								on_select	=> 'play'
+							},
+						]
+					}
+					]
+			},{
+			
+				name	=> 'franceinfo',
+				image	=> $icons->{franceinfo},
+				items	=> [
+					{
+						name	=> 'franceinfo (HLS)',
+						type	=> 'audio',
+						icon	=> $icons->{franceinfo},
+						url	=> 'https://stream.radiofrance.fr/franceinfo/franceinfo.m3u8',
+						on_select	=> 'play'
+					},{
+						name	=> 'franceinfo (AAC)',
+						type	=> 'audio',
+						icon	=> $icons->{franceinfo},
+						url	=> 'http://icecast.radiofrance.fr/franceinfo-hifi.aac',
+						on_select	=> 'play'
+					},{
+						name	=> 'franceinfo (MP3)',
+						type	=> 'audio',
+						icon	=> $icons->{franceinfo},
+						url	=> 'http://icecast.radiofrance.fr/franceinfo-midfi.mp3',
+						on_select	=> 'play'
+					},
+				]
+			},{
+				name	=> 'France Culture',
+				image	=> $icons->{franceculture},
+				items	=> [
+					{
+						name	=> 'France Culture (HLS)',
+						type	=> 'audio',
+						icon	=> $icons->{franceculture},
+						url	=> 'https://stream.radiofrance.fr/franceculture/franceculture.m3u8',
+						on_select	=> 'play'
+					},{
+						name	=> 'France Culture (AAC)',
+						type	=> 'audio',
+						icon	=> $icons->{franceculture},
+						url	=> 'http://icecast.radiofrance.fr/franceculture-hifi.aac',
+						on_select	=> 'play'
+					},{
+						name	=> 'France Culture (MP3)',
+						type	=> 'audio',
+						icon	=> $icons->{franceculture},
+						url	=> 'http://icecast.radiofrance.fr/franceculture-midfi.mp3',
+						on_select	=> 'play'
+					},
+				]
+			},{
+				name	=> 'France Bleu',
+				image	=> 'https://mediateur.radiofrance.fr/wp-content/themes/radiofrance/img/france-bleu.png',
+				items	=> [
+					{
+						name	=> 'Alsace',
+						icon	=> $icons->{fbalsace},
+						items	=> [
+							{
+							name	=> 'Alsace',
+							icon	=> $icons->{fbalsace},
+								name	=> 'France Bleu Alsace (HLS)',
+								type	=> 'audio',
+								icon	=> $icons->{fbalsace},
+								url	=> 'https://stream.radiofrance.fr/fbalsace/fbalsace.m3u8',
+								on_select	=> 'play'
+							},{
+								name	=> 'France Bleu Alsace (MP3)',
+								type	=> 'audio',
+								icon	=> $icons->{fbalsace},
+								url	=> 'http://direct.francebleu.fr/live/fbalsace-midfi.mp3',
+								on_select	=> 'play'
+							},
+						]
+					},{
+						name	=> 'Armorique',
+						image	=> $icons->{fbarmorique},
+						items	=> [
+							{
+								name	=> 'France Bleu Armorique (HLS)',
+								type	=> 'audio',
+								icon	=> $icons->{fbarmorique},
+								url	=> 'https://stream.radiofrance.fr/fbarmorique/fbarmorique.m3u8',
+								on_select	=> 'play'
+							},{
+								name	=> 'France Bleu Armorique (MP3)',
+								type	=> 'audio',
+								icon	=> $icons->{fbarmorique},
+								url	=> 'http://direct.francebleu.fr/live/fbarmorique-midfi.mp3',
+								on_select	=> 'play'
+							},
+						]
+					},{
+						name	=> 'Auxerre',
+						image	=> $icons->{fbauxerre},
+						items	=> [
+							{
+								name	=> 'France Bleu Auxerre (HLS)',
+								type	=> 'audio',
+								icon	=> $icons->{fbauxerre},
+								url	=> 'https://stream.radiofrance.fr/fbauxerre/fbauxerre.m3u8',
+								on_select	=> 'play'
+							},{
+								name	=> 'France Bleu Auxerre (MP3)',
+								type	=> 'audio',
+								icon	=> $icons->{fbauxerre},
+								url	=> 'http://direct.francebleu.fr/live/fbauxerre-midfi.mp3',
+								on_select	=> 'play'
+							},
+						]
+					},{
+						name	=> 'Azur',
+						image	=> $icons->{fbazur},
+						items	=> [
+							{
+								name	=> 'France Bleu Azur (HLS)',
+								type	=> 'audio',
+								icon	=> $icons->{fbazur},
+								url	=> 'https://stream.radiofrance.fr/fbazur/fbazur.m3u8',
+								on_select	=> 'play'
+							},{
+								name	=> 'France Bleu Azur (MP3)',
+								type	=> 'audio',
+								icon	=> $icons->{fbazur},
+								url	=> 'http://direct.francebleu.fr/live/fbazur-midfi.mp3',
+								on_select	=> 'play'
+							},
+						]
+					},{
+						name	=> 'Béarn',
+						image	=> $icons->{fbbearn},
+						items	=> [
+							{
+								name	=> 'France Bleu Béarn (HLS)',
+								type	=> 'audio',
+								icon	=> $icons->{fbbearn},
+								url	=> 'https://stream.radiofrance.fr/fbbearn/fbbearn.m3u8',
+								on_select	=> 'play'
+							},{
+								name	=> 'France Bleu Béarn (MP3)',
+								type	=> 'audio',
+								icon	=> $icons->{fbbearn},
+								url	=> 'http://direct.francebleu.fr/live/fbbearn-midfi.mp3',
+								on_select	=> 'play'
+							},
+						]
+					},{
+						name	=> 'Belfort-Montbéliard',
+						image	=> $icons->{fbbelfort},
+						items	=> [
+							{
+								name	=> 'France Bleu Belfort-Montbéliard (HLS)',
+								type	=> 'audio',
+								icon	=> $icons->{fbbelfort},
+								url	=> 'https://stream.radiofrance.fr/fbbelfort/fbbelfort.m3u8',
+								on_select	=> 'play'
+							},{
+								name	=> 'France Bleu Belfort-Montbéliard (MP3)',
+								type	=> 'audio',
+								icon	=> $icons->{fbbelfort},
+								url	=> 'http://direct.francebleu.fr/live/fbbelfort-midfi.mp3',
+								on_select	=> 'play'
+							},
+						]
+					},{
+						name	=> 'Berry',
+						image	=> $icons->{fbberry},
+						items	=> [
+							{
+								name	=> 'France Bleu Berry (HLS)',
+								type	=> 'audio',
+								icon	=> $icons->{fbberry},
+								url	=> 'https://stream.radiofrance.fr/fbberry/fbberry.m3u8',
+								on_select	=> 'play'
+							},{
+								name	=> 'France Bleu Berry (MP3)',
+								type	=> 'audio',
+								icon	=> $icons->{fbberry},
+								url	=> 'http://direct.francebleu.fr/live/fbberry-midfi.mp3',
+								on_select	=> 'play'
+							},
+						]
+					},{
+						name	=> 'Besançon',
+						image	=> $icons->{fbbesancon},
+						items	=> [
+							{
+								name	=> 'France Bleu Besançon (HLS)',
+								type	=> 'audio',
+								icon	=> $icons->{fbbesancon},
+								url	=> 'https://stream.radiofrance.fr/fbbesancon/fbbesancon.m3u8',
+								on_select	=> 'play'
+							},{
+								name	=> 'France Bleu Besançon (MP3)',
+								type	=> 'audio',
+								icon	=> $icons->{fbbesancon},
+							url	=> 'http://direct.francebleu.fr/live/fbbesancon-midfi.mp3',
+								on_select	=> 'play'
+							},
+						]
+					},{
+						name	=> 'Bourgogne',
+						image	=> $icons->{fbbourgogne},
+						items	=> [
+							{
+								name	=> 'France Bleu Bourgogne (HLS)',
+								type	=> 'audio',
+								icon	=> $icons->{fbbourgogne},
+								url	=> 'https://stream.radiofrance.fr/fbbourgogne/fbbourgogne.m3u8',
+								on_select	=> 'play'
+							},{
+								name	=> 'France Bleu Bourgogne (MP3)',
+								type	=> 'audio',
+								icon	=> $icons->{fbbourgogne},
+								url	=> 'http://direct.francebleu.fr/live/fbbourgogne-midfi.mp3',
+								on_select	=> 'play'
+							},
+						]
+					},{
+						name	=> 'Breizh Izel',
+						image	=> $icons->{fbbreizhizel},
+						items	=> [
+							{
+								name	=> 'France Bleu Breizh Izel (HLS)',
+								type	=> 'audio',
+								icon	=> $icons->{fbbreizhizel},
+								url	=> 'https://stream.radiofrance.fr/fbbreizizel/fbbreizizel.m3u8',
+								on_select	=> 'play'
+							},{
+								name	=> 'France Bleu Breizh Izel (MP3)',
+								type	=> 'audio',
+								icon	=> $icons->{fbbreizhizel},
+								url	=> 'http://direct.francebleu.fr/live/fbbreizizel-midfi.mp3',
+								on_select	=> 'play'
+							},
+						]
+					},{
+						name	=> 'Champagne-Ardenne',
+						image	=> $icons->{fbchampagne},
+						items	=> [
+							{
+								name	=> 'France Bleu Champagne-Ardenne (HLS)',
+								type	=> 'audio',
+								icon	=> $icons->{fbchampagne},
+								url	=> 'https://stream.radiofrance.fr/fbchampagne/fbchampagne.m3u8',
+								on_select	=> 'play'
+							},{
+								name	=> 'France Bleu Champagne-Ardenne (MP3)',
+								type	=> 'audio',
+								icon	=> $icons->{fbchampagne},
+								url	=> 'http://direct.francebleu.fr/live/fbchampagne-midfi.mp3',
+								on_select	=> 'play'
+							},
+						]
+					},{
+						name	=> 'Cotentin',
+						image	=> $icons->{fbcotentin},
+						items	=> [
+							{
+								name	=> 'France Bleu Cotentin (HLS)',
+								type	=> 'audio',
+								icon	=> $icons->{fbcotentin},
+								url	=> 'https://stream.radiofrance.fr/fbcotentin/fbcotentin.m3u8',
+								on_select	=> 'play'
+							},{
+								name	=> 'France Bleu Cotentin (MP3)',
+								type	=> 'audio',
+								icon	=> $icons->{fbcotentin},
+								url	=> 'http://direct.francebleu.fr/live/fbcotentin-midfi.mp3',
+								on_select	=> 'play'
+							},
+						]
+					},{
+						name	=> 'Creuse',
+						image	=> $icons->{fbcreuse},
+						items	=> [
+							{
+								name	=> 'France Bleu Creuse (HLS)',
+								type	=> 'audio',
+								icon	=> $icons->{fbcreuse},
+								url	=> 'https://stream.radiofrance.fr/fbcreuse/fbcreuse.m3u8',
+								on_select	=> 'play'
+							},{
+								name	=> 'France Bleu Creuse (MP3)',
+								type	=> 'audio',
+								icon	=> $icons->{fbcreuse},
+								url	=> 'http://direct.francebleu.fr/live/fbcreuse-midfi.mp3',
+								on_select	=> 'play'
+							},
+						]
+					},{
+						name	=> 'Drôme Ardèche',
+						image	=> $icons->{fbdromeardeche},
+						items	=> [
+							{
+								name	=> 'France Bleu Drôme Ardèche (HLS)',
+								type	=> 'audio',
+								icon	=> $icons->{fbdromeardeche},
+								url	=> 'https://stream.radiofrance.fr/fbdromeardeche/fbdromeardeche.m3u8',
+								on_select	=> 'play'
+							},{
+								name	=> 'France Bleu Drôme Ardèche (MP3)',
+								type	=> 'audio',
+								icon	=> $icons->{fbdromeardeche},
+								url	=> 'http://direct.francebleu.fr/live/fbdromeardeche-midfi.mp3',
+								on_select	=> 'play'
+							},
+						]
+						
+						# Wrong logo 
+					},{
+						name	=> 'Elsass',
+						image	=> $icons->{fbelsass},
+						items	=> [
+							{
+								name	=> 'France Bleu Elsass (HLS)',
+								type	=> 'audio',
+								icon	=> $icons->{fbelsass},
+								url	=> 'https://stream.radiofrance.fr/fbelsass/fbelsass.m3u8',
+								on_select	=> 'play'
+							},{
+								name	=> 'France Bleu Elsass (MP3)',
+								type	=> 'audio',
+								icon	=> $icons->{fbelsass},
+								url	=> 'http://direct.francebleu.fr/live/fbelsass-midfi.mp3',
+								on_select	=> 'play'
+							},
+						]
+					},{
+						name	=> 'Gard Lozère',
+						image	=> $icons->{fbgardlozere},
+						items	=> [
+							{
+								name	=> 'France Bleu Gard Lozère (HLS)',
+								type	=> 'audio',
+								icon	=> $icons->{fbgardlozere},
+								url	=> 'https://stream.radiofrance.fr/fbgardlozere/fbgardlozere.m3u8',
+								on_select	=> 'play'
+							},{
+								name	=> 'France Bleu Gard Lozère (MP3)',
+								type	=> 'audio',
+								icon	=> $icons->{fbgardlozere},
+								url	=> 'http://direct.francebleu.fr/live/fbgardlozere-midfi.mp3',
+								on_select	=> 'play'
+							},
+						]
+					},{
+						name	=> 'Gascogne',
+						image	=> $icons->{fbgascogne},
+						items	=> [
+							{
+								name	=> 'France Bleu Gascogne (HLS)',
+								type	=> 'audio',
+								icon	=> $icons->{fbgascogne},
+								url	=> 'https://stream.radiofrance.fr/fbgascogne/fbgascogne.m3u8',
+								on_select	=> 'play'
+							},{
+								name	=> 'France Bleu Gascogne (MP3)',
+								type	=> 'audio',
+								icon	=> $icons->{fbgascogne},
+								url	=> 'http://direct.francebleu.fr/live/fbgascogne-midfi.mp3',
+								on_select	=> 'play'
+							},
+						]
+					},{
+						name	=> 'Gironde',
+						image	=> $icons->{fbgironde},
+						items	=> [
+							{
+								name	=> 'France Bleu Gironde (HLS)',
+								type	=> 'audio',
+								icon	=> $icons->{fbgironde},
+								url	=> 'https://stream.radiofrance.fr/fbgironde/fbgironde.m3u8',
+								on_select	=> 'play'
+							},{
+								name	=> 'France Bleu Gironde (MP3)',
+								type	=> 'audio',
+								icon	=> $icons->{fbgironde},
+								url	=> 'http://direct.francebleu.fr/live/fbgironde-midfi.mp3',
+								on_select	=> 'play'
+							},
+						]
+					},{
+						name	=> 'Hérault',
+						image	=> $icons->{fbherault},
+						items	=> [
+							{
+								name	=> 'France Bleu Hérault (HLS)',
+								type	=> 'audio',
+								icon	=> $icons->{fbherault},
+								url	=> 'https://stream.radiofrance.fr/fbherault/fbherault.m3u8',
+								on_select	=> 'play'
+							},{
+								name	=> 'France Bleu Hérault (MP3)',
+								type	=> 'audio',
+								icon	=> $icons->{fbherault},
+								url	=> 'http://direct.francebleu.fr/live/fbherault-midfi.mp3',
+								on_select	=> 'play'
+							},
+						]
+					},{
+						name	=> 'Isère',
+						image	=> $icons->{fbisere},
+						items	=> [
+							{
+								name	=> 'France Bleu Isère (HLS)',
+								type	=> 'audio',
+								icon	=> $icons->{fbisere},
+								url	=> 'https://stream.radiofrance.fr/fbisere/fbisere.m3u8',
+								on_select	=> 'play'
+							},{
+								name	=> 'France Bleu Isère (MP3)',
+								type	=> 'audio',
+								icon	=> $icons->{fbisere},
+								url	=> 'http://direct.francebleu.fr/live/fbisere-midfi.mp3',
+								on_select	=> 'play'
+							},
+						]
+					},{
+						name	=> 'La Rochelle',
+						image	=> $icons->{fblarochelle},
+						items	=> [
+							{
+								name	=> 'France Bleu La Rochelle (HLS)',
+								type	=> 'audio',
+								icon	=> $icons->{fblarochelle},
+								url	=> 'https://stream.radiofrance.fr/fblarochelle/fblarochelle.m3u8',
+								on_select	=> 'play'
+							},{
+					},{
+						name	=> 'France Bleu La Rochelle (MP3)',
+								type	=> 'audio',
+								icon	=> $icons->{fblarochelle},
+							url	=> 'http://direct.francebleu.fr/live/fblarochelle-midfi.mp3',
+								on_select	=> 'play'
+							},
+						]
+					},{
+						name	=> 'Limousin',
+						image	=> $icons->{fblimousin},
+						items	=> [
+							{
+								name	=> 'France Bleu Limousin (HLS)',
+								type	=> 'audio',
+								icon	=> $icons->{fblimousin},
+								url	=> 'https://stream.radiofrance.fr/fblimousin/fblimousin.m3u8',
+								on_select	=> 'play'
+							},{
+								name	=> 'France Bleu Limousin (MP3)',
+								type	=> 'audio',
+								icon	=> $icons->{fblimousin},
+								url	=> 'http://direct.francebleu.fr/live/fblimousin-midfi.mp3',
+								on_select	=> 'play'
+							},
+						]
+					},{
+						name	=> 'Loire Océan',
+						image	=> $icons->{fbloireocean},
+						items	=> [
+							{
+								name	=> 'France Bleu Loire Océan (HLS)',
+								type	=> 'audio',
+								icon	=> $icons->{fbloireocean},
+								url	=> 'https://stream.radiofrance.fr/fbloireocean/fbloireocean.m3u8',
+								on_select	=> 'play'
+							},{
+								name	=> 'France Bleu Loire Océan (MP3)',
+								type	=> 'audio',
+								icon	=> $icons->{fbloireocean},
+								url	=> 'http://direct.francebleu.fr/live/fbloireocean-midfi.mp3',
+								on_select	=> 'play'
+							},
+						]
+					},{
+						name	=> 'Lorraine Nord',
+						image	=> $icons->{fblorrainenord},
+						items	=> [
+							{
+								name	=> 'France Bleu Lorraine Nord (HLS)',
+								type	=> 'audio',
+								icon	=> $icons->{fblorrainenord},
+								url	=> 'https://stream.radiofrance.fr/fblorrainenord/fblorrainenord.m3u8',
+								on_select	=> 'play'
+							},{
+								name	=> 'France Bleu Lorraine Nord (MP3)',
+								type	=> 'audio',
+								icon	=> $icons->{fblorrainenord},
+								url	=> 'http://direct.francebleu.fr/live/fblorrainenord-midfi.mp3',
+								on_select	=> 'play'
+							},
+						]
+					},{
+						name	=> 'Maine',
+						image	=> $icons->{fbmaine},
+						items	=> [
+							{
+								name	=> 'France Bleu Maine (HLS)',
+								type	=> 'audio',
+								icon	=> $icons->{fbmaine},
+								url	=> 'https://stream.radiofrance.fr/fbmaine/fbmaine.m3u8',
+								on_select	=> 'play'
+							},{
+								name	=> 'France Bleu Maine (MP3)',
+								type	=> 'audio',
+								icon	=> $icons->{fbmaine},
+								url	=> 'http://direct.francebleu.fr/live/fbmaine-midfi.mp3',
+								on_select	=> 'play'
+							},
+						]
+					},{
+						name	=> 'Mayenne',
+						image	=> $icons->{fbmayenne},
+						items	=> [
+							{
+								name	=> 'France Bleu Mayenne (HLS)',
+								type	=> 'audio',
+								icon	=> $icons->{fbmayenne},
+								url	=> 'https://stream.radiofrance.fr/fbmayenne/fbmayenne.m3u8',
+								on_select	=> 'play'
+							},{
+								name	=> 'France Bleu Mayenne (MP3)',
+								type	=> 'audio',
+								icon	=> $icons->{fbmayenne},
+								url	=> 'http://direct.francebleu.fr/live/fbmayenne-midfi.mp3',
+								on_select	=> 'play'
+							},
+						]
+					},{
+						name	=> 'Nord',
+						image	=> $icons->{fbnord},
+						items	=> [
+							{
+								name	=> 'France Bleu Nord (HLS)',
+								type	=> 'audio',
+								icon	=> $icons->{fbnord},
+								url	=> 'https://stream.radiofrance.fr/fbnord/fbnord.m3u8',
+								on_select	=> 'play'
+							},{
+								name	=> 'France Bleu Nord (MP3)',
+								type	=> 'audio',
+								icon	=> $icons->{fbnord},
+								url	=> 'http://direct.francebleu.fr/live/fbnord-midfi.mp3',
+								on_select	=> 'play'
+							},
+						]
+						# Wrong logo and non-standard naming
+					},{
+						name	=> 'Normandie (Calvados - Orne)',
+						image	=> $icons->{fbbassenormandie},
+						items	=> [
+							{
+								name	=> 'France Bleu Normandie (Calvados - Orne) (HLS)',
+								type	=> 'audio',
+								icon	=> $icons->{fbbassenormandie},
+								url	=> 'https://stream.radiofrance.fr/fbbassenormandie/fbbassenormandie.m3u8',
+								on_select	=> 'play'
+							},{
+								name	=> 'France Bleu Normandie (Calvados - Orne) (MP3)',
+								type	=> 'audio',
+								icon	=> $icons->{fbbassenormandie},
+								url	=> 'http://direct.francebleu.fr/live/fbbassenormandie-midfi.mp3',
+								on_select	=> 'play'
+							},
+						]
+						# Wrong logo and non-standard naming
+					},{
+						name	=> 'Normandie (Seine-Maritime - Eure)',
+						image	=> $icons->{fbhautenormandie},
+						items	=> [
+							{
+								name	=> 'France Bleu Normandie (Seine-Maritime - Eure) (HLS)',
+								type	=> 'audio',
+								icon	=> $icons->{fbhautenormandie},
+								url	=> 'https://stream.radiofrance.fr/fbhautenormandie/fbhautenormandie.m3u8',
+								on_select	=> 'play'
+							},{
+								name	=> 'France Bleu Normandie (Seine-Maritime - Eure) (MP3)',
+								type	=> 'audio',
+								icon	=> $icons->{fbhautenormandie},
+								url	=> 'http://direct.francebleu.fr/live/fbhautenormandie-midfi.mp3',
+								on_select	=> 'play'
+							},
+						]
+					},{
+						name	=> 'Occitanie',
+						image	=> $icons->{fbtoulouse},
+						items	=> [
+							{
+								name	=> 'France Bleu Occitanie (HLS)',
+								type	=> 'audio',
+								icon	=> $icons->{fbtoulouse},
+								url	=> 'https://stream.radiofrance.fr/fbtoulouse/fbtoulouse.m3u8',
+								on_select	=> 'play'
+							},{
+								name	=> 'France Bleu Occitanie (MP3)',
+								type	=> 'audio',
+								icon	=> $icons->{fbtoulouse},
+								url	=> 'http://direct.francebleu.fr/live/fbtoulouse-midfi.mp3',
+								on_select	=> 'play'
+							},
+						]
+					},{
+						name	=> 'Orléans',
+						image	=> $icons->{fborleans},
+						items	=> [
+							{
+								name	=> 'France Bleu Orléans (HLS)',
+								type	=> 'audio',
+								icon	=> $icons->{fborleans},
+								url	=> 'https://stream.radiofrance.fr/fborleans/fborleans.m3u8',
+								on_select	=> 'play'
+							},{
+								name	=> 'France Bleu Orléans (MP3)',
+								type	=> 'audio',
+								icon	=> $icons->{fborleans},
+								url	=> 'http://direct.francebleu.fr/live/fborleans-midfi.mp3',
+								on_select	=> 'play'
+							},
+						]
+						# Special case - 107-1 = Paris
+					},{
+						name	=> 'Paris',
+						image	=> $icons->{fbparis},
+						items	=> [
+							{
+								name	=> 'France Bleu Paris (HLS)',
+								type	=> 'audio',
+								icon	=> $icons->{fbparis},
+								url	=> 'https://stream.radiofrance.fr/fb1071/fb1071.m3u8',
+								on_select	=> 'play'
+							},{
+								name	=> 'France Bleu Paris (MP3)',
+								type	=> 'audio',
+								icon	=> $icons->{fbparis},
+								url	=> 'http://direct.francebleu.fr/live/fb1071-midfi.mp3',
+								on_select	=> 'play'
+							},
+						]
+					},{
+						name	=> 'Pays Basque',
+						image	=> $icons->{fbpaysbasque},
+						items	=> [
+							{
+								name	=> 'France Bleu Pays Basque (HLS)',
+								type	=> 'audio',
+								icon	=> $icons->{fbpaysbasque},
+								url	=> 'https://stream.radiofrance.fr/fbpaysbasque/fbpaysbasque.m3u8',
+								on_select	=> 'play'
+							},{
+								name	=> 'France Bleu Pays Basque (MP3)',
+								type	=> 'audio',
+								icon	=> $icons->{fbpaysbasque},
+								url	=> 'http://direct.francebleu.fr/live/fbpaysbasque-midfi.mp3',
+								on_select	=> 'play'
+							},
+						]
+					},{
+						name	=> 'Pays d\'Auvergne',
+						image	=> $icons->{fbpaysdauvergne},
+						items	=> [
+							{
+								name	=> 'France Bleu Pays d\'Auvergne (HLS)',
+								type	=> 'audio',
+								icon	=> $icons->{fbpaysdauvergne},
+								url	=> 'https://stream.radiofrance.fr/fbpaysdauvergne/fbpaysdauvergne.m3u8',
+								on_select	=> 'play'
+							},{
+								name	=> 'France Bleu Pays d\'Auvergne (MP3)',
+								type	=> 'audio',
+								icon	=> $icons->{fbpaysdauvergne},
+								url	=> 'http://direct.francebleu.fr/live/fbpaysdauvergne-midfi.mp3',
+								on_select	=> 'play'
+							},
+						]
+					},{
+						name	=> 'Pays de Savoie',
+						image	=> $icons->{fbpaysdesavoie},
+						items	=> [
+							{
+								name	=> 'France Bleu Pays de Savoie (HLS)',
+								type	=> 'audio',
+								icon	=> $icons->{fbpaysdesavoie},
+								url	=> 'https://stream.radiofrance.fr/fbpaysdesavoie/fbpaysdesavoie.m3u8',
+								on_select	=> 'play'
+							},{
+								name	=> 'France Bleu Pays de Savoie (MP3)',
+								type	=> 'audio',
+								icon	=> $icons->{fbpaysdesavoie},
+								url	=> 'http://direct.francebleu.fr/live/fbpaysdesavoie-midfi.mp3',
+								on_select	=> 'play'
+							},
+						]
+					},{
+						name	=> 'Périgord',
+						image	=> $icons->{fbperigord},
+						items	=> [
+							{
+								name	=> 'France Bleu Périgord (HLS)',
+								type	=> 'audio',
+								icon	=> $icons->{fbperigord},
+								url	=> 'https://stream.radiofrance.fr/fbperigord/fbperigord.m3u8',
+								on_select	=> 'play'
+							},{
+								name	=> 'France Bleu Périgord (MP3)',
+								type	=> 'audio',
+								icon	=> $icons->{fbperigord},
+								url	=> 'http://direct.francebleu.fr/live/fbperigord-midfi.mp3',
+								on_select	=> 'play'
+							},
+						]
+					},{
+						name	=> 'Picardie',
+						image	=> $icons->{fbpicardie},
+						items	=> [
+							{
+								name	=> 'France Bleu Picardie (HLS)',
+								type	=> 'audio',
+								icon	=> $icons->{fbpicardie},
+								url	=> 'https://stream.radiofrance.fr/fbpicardie/fbpicardie.m3u8',
+								on_select	=> 'play'
+							},{
+								name	=> 'France Bleu Picardie (MP3)',
+								type	=> 'audio',
+								icon	=> $icons->{fbpicardie},
+								url	=> 'http://direct.francebleu.fr/live/fbpicardie-midfi.mp3',
+								on_select	=> 'play'
+							},
+						]
+					},{
+						name	=> 'Poitou',
+						image	=> $icons->{fbpoitou},
+						items	=> [
+							{
+								name	=> 'France Bleu Poitou (HLS)',
+								type	=> 'audio',
+								icon	=> $icons->{fbpoitou},
+								url	=> 'https://stream.radiofrance.fr/fbpoitou/fbpoitou.m3u8',
+								on_select	=> 'play'
+							},{
+								name	=> 'France Bleu Poitou (MP3)',
+								type	=> 'audio',
+								icon	=> $icons->{fbpoitou},
+								url	=> 'http://direct.francebleu.fr/live/fbpoitou-midfi.mp3',
+								on_select	=> 'play'
+							},
+						]
+					},{
+						name	=> 'Provence',
+						image	=> $icons->{fbprovence},
+						items	=> [
+							{
+								name	=> 'France Bleu Provence (HLS)',
+								type	=> 'audio',
+								icon	=> $icons->{fbprovence},
+								url	=> 'https://stream.radiofrance.fr/fbprovence/fbprovence.m3u8',
+								on_select	=> 'play'
+							},{
+								name	=> 'France Bleu Provence (MP3)',
+								type	=> 'audio',
+								icon	=> $icons->{fbprovence},
+								url	=> 'http://direct.francebleu.fr/live/fbprovence-midfi.mp3',
+								on_select	=> 'play'
+							},
+						]
+					},{
+						name	=> 'RCFM',
+						image	=> $icons->{fbrcfm},
+						items	=> [
+							{
+								name	=> 'France Bleu RCFM (HLS)',
+								type	=> 'audio',
+								icon	=> $icons->{fbrcfm},
+								url	=> 'https://stream.radiofrance.fr/fbfrequenzamora/fbfrequenzamora.m3u8',
+								on_select	=> 'play'
+							},{
+								name	=> 'France Bleu RCFM (MP3)',
+								type	=> 'audio',
+								icon	=> $icons->{fbrcfm},
+								url	=> 'http://direct.francebleu.fr/live/fbfrequenzamora-midfi.mp3',
+								on_select	=> 'play'
+							},
+						]
+					},{
+						name	=> 'Roussillon',
+						image	=> $icons->{fbroussillon},
+						items	=> [
+							{
+								name	=> 'France Bleu Roussillon (HLS)',
+								type	=> 'audio',
+								icon	=> $icons->{fbroussillon},
+								url	=> 'https://stream.radiofrance.fr/fbroussillon/fbroussillon.m3u8',
+								on_select	=> 'play'
+							},{
+								name	=> 'France Bleu Roussillon (MP3)',
+								type	=> 'audio',
+								icon	=> $icons->{fbroussillon},
+								url	=> 'http://direct.francebleu.fr/live/fbroussillon-midfi.mp3',
+								on_select	=> 'play'
+							},
+						]
+						# Non-standard naming 
+					},{
+						name	=> 'Saint-Étienne Loire',
+						image	=> $icons->{fbsaintetienneloire},
+						items	=> [
+							{
+								name	=> 'France Bleu Saint-Étienne Loire (HLS)',
+								type	=> 'audio',
+								icon	=> $icons->{fbsaintetienneloire},
+								url	=> 'https://stream.radiofrance.fr/fbstetienne/fbstetienne.m3u8',
+								on_select	=> 'play'
+							},{
+								name	=> 'France Bleu Saint-Étienne Loire (MP3)',
+								type	=> 'audio',
+								icon	=> $icons->{fbsaintetienneloire},
+								url	=> 'http://direct.francebleu.fr/live/fbstetienne-midfi.mp3',
+								on_select	=> 'play'
+							},
+						]
+					},{
+						name	=> 'Sud Lorraine',
+						image	=> $icons->{fbsudlorraine},
+						items	=> [
+							{
+								name	=> 'France Bleu Sud Lorraine (HLS)',
+								type	=> 'audio',
+								icon	=> $icons->{fbsudlorraine},
+								url	=> 'https://stream.radiofrance.fr/fbsudlorraine/fbsudlorraine.m3u8',
+								on_select	=> 'play'
+							},{
+								name	=> 'France Bleu Sud Lorraine (MP3)',
+								type	=> 'audio',
+								icon	=> $icons->{fbsudlorraine},
+								url	=> 'http://direct.francebleu.fr/live/fbsudlorraine-midfi.mp3',
+								on_select	=> 'play'
+							},
+						]
+					},{
+						name	=> 'Touraine',
+						image	=> $icons->{fbtouraine},
+						items	=> [
+							{
+								name	=> 'France Bleu Touraine (HLS)',
+								type	=> 'audio',
+								icon	=> $icons->{fbtouraine},
+								url	=> 'https://stream.radiofrance.fr/fbtouraine/fbtouraine.m3u8',
+								on_select	=> 'play'
+							},{
+								name	=> 'France Bleu Touraine (MP3)',
+								type	=> 'audio',
+								icon	=> $icons->{fbtouraine},
+								url	=> 'http://direct.francebleu.fr/live/fbtouraine-midfi.mp3',
+								on_select	=> 'play'
+							},
+						]
+					},{
+						name	=> 'Vaucluse',
+						image	=> $icons->{fbvaucluse},
+						items	=> [
+							{
+								name	=> 'France Bleu Vaucluse (HLS)',
+								type	=> 'audio',
+								icon	=> $icons->{fbvaucluse},
+								url	=> 'https://stream.radiofrance.fr/fbvaucluse/fbvaucluse.m3u8',
+								on_select	=> 'play'
+							},{
+								name	=> 'France Bleu Vaucluse (MP3)',
+								type	=> 'audio',
+								icon	=> $icons->{fbvaucluse},
+								url	=> 'http://direct.francebleu.fr/live/fbvaucluse-midfi.mp3',
+								on_select	=> 'play'
+							},
+						]
+					}
+					]
+			},
+			],
+		},{
+			name => string('PLUGIN_RADIOFRANCE_SCHEDULE'),
+			image => 'plugins/RadioFrance/html/images/schedule_MTL_icon_calendar_today.png',
+			items => [
+				{
+					name        => 'France Inter',
+					type        => 'link',
+					url         => \&getDayMenu,
+					image       => $icons->{franceinter},
+					passthrough => [
+								{
+									stationid => 'franceinter'
+								}
+							],
+				},
+				{
+					name        => 'France Musique',
+					type        => 'link',
+					url         => \&getDayMenu,
+					image       => $icons->{francemusique},
+					passthrough => [
+								{
+									stationid => 'francemusique'
+								}
+							],
+				},
+				{
+					name        => 'FIP',
+					type        => 'link',
+					url         => \&getDayMenu,
+					image       => $icons->{fipradio},
+					passthrough => [
+								{
+									stationid => 'fipradio'
+								}
+							],
+				},
+				{
+					name        => 'France Culture',
+					type        => 'link',
+					url         => \&getDayMenu,
+					image       => $icons->{franceculture},
+					passthrough => [
+								{
+									stationid => 'franceculture'
+								}
+							],
+				},
+				{
+					name        => 'Mouv\'',
+					type        => 'link',
+					url         => \&getDayMenu,
+					image       => $icons->{mouv},
+					passthrough => [
+								{
+									stationid => 'mouv'
+								}
+							],
+				},
+				{
+					name        => 'franceinfo',
+					type        => 'link',
+					url         => \&getDayMenu,
+					image       => $icons->{franceinfo},
+					passthrough => [
+								{
+									stationid => 'franceinfo'
+								}
+							],
+				},
+				{
+					name	=> 'France Bleu',
+					image	=> 'https://mediateur.radiofrance.fr/wp-content/themes/radiofrance/img/france-bleu.png',
+					items	=> [
+					{
+						name	=> 'Alsace',
+						type	=> 'link',
+						url	=> \&getDayMenu,
+						image	=> $icons->{fbalsace},
+						passthrough	=> [
+							{
+									stationid => 'fbalsace'
+							},
+						]
+					},{
+						name	=> 'Armorique',
+						type	=> 'link',
+						url	=> \&getDayMenu,
+						image	=> $icons->{fbarmorique},
+						passthrough	=> [
+							{
+									stationid => 'fbarmorique'
+							},
+						]
+					},{
+						name	=> 'Auxerre',
+						type	=> 'link',
+						url	=> \&getDayMenu,
+						image	=> $icons->{fbauxerre},
+						passthrough	=> [
+							{
+									stationid => 'fbauxerre'
+							},
+						]
+					},{
+						name	=> 'Azur',
+						type	=> 'link',
+						url	=> \&getDayMenu,
+						image	=> $icons->{fbazur},
+						passthrough	=> [
+							{
+									stationid => 'fbazur'
+							},
+						]
+					},{
+						name	=> 'Béarn',
+						type	=> 'link',
+						url	=> \&getDayMenu,
+						image	=> $icons->{fbbearn},
+						passthrough	=> [
+							{
+									stationid => 'fbbearn'
+							},
+						]
+					},{
+						name	=> 'Belfort-Montbéliard',
+						type	=> 'link',
+						url	=> \&getDayMenu,
+						image	=> $icons->{fbbelfort},
+						passthrough	=> [
+							{
+									stationid => 'fbbelfort'
+							},
+						]
+					},{
+						name	=> 'Berry',
+						type	=> 'link',
+						url	=> \&getDayMenu,
+						image	=> $icons->{fbberry},
+						passthrough	=> [
+							{
+									stationid => 'fbberry'
+							},
+						]
+					},{
+						name	=> 'Besançon',
+						type	=> 'link',
+						url	=> \&getDayMenu,
+						image	=> $icons->{fbbesancon},
+						passthrough	=> [
+							{
+									stationid => 'fbbesancon'
+							},
+						]
+					},{
+						name	=> 'Bourgogne',
+						type	=> 'link',
+						url	=> \&getDayMenu,
+						image	=> $icons->{fbbourgogne},
+						passthrough	=> [
+							{
+									stationid => 'fbbourgogne'
+							},
+						]
+					},{
+						name	=> 'Breizh Izel',
+						type	=> 'link',
+						url	=> \&getDayMenu,
+						image	=> $icons->{fbbreizhizel},
+						passthrough	=> [
+							{
+									stationid => 'fbbreizhizel'
+							},
+						]
+					},{
+						name	=> 'Champagne-Ardenne',
+						type	=> 'link',
+						url	=> \&getDayMenu,
+						image	=> $icons->{fbchampagne},
+						passthrough	=> [
+							{
+									stationid => 'fbchampagne'
+							},
+						]
+					},{
+						name	=> 'Cotentin',
+						type	=> 'link',
+						url	=> \&getDayMenu,
+						image	=> $icons->{fbcotentin},
+						passthrough	=> [
+							{
+									stationid => 'fbcotentin'
+							},
+						]
+					},{
+						name	=> 'Creuse',
+						type	=> 'link',
+						url	=> \&getDayMenu,
+						image	=> $icons->{fbcreuse},
+						passthrough	=> [
+							{
+									stationid => 'fbcreuse'
+							},
+						]
+					},{
+						name	=> 'Drôme Ardèche',
+						type	=> 'link',
+						url	=> \&getDayMenu,
+						image	=> $icons->{fbdromeardeche},
+						passthrough	=> [
+							{
+									stationid => 'fbdromeardeche'
+							},
+						]
+					},{
+						name	=> 'Elsass',
+						type	=> 'link',
+						url	=> \&getDayMenu,
+						image	=> $icons->{fbelsass},
+						passthrough	=> [
+							{
+									stationid => 'fbelsass'
+							},
+						]
+					},{
+						name	=> 'Gard Lozère',
+						type	=> 'link',
+						url	=> \&getDayMenu,
+						image	=> $icons->{fbgardlozere},
+						passthrough	=> [
+							{
+									stationid => 'fbgardlozere'
+							},
+						]
+					},{
+						name	=> 'Gascogne',
+						type	=> 'link',
+						url	=> \&getDayMenu,
+						image	=> $icons->{fbgascogne},
+						passthrough	=> [
+							{
+									stationid => 'fbgascogne'
+							},
+						]
+					},{
+						name	=> 'Gironde',
+						type	=> 'link',
+						url	=> \&getDayMenu,
+						image	=> $icons->{fbgironde},
+						passthrough	=> [
+							{
+									stationid => 'fbgironde'
+							},
+						]
+					},{
+						name	=> 'Hérault',
+						type	=> 'link',
+						url	=> \&getDayMenu,
+						image	=> $icons->{fbherault},
+						passthrough	=> [
+							{
+									stationid => 'fbherault'
+							},
+						]
+					},{
+						name	=> 'Isère',
+						type	=> 'link',
+						url	=> \&getDayMenu,
+						image	=> $icons->{fbisere},
+						passthrough	=> [
+							{
+									stationid => 'fbisere'
+							},
+						]
+					},{
+						name	=> 'La Rochelle',
+						type	=> 'link',
+						url	=> \&getDayMenu,
+						image	=> $icons->{fblarochelle},
+						passthrough	=> [
+							{
+									stationid => 'fblarochelle'
+							},
+						]
+					},{
+						name	=> 'Limousin',
+						type	=> 'link',
+						url	=> \&getDayMenu,
+						image	=> $icons->{fblimousin},
+						passthrough	=> [
+							{
+									stationid => 'fblimousin'
+							},
+						]
+					},{
+						name	=> 'Loire Océan',
+						type	=> 'link',
+						url	=> \&getDayMenu,
+						image	=> $icons->{fbloireocean},
+						passthrough	=> [
+							{
+									stationid => 'fbloireocean'
+							},
+						]
+					},{
+						name	=> 'Lorraine Nord',
+						type	=> 'link',
+						url	=> \&getDayMenu,
+						image	=> $icons->{fblorrainenord},
+						passthrough	=> [
+							{
+									stationid => 'fblorrainenord'
+							},
+						]
+					},{
+						name	=> 'Maine',
+						type	=> 'link',
+						url	=> \&getDayMenu,
+						image	=> $icons->{fbmaine},
+						passthrough	=> [
+							{
+									stationid => 'fbmaine'
+							},
+						]
+					},{
+						name	=> 'Mayenne',
+						type	=> 'link',
+						url	=> \&getDayMenu,
+						image	=> $icons->{fbmayenne},
+						passthrough	=> [
+							{
+									stationid => 'fbmayenne'
+							},
+						]
+					},{
+						name	=> 'Nord',
+						type	=> 'link',
+						url	=> \&getDayMenu,
+						image	=> $icons->{fbnord},
+						passthrough	=> [
+							{
+									stationid => 'fbnord'
+							},
+						]
+					},{
+						name	=> 'Normandie (Calvados - Orne)',
+						type	=> 'link',
+						url	=> \&getDayMenu,
+						image	=> $icons->{fbbassenormandie},
+						passthrough	=> [
+							{
+									stationid => 'fbbassenormandie'
+							},
+						]
+					},{
+						name	=> 'Normandie (Seine-Maritime - Eure)',
+						type	=> 'link',
+						url	=> \&getDayMenu,
+						image	=> $icons->{fbhautenormandie},
+						passthrough	=> [
+							{
+									stationid => 'fbhautenormandie'
+							},
+						]
+					},{
+						name	=> 'Occitanie',
+						type	=> 'link',
+						url	=> \&getDayMenu,
+						image	=> $icons->{fbtoulouse},
+						passthrough	=> [
+							{
+									stationid => 'fbtoulouse'
+							},
+						]
+					},{
+						name	=> 'Orléans',
+						type	=> 'link',
+						url	=> \&getDayMenu,
+						image	=> $icons->{fborleans},
+						passthrough	=> [
+							{
+									stationid => 'fborleans'
+							},
+						]
+					},{
+						name	=> 'Paris',
+						type	=> 'link',
+						url	=> \&getDayMenu,
+						image	=> $icons->{fbparis},
+						passthrough	=> [
+							{
+									stationid => 'fbparis'
+							},
+						]
+					},{
+						name	=> 'Pays Basque',
+						type	=> 'link',
+						url	=> \&getDayMenu,
+						image	=> $icons->{fbpaysbasque},
+						passthrough	=> [
+							{
+									stationid => 'fbpaysbasque'
+							},
+						]
+					},{
+						name	=> 'Pays d\'Auvergne',
+						type	=> 'link',
+						url	=> \&getDayMenu,
+						image	=> $icons->{fbpaysdauvergne},
+						passthrough	=> [
+							{
+									stationid => 'fbpaysdauvergne'
+							},
+						]
+					},{
+						name	=> 'Pays de Savoie',
+						type	=> 'link',
+						url	=> \&getDayMenu,
+						image	=> $icons->{fbpaysdesavoie},
+						passthrough	=> [
+							{
+									stationid => 'fbpaysdesavoie'
+							},
+						]
+					},{
+						name	=> 'Périgord',
+						type	=> 'link',
+						url	=> \&getDayMenu,
+						image	=> $icons->{fbperigord},
+						passthrough	=> [
+							{
+									stationid => 'fbperigord'
+							},
+						]
+					},{
+						name	=> 'Picardie',
+						type	=> 'link',
+						url	=> \&getDayMenu,
+						image	=> $icons->{fbpicardie},
+						passthrough	=> [
+							{
+									stationid => 'fbpicardie'
+							},
+						]
+					},{
+						name	=> 'Poitou',
+						type	=> 'link',
+						url	=> \&getDayMenu,
+						image	=> $icons->{fbpoitou},
+						passthrough	=> [
+							{
+									stationid => 'fbpoitou'
+							},
+						]
+					},{
+						name	=> 'Provence',
+						type	=> 'link',
+						url	=> \&getDayMenu,
+						image	=> $icons->{fbprovence},
+						passthrough	=> [
+							{
+									stationid => 'fbprovence'
+							},
+						]
+					},{
+						name	=> 'RCFM',
+						type	=> 'link',
+						url	=> \&getDayMenu,
+						image	=> $icons->{fbrcfm},
+						passthrough	=> [
+							{
+									stationid => 'fbrcfm'
+							},
+						]
+					},{
+						name	=> 'Roussillon',
+						type	=> 'link',
+						url	=> \&getDayMenu,
+						image	=> $icons->{fbroussillon},
+						passthrough	=> [
+							{
+									stationid => 'fbroussillon'
+							},
+						]
+					},{
+						name	=> 'Saint-Étienne Loire',
+						type	=> 'link',
+						url	=> \&getDayMenu,
+						image	=> $icons->{fbsaintetienneloire},
+						passthrough	=> [
+							{
+									stationid => 'fbsaintetienneloire'
+							},
+						]
+					},{
+						name	=> 'Sud Lorraine',
+						type	=> 'link',
+						url	=> \&getDayMenu,
+						image	=> $icons->{fbsudlorraine},
+						passthrough	=> [
+							{
+									stationid => 'fbsudlorraine'
+							},
+						]
+					},{
+						name	=> 'Touraine',
+						type	=> 'link',
+						url	=> \&getDayMenu,
+						image	=> $icons->{fbtouraine},
+						passthrough	=> [
+							{
+									stationid => 'fbtouraine'
+							},
+						]
+					},{
+						name	=> 'Vaucluse',
+						type	=> 'link',
+						url	=> \&getDayMenu,
+						image	=> $icons->{fbvaucluse},
+						passthrough	=> [
+							{
+									stationid => 'fbvaucluse'
+							},
+						]
+					}
+					]
+				},
+			],
+		},
+	];
+
+	$callback->( { items => $menu } );
+
+	main::DEBUGLOG && $log->is_debug && $log->debug("--toplevel");
+	return;
 }
 
 
