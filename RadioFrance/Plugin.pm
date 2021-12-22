@@ -3707,7 +3707,7 @@ sub toplevel {
 								name	=> 'FIP Groove (HLS)',
 								type	=> 'audio',
 								icon	=> $icons->{fipgroove},
-								url	=> 'https://stream.radiofrance.fr/fipjazz/fipgroove.m3u8',
+								url	=> 'https://stream.radiofrance.fr/fipgroove/fipgroove.m3u8',
 								on_select	=> 'play'
 							},{
 								name	=> 'FIP Groove (AAC)',
