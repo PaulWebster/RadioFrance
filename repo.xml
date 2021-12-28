@@ -11,13 +11,17 @@
 			<creator>Paul Webster</creator>
 			<email></email>
 			<changes lang="EN">
-				- Restore metadata for music stations
+				- After changes at RadioFrance needed to adjust things to collect the programme name.
+				- More work needed to collect programme description and icon from a different location.
+				- Also - correction for FIP Groove HLS URL ( thanks @Atmis )
 			</changes>
 			<changes lang="FR">
-				- Restaurer les métadonnées des stations de musique
+				- Après des changements à RadioFrance, il a fallu ajuster les choses pour récupérer le nom du programme.
+				- Plus de travail nécessaire pour collecter la description et l'icône du programme à partir d'un emplacement différent.
+				- Aussi - correction pour l'URL FIP Groove HLS ( merci @Atmis )
 			</changes>
-			<url>https://paulwebster.github.io/RadioFrance/RadioFrance-0.3.6.zip</url>
-			<sha>4da164a38ce2e6d6e1643d266e2b7afd1f9e003f</sha>
+			<url>https://paulwebster.github.io/RadioFrance/RadioFrance-0.3.7.zip</url>
+			<sha>00af3c7716c9b14c5b508b79c5f6af7540b6d2cc</sha>
 		</plugin>
 	</plugins>
 </extensions>
