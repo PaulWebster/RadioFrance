@@ -70,6 +70,13 @@ Note: Radio France does not always provide track information in a timely manner 
 - If things are not working then enable Debug logging for this plugin via LMS/Settings/Advanced/Logging interface, repeat the problem and then check the LMS logs.  
 
 ## Version History
+**0.3.7 28-Dec-2021**
+- After changes at RadioFrance needed to adjust things to collect the programme name.
+- More work needed to collect programme description and icon from a different location.
+- Also - correction for FIP Groove HLS URL ( thanks @Atmis )
+
+**0.3.6 20-Dec-2021**
+- Radio France appear to have phased out the old metadata API ... so switch to new one. Only done for music stations for now. Rest to come later.
 
 **0.3.5 09-Mar-2021**
 - Add replay from schedules
