@@ -226,83 +226,85 @@ my $urls = {
 	# Note - loop below adds one hash for each station
 # finished 1521553005 - 2018-03-20 13:36:45	fipradio_alt => 'http://www.fipradio.fr/sites/default/files/import_si/si_titre_antenne/FIP_player_current.json',
 	fipradio => 'https://api.radiofrance.fr/livemeta/pull/${stationid}',
-	fipradio_alt => $type3prefix1fip.'7'.$type3prefix2fip.$type3suffixfip,
+	fipradio_alt => $type3prefix1fip.'${stationid}'.$type3prefix2fip.$type3suffixfip,
 # finished 1521553005 - 2018-03-20 13:36:45	fipbordeaux_alt => 'http://www.fipradio.fr/sites/default/files/import_si/si_titre_antenne/FIP_player_current.json',
 	fipbordeaux => 'https://api.radiofrance.fr/livemeta/pull/${stationid}',
-	fipbordeaux_alt => $type3prefix1fip.'7'.$type3prefix2fip.$type3suffixfip,
+	fipbordeaux_alt => $type3prefix1fip.'${stationid}'.$type3prefix2fip.$type3suffixfip,
 # finished 1521553005 - 2018-03-20 13:36:45	fipnantes_alt => 'http://www.fipradio.fr/sites/default/files/import_si/si_titre_antenne/FIP_player_current.json',
 	fipnantes => 'https://api.radiofrance.fr/livemeta/pull/${stationid}',
-	fipnantes_alt => $type3prefix1fip.'7'.$type3prefix2fip.$type3suffixfip,
+	fipnantes_alt => $type3prefix1fip.'${stationid}'.$type3prefix2fip.$type3suffixfip,
 # finished 1521553005 - 2018-03-20 13:36:45	fipstrasbourg_alt => 'http://www.fipradio.fr/sites/default/files/import_si/si_titre_antenne/FIP_player_current.json',
 	fipstrasbourg => 'https://api.radiofrance.fr/livemeta/pull/${stationid}',
-	fipstrasbourg_alt => $type3prefix1fip.'7'.$type3prefix2fip.$type3suffixfip,
+	fipstrasbourg_alt => $type3prefix1fip.'${stationid}'.$type3prefix2fip.$type3suffixfip,
 # finished 1507650288 - 2017-10-10 16:44:48	fiprock_alt => 'http://www.fipradio.fr/sites/default/files/import_si_webradio_1/si_titre_antenne/FIP_player_current.json',
 	fiprock => 'https://api.radiofrance.fr/livemeta/pull/${stationid}',
-	fiprock_alt => $type3prefix1fip.'64'.$type3prefix2fip.$type3suffixfip,
+	fiprock_alt => $type3prefix1fip.'${stationid}'.$type3prefix2fip.$type3suffixfip,
 # finished 1507650914 - 2017-10-10 16:55:14	fipjazz_alt => 'http://www.fipradio.fr/sites/default/files/import_si_webradio_2/si_titre_antenne/FIP_player_current.json',
 	fipjazz => 'https://api.radiofrance.fr/livemeta/pull/${stationid}',
-	fipjazz_alt => $type3prefix1fip.'65'.$type3prefix2fip.$type3suffixfip,
+	fipjazz_alt => $type3prefix1fip.'${stationid}'.$type3prefix2fip.$type3suffixfip,
 # finished 1507650885 - 2017-10-10 16:54:45	fipgroove_alt => 'http://www.fipradio.fr/sites/default/files/import_si_webradio_3/si_titre_antenne/FIP_player_current.json',
 	fipgroove => 'https://api.radiofrance.fr/livemeta//pull/${stationid}',
-	fipgroove_alt => $type3prefix1fip.'66'.$type3prefix2fip.$type3suffixfip,
+	fipgroove_alt => $type3prefix1fip.'${stationid}'.$type3prefix2fip.$type3suffixfip,
 # finished 1507650800 - 2017-10-10 16:53:20	fipmonde_alt => 'http://www.fipradio.fr/sites/default/files/import_si_webradio_4/si_titre_antenne/FIP_player_current.json',
 	fipmonde => 'https://api.radiofrance.fr/livemeta/pull/${stationid}',
-	fipmonde_alt => $type3prefix1fip.'69'.$type3prefix2fip.$type3suffixfip,
+	fipmonde_alt => $type3prefix1fip.'${stationid}'.$type3prefix2fip.$type3suffixfip,
 # finished 1507650797 - 2017-10-10 16:53:17	fipnouveau_alt => 'http://www.fipradio.fr/sites/default/files/import_si_webradio_5/si_titre_antenne/FIP_player_current.json',
 	fipnouveau => 'https://api.radiofrance.fr/livemeta/pull/${stationid}',
-	fipnouveau_alt => $type3prefix1fip.'70'.$type3prefix2fip.$type3suffixfip,
+	fipnouveau_alt => $type3prefix1fip.'${stationid}'.$type3prefix2fip.$type3suffixfip,
 # finished 1507650800 - 2017-10-10 16:53:20	fipevenement_alt => 'http://www.fipradio.fr/sites/default/files/import_si_webradio_6/si_titre_antenne/FIP_player_current.json',
 # FIP Evenement became FIP Autour Du Reggae
 	fipreggae => 'https://api.radiofrance.fr/livemeta/pull/${stationid}',
-	fipreggae_alt => $type3prefix1fip.'71'.$type3prefix2fip.$type3suffixfip,
+	fipreggae_alt => $type3prefix1fip.'${stationid}'.$type3prefix2fip.$type3suffixfip,
 	fipelectro => 'https://api.radiofrance.fr/livemeta/pull/${stationid}',
-	fipelectro_alt => $type3prefix1fip.'74'.$type3prefix2fip.$type3suffixfip,
+	fipelectro_alt => $type3prefix1fip.'${stationid}'.$type3prefix2fip.$type3suffixfip,
 	fipmetal => 'https://api.radiofrance.fr/livemeta/pull/${stationid}',
-	fipmetal_alt => $type3prefix1fip.'77'.$type3prefix2fip.$type3suffixfip,
+	fipmetal_alt => $type3prefix1fip.'${stationid}'.$type3prefix2fip.$type3suffixfip,
 	
 	fmclassiqueeasy => 'https://api.radiofrance.fr/livemeta/pull/${stationid}',
-	fmclassiqueeasy_alt => $type3prefix1fip.'401'.$type3prefix2fip.$type3suffixfip,
+	fmclassiqueeasy_alt => $type3prefix1fip.'${stationid}'.$type3prefix2fip.$type3suffixfip,
 	fmbaroque => 'https://api.radiofrance.fr/livemeta/pull/${stationid}',
-	fmbaroque_alt => $type3prefix1fip.'408'.$type3prefix2fip.$type3suffixfip,
+	fmbaroque_alt => $type3prefix1fip.'${stationid}'.$type3prefix2fip.$type3suffixfip,
 	fmclassiqueplus => 'https://api.radiofrance.fr/livemeta/pull/${stationid}',
-	fmclassiqueplus_alt => $type3prefix1fip.'402'.$type3prefix2fip.$type3suffixfip,
+	fmclassiqueplus_alt => $type3prefix1fip.'${stationid}'.$type3prefix2fip.$type3suffixfip,
 	fmconcertsradiofrance => 'https://api.radiofrance.fr/livemeta/pull/${stationid}',
-	fmconcertsradiofrance_alt => $type3prefix1fip.'403'.$type3prefix2fip.$type3suffixfip,
+	fmconcertsradiofrance_alt => $type3prefix1fip.'${stationid}'.$type3prefix2fip.$type3suffixfip,
 	fmlajazz => 'https://api.radiofrance.fr/livemeta/pull/${stationid}',
-	fmlajazz_alt => $type3prefix1fip.'405'.$type3prefix2fip.$type3suffixfip,
+	fmlajazz_alt => $type3prefix1fip.'${stationid}'.$type3prefix2fip.$type3suffixfip,
 	fmlacontemporaine => 'https://api.radiofrance.fr/livemeta/pull/${stationid}',
-	fmlacontemporaine_alt => $type3prefix1fip.'406'.$type3prefix2fip.$type3suffixfip,
+	fmlacontemporaine_alt => $type3prefix1fip.'${stationid}'.$type3prefix2fip.$type3suffixfip,
 	fmocoramonde => 'https://api.radiofrance.fr/livemeta/pull/${stationid}',
-	fmocoramonde_alt => $type3prefix1fip.'404'.$type3prefix2fip.$type3suffixfip,
+	fmocoramonde_alt => $type3prefix1fip.'${stationid}'.$type3prefix2fip.$type3suffixfip,
 	#fmevenementielle => 'https://api.radiofrance.fr/livemeta/pull/${stationid}',
 	fmlabo => 'https://api.radiofrance.fr/livemeta/pull/${stationid}',
-	fmlabo_alt => $type3prefix1fip.'407'.$type3prefix2fip.$type3suffixfip,
+	fmlabo_alt => $type3prefix1fip.'${stationid}'.$type3prefix2fip.$type3suffixfip,
 	fmopera => 'https://api.radiofrance.fr/livemeta/pull/${stationid}',
-	fmopera_alt => $type3prefix1fip.'409'.$type3prefix2fip.$type3suffixfip,
+	fmopera_alt => $type3prefix1fip.'${stationid}'.$type3prefix2fip.$type3suffixfip,
 	
 	mouv => 'https://api.radiofrance.fr/livemeta/pull/${stationid}',
-	mouv_alt => $type3prefix1fip.'6'.$type3prefix2fip.$type3suffixfip,
+	mouv_alt => $type3prefix1fip.'${stationid}'.$type3prefix2fip.$type3suffixfip,
 	mouvxtra => 'https://api.radiofrance.fr/livemeta/pull/${stationid}',
-	mouvxtra_alt => $type3prefix1fip.'75'.$type3prefix2fip.$type3suffixfip,
+	mouvxtra_alt => $type3prefix1fip.'${stationid}'.$type3prefix2fip.$type3suffixfip,
 	mouvclassics => 'https://www.mouv.fr/latest/api/graphql?operationName=NowWebradio&variables=%7B%22stationId%22%3A601%7D&'.$type3suffix,
-	mouvclassics_alt => $type3prefix1fip.'601'.$type3prefix2fip.$type3suffixfip,
+	mouvclassics_alt => $type3prefix1fip.'${stationid}'.$type3prefix2fip.$type3suffixfip,
 	mouvdancehall => 'https://www.mouv.fr/latest/api/graphql?operationName=NowWebradio&variables=%7B%22stationId%22%3A602%7D&'.$type3suffix,
-	mouvdancehall_alt => $type3prefix1fip.'602'.$type3prefix2fip.$type3suffixfip,
+	mouvdancehall_alt => $type3prefix1fip.'${stationid}'.$type3prefix2fip.$type3suffixfip,
 	mouvrnb => 'https://www.mouv.fr/latest/api/graphql?operationName=NowWebradio&variables=%7B%22stationId%22%3A603%7D&'.$type3suffix,
-	mouvrnb_alt => $type3prefix1fip.'603'.$type3prefix2fip.$type3suffixfip,
+	mouvrnb_alt => $type3prefix1fip.'${stationid}'.$type3prefix2fip.$type3suffixfip,
 	mouvrapus => 'https://www.mouv.fr/latest/api/graphql?operationName=NowWebradio&variables=%7B%22stationId%22%3A604%7D&'.$type3suffix,
-	mouvrapus_alt => $type3prefix1fip.'604'.$type3prefix2fip.$type3suffixfip,
+	mouvrapus_alt => $type3prefix1fip.'${stationid}'.$type3prefix2fip.$type3suffixfip,
 	mouvrapfr => 'https://www.mouv.fr/latest/api/graphql?operationName=NowWebradio&variables=%7B%22stationId%22%3A605%7D&'.$type3suffix,
-	mouvrapfr_alt => $type3prefix1fip.'605'.$type3prefix2fip.$type3suffixfip,
+	mouvrapfr_alt => $type3prefix1fip.'${stationid}'.$type3prefix2fip.$type3suffixfip,
 	mouv100mix => 'https://www.mouv.fr/latest/api/graphql?operationName=NowWebradio&variables=%7B%22stationId%22%3A75%7D&'.$type3suffix,
-	mouv100mix_alt => $type3prefix1fip.'75'.$type3prefix2fip.$type3suffixfip,
+	mouv100mix_alt => $type3prefix1fip.'${stationid}'.$type3prefix2fip.$type3suffixfip,
 	
 	franceinter => 'https://api.radiofrance.fr/livemeta/pull/${stationid}',
-	franceinter_alt => $type3prefix1fip.'1'.$type3prefix2fip.$type3suffixfip,
+	franceinter_alt => $type3prefix1fip.'${stationid}'.$type3prefix2fip.$type3suffixfip,
 	franceinfo => 'https://api.radiofrance.fr/livemeta/pull/${stationid}',
+	franceinfo_alt => $type3prefix1fip.'${stationid}'.$type3prefix2fip.$type3suffixfip,
 	francemusique => 'https://api.radiofrance.fr/livemeta/pull/${stationid}',
+	francemusique_alt => $type3prefix1fip.'${stationid}'.$type3prefix2fip.$type3suffixfip,
 	franceculture => 'https://api.radiofrance.fr/livemeta/pull/${stationid}',
-	franceculture_alt => $type3prefix1fip.'5'.$type3prefix2fip.$type3suffixfip,
+	franceculture_alt => $type3prefix1fip.'${stationid}'.$type3prefix2fip.$type3suffixfip,
 	
 	# Limited song data from France Bleu stations
 	fbalsace => 'https://api.radiofrance.fr/livemeta/pull/${stationid}',
@@ -2247,13 +2249,24 @@ sub parseContent {
 				( $thisItem->{'end_time'} >= $hiResTime || $thisItem->{'end_time'} == 0 )) {
 				# This is in range (special case with 0 end_time)
 				# main::DEBUGLOG && $log->is_debug && $log->debug("Current playing $thisItem");
-				if ((!exists $thisItem->{'title'} || !defined($thisItem->{'title'}) || $thisItem->{'title'} eq '') && 
-					exists $thisItem->{'subtitle'} && defined($thisItem->{'subtitle'}) && $thisItem->{'subtitle'} ne '' )
-				{	# If there is no title but there is a subtitle then this is a show not a song
+				
+				if ( exists $perl_data->{'data'}->{'nowList'}[0]->{'mode'} && $perl_data->{'data'}->{'nowList'}[0]->{'mode'} eq 'song' ){
+					$nowplaying = $thisItem;
+					$info->{isSong} = true;
+				}
+				
+				if (((!exists $thisItem->{'title'} || !defined($thisItem->{'title'}) || $thisItem->{'title'} eq '') && 
+					exists $thisItem->{'subtitle'} && defined($thisItem->{'subtitle'}) && $thisItem->{'subtitle'} ne '' ) ||
+				    exists $perl_data->{'data'}->{'nowList'}[0]->{'mode'} && $perl_data->{'data'}->{'nowList'}[0]->{'mode'} eq 'program' )
+				{	# If there is no title but there is a subtitle ... or ... told explicitly that this is a programme ... then this is a show not a song
 				
 					main::DEBUGLOG && $log->is_debug && $log->debug("$station Found programme: ".$thisItem->{'subtitle'});
 					
-					$calculatedPlaying->{$station}->{'progtitle'} = $thisItem->{'subtitle'};
+					if ( exists $thisItem->{'title'} && defined($thisItem->{'title'}) && $thisItem->{'title'} ne '' ){
+						$calculatedPlaying->{$station}->{'progtitle'} = $thisItem->{'title'};
+					} elsif ( exists $thisItem->{'subtitle'} && defined($thisItem->{'subtitle'}) && $thisItem->{'subtitle'} ne '' ) {
+						$calculatedPlaying->{$station}->{'progtitle'} = $thisItem->{'subtitle'};
+					}
 					
 					if (exists $thisItem->{'start_time'}){ $calculatedPlaying->{$station}->{'progstart'} = $thisItem->{'start_time'}};
 					if (exists $thisItem->{'end_time'}){ $calculatedPlaying->{$station}->{'progend'} = $thisItem->{'end_time'}};
