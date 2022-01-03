@@ -4,24 +4,20 @@
 		<title lang="EN">Paul Webster's Squeezecenter Plugin for Radio France</title>
 	</details>
 	<plugins>
-		<plugin name="RadioFrance" version="0.3.7" minTarget="7.5" maxTarget="*">
+		<plugin name="RadioFrance" version="0.4.0" minTarget="7.5" maxTarget="*">
 			<title lang="EN">Radio France</title>
 			<desc  lang="EN">Radio France programme and track information plus on demand replay</desc>
 			<desc  lang="FR">Radio France - info sur le programme et morceau de musique, ainsi que la lecture à la demande</desc>
 			<creator>Paul Webster</creator>
 			<email></email>
 			<changes lang="EN">
-				- After changes at RadioFrance needed to adjust things to collect the programme name.
-				- More work needed to collect programme description and icon from a different location.
-				- Also - correction for FIP Groove HLS URL ( thanks @Atmis )
+				- Restore programme details for Now Playing on all stations
 			</changes>
 			<changes lang="FR">
-				- Après des changements à RadioFrance, il a fallu ajuster les choses pour récupérer le nom du programme.
-				- Plus de travail nécessaire pour collecter la description et l'icône du programme à partir d'un emplacement différent.
-				- Aussi - correction pour l'URL FIP Groove HLS ( merci @Atmis )
+				- Restaurer les détails du programme pour Now Playing sur toutes les stations
 			</changes>
-			<url>https://paulwebster.github.io/RadioFrance/RadioFrance-0.3.7.zip</url>
-			<sha>00af3c7716c9b14c5b508b79c5f6af7540b6d2cc</sha>
+			<url>https://paulwebster.github.io/RadioFrance/RadioFrance-0.4.0.zip</url>
+			<sha>5C8B64D338BA9EE7ACC4FD7B07CAAF7225B458EB</sha>
 		</plugin>
 	</plugins>
 </extensions>
