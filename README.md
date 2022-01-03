@@ -70,6 +70,9 @@ Note: Radio France does not always provide track information in a timely manner 
 - If things are not working then enable Debug logging for this plugin via LMS/Settings/Advanced/Logging interface, repeat the problem and then check the LMS logs.  
 
 ## Version History
+**0.4.0 03-Jan-2022**
+- Restore programme details for Now Playing on all stations
+
 **0.3.7 28-Dec-2021**
 - After changes at RadioFrance needed to adjust things to collect the programme name.
 - More work needed to collect programme description and icon from a different location.
