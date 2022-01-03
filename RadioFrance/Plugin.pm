@@ -132,7 +132,7 @@ my $stationSet = { # Take extra care if pasting in from external spreadsheet ...
 	fmlabo => { fullname => 'France Musique La B.O. de Films', stationid => '407', region => '', tuneinid => 's306575', notexcludable => true, match1 => 'francemusiquelabo', match2 => '' }, 
 	fmopera => { fullname => 'France Musique Opéra', stationid => '409', region => '', tuneinid => '', notexcludable => true, match1 => 'francemusiqueopera', match2 => '' },
 
-	mouv => { fullname => 'Mouv\'', stationid => '6', region => '', tuneinid => 's6597', notexcludable => true, match1 => 'mouv', match2 => '', ondemandurl => $radiofrancescheuleurl, ondemandheaders => \%radiofranceapiondemandheaderset, artfromuid => false },
+	mouv => { fullname => 'Mouv\'', stationid => '6', region => '', tuneinid => 's6597', notexcludable => true, match1 => 'mouv', match2 => '', ondemandurl => $radiofrancescheuleurl, ondemandheaders => \%radiofranceapiondemandheaderset, artfromuid => true },
 	mouvxtra => { fullname => 'Mouv\' Xtra', stationid => '75', region => '', tuneinid => '', notexcludable => true, match1 => 'mouvxtra', match2 => '' },
 	mouvclassics => { fullname => 'Mouv\' Classics', stationid => '601', region => '', tuneinid => 's307696', notexcludable => true, match1 => 'mouvclassics', match2 => '' },
 	mouvdancehall => { fullname => 'Mouv\' Dancehall', stationid => '602', region => '', tuneinid => 's307697', notexcludable => true, match1 => 'mouvdancehall', match2 => '' },
@@ -143,55 +143,55 @@ my $stationSet = { # Take extra care if pasting in from external spreadsheet ...
 	mouv100mix => { fullname => 'Mouv\' 100\% Mix', stationid => '75', region => '', tuneinid => 's244069', notexcludable => true, match1 => 'mouv100p100mix', match2 => '' },
 
 	franceinter => { fullname => 'France Inter', stationid => '1', region => '', tuneinid => 's24875', notexcludable => false, match1 => 'franceinter', match2 => '', ondemandurl => $radiofrancescheuleurl, ondemandheaders => \%radiofranceapiondemandheaderset },
-	franceinfo => { fullname => 'France Info', stationid => '2', region => '', tuneinid => 's9948', notexcludable => false, match1 => 'franceinfo', match2 => '', ondemandurl => $radiofrancescheuleurl, ondemandheaders => \%radiofranceapiondemandheaderset, artfromuid => false },
+	franceinfo => { fullname => 'France Info', stationid => '2', region => '', tuneinid => 's9948', notexcludable => false, match1 => 'franceinfo', match2 => '', ondemandurl => $radiofrancescheuleurl, ondemandheaders => \%radiofranceapiondemandheaderset, artfromuid => true },
 	francemusique => { fullname => 'France Musique', stationid => '4', region => '', tuneinid => 's15198', notexcludable => false, match1 => 'francemusique', match2 => '', ondemandurl => $radiofrancescheuleurl, ondemandheaders => \%radiofranceapiondemandheaderset },
-	franceculture => { fullname => 'France Culture', stationid => '5', region => '', tuneinid => 's2442', notexcludable => false, match1 => 'franceculture', match2 => '', ondemandurl => $radiofrancescheuleurl, ondemandheaders => \%radiofranceapiondemandheaderset, artfromuid => false },
+	franceculture => { fullname => 'France Culture', stationid => '5', region => '', tuneinid => 's2442', notexcludable => false, match1 => 'franceculture', match2 => '', ondemandurl => $radiofrancescheuleurl, ondemandheaders => \%radiofranceapiondemandheaderset, artfromuid => true },
 
-	fbalsace => { fullname => 'France Bleu Alsace', stationid => '12', region => '', tuneinid => 's2992', notexcludable => false, match1 => 'fbalsace', match2 => '', scheduleurl => '', artfromuid => false },
-	fbarmorique => { fullname => 'France Bleu Armorique', stationid => '13', region => '', tuneinid => 's25492', notexcludable => false, match1 => 'fbarmorique', match2 => '', scheduleurl => '', artfromuid => false },
-	fbauxerre => { fullname => 'France Bleu Auxerre', stationid => '14', region => '', tuneinid => 's47473', notexcludable => false, match1 => 'fbauxerre', match2 => '', scheduleurl => '', artfromuid => false },
-	fbazur => { fullname => 'France Bleu Azur', stationid => '49', region => '', tuneinid => 's45035', notexcludable => false, match1 => 'fbazur', match2 => '', scheduleurl => '', artfromuid => false },
-	fbbearn => { fullname => 'France Bleu Béarn', stationid => '15', region => '', tuneinid => 's48291', notexcludable => false, match1 => 'fbbearn', match2 => '', scheduleurl => '', artfromuid => false },
-	fbbelfort => { fullname => 'France Bleu Belfort-Montbéliard', stationid => '16', region => '', tuneinid => 's25493', notexcludable => false, match1 => 'fbbelfort', match2 => '', scheduleurl => '', artfromuid => false },
-	fbberry => { fullname => 'France Bleu Berry', stationid => '17', region => '', tuneinid => 's48650', notexcludable => false, match1 => 'fbberry', match2 => '', scheduleurl => '', artfromuid => false },
-	fbbesancon => { fullname => 'France Bleu Besançon', stationid => '18', region => '', tuneinid => 's48652', notexcludable => false, match1 => 'fbbesancon', match2 => '', scheduleurl => '', artfromuid => false },
-	fbbourgogne => { fullname => 'France Bleu Bourgogne', stationid => '19', region => '', tuneinid => 's36092', notexcludable => false, match1 => 'fbbourgogne', match2 => '', scheduleurl => '', artfromuid => false },
-	fbbreizhizel => { fullname => 'France Bleu Breizh Izel', stationid => '20', region => '', tuneinid => 's25494', notexcludable => false, match1 => 'fbbreizizel', match2 => '', scheduleurl => '', artfromuid => false },
-	fbchampagne => { fullname => 'France Bleu Champagne-Ardenne', stationid => '21', region => '', tuneinid => 's47472', notexcludable => false, match1 => 'fbchampagne', match2 => '', scheduleurl => '', artfromuid => false },
-	fbcotentin => { fullname => 'France Bleu Cotentin', stationid => '37', region => '', tuneinid => 's36093', notexcludable => false, match1 => 'fbcotentin', match2 => '', scheduleurl => '', artfromuid => false },
-	fbcreuse => { fullname => 'France Bleu Creuse', stationid => '23', region => '', tuneinid => 's2997', notexcludable => false, match1 => 'fbcreuse', match2 => '', scheduleurl => '', artfromuid => false },
-	fbdromeardeche => { fullname => 'France Bleu Drôme Ardèche', stationid => '24', region => '', tuneinid => 's48657', notexcludable => false, match1 => 'fbdromeardeche', match2 => '', scheduleurl => '', artfromuid => false },
-	fbelsass => { fullname => 'France Bleu Elsass', stationid => '90', region => '', tuneinid => 's74418', notexcludable => false, match1 => 'fbelsass', match2 => '', scheduleurl => '', artfromuid => false },
-	fbgardlozere => { fullname => 'France Bleu Gard Lozère', stationid => '25', region => '', tuneinid => 's36094', notexcludable => false, match1 => 'fbgardlozere', match2 => '', scheduleurl => '', artfromuid => false },
-	fbgascogne => { fullname => 'France Bleu Gascogne', stationid => '26', region => '', tuneinid => 's47470', notexcludable => false, match1 => 'fbgascogne', match2 => '', scheduleurl => '', artfromuid => false },
-	fbgironde => { fullname => 'France Bleu Gironde', stationid => '27', region => '', tuneinid => 's48659', notexcludable => false, match1 => 'fbgironde', match2 => '', scheduleurl => '', artfromuid => false },
-	fbherault => { fullname => 'France Bleu Hérault', stationid => '28', region => '', tuneinid => 's48665', notexcludable => false, match1 => 'fbherault', match2 => '', scheduleurl => '', artfromuid => false },
-	fbisere => { fullname => 'France Bleu Isère', stationid => '29', region => '', tuneinid => 's20328', notexcludable => false, match1 => 'fbisere', match2 => '', scheduleurl => '', artfromuid => false },
-	fblarochelle => { fullname => 'France Bleu La Rochelle', stationid => '30', region => '', tuneinid => 's48669', notexcludable => false, match1 => 'fblarochelle', match2 => '', ondemandurl => $radiofrancescheuleurl, ondemandheaders => \%radiofranceapiondemandheaderset, artfromuid => false },  #Possible alternate for schedule https://www.francebleu.fr/grid/la-rochelle/${unixtime}
-	fblimousin => { fullname => 'France Bleu Limousin', stationid => '31', region => '', tuneinid => 's48670', notexcludable => false, match1 => 'fblimousin', match2 => '', scheduleurl => '', artfromuid => false },
-	fbloireocean => { fullname => 'France Bleu Loire Océan', stationid => '32', region => '', tuneinid => 's36096', notexcludable => false, match1 => 'fbloireocean', match2 => '', scheduleurl => '', artfromuid => false },
-	fblorrainenord => { fullname => 'France Bleu Lorraine Nord', stationid => '50', region => '', tuneinid => 's48672', notexcludable => false, match1 => 'fblorrainenord', match2 => '', scheduleurl => '', artfromuid => false },
-	fbmaine => { fullname => 'France Bleu Maine', stationid => '91', region => '', tuneinid => 's127941', notexcludable => false, match1 => 'fbmaine', match2 => '', scheduleurl => '', artfromuid => false },
-	fbmayenne => { fullname => 'France Bleu Mayenne', stationid => '34', region => '', tuneinid => 's48673', notexcludable => false, match1 => 'fbmayenne', match2 => '', scheduleurl => '', artfromuid => false },
-	fbnord => { fullname => 'France Bleu Nord', stationid => '36', region => '', tuneinid => 's44237', notexcludable => false, match1 => 'fbnord', match2 => '', scheduleurl => '', artfromuid => false },
-	fbbassenormandie => { fullname => 'France Bleu Normandie (Calvados - Orne)', stationid => '22', region => '', tuneinid => 's48290', notexcludable => false, match1 => 'fbbassenormandie', match2 => '', scheduleurl => '', artfromuid => false },
-	fbhautenormandie => { fullname => 'France Bleu Normandie (Seine-Maritime - Eure)', stationid => '38', region => '', tuneinid => 's222667', notexcludable => false, match1 => 'fbhautenormandie', match2 => '', scheduleurl => '', artfromuid => false },
-	fbtoulouse => { fullname => 'France Bleu Occitanie', stationid => '92', region => '', tuneinid => 's50669', notexcludable => false, match1 => 'fbtoulouse', match2 => '', scheduleurl => '', artfromuid => false },
-	fborleans => { fullname => 'France Bleu Orléans', stationid => '39', region => '', tuneinid => 's1335', notexcludable => false, match1 => 'fborleans', match2 => '', scheduleurl => '', artfromuid => false },
-	fbparis => { fullname => 'France Bleu Paris', stationid => '68', region => '', tuneinid => 's52972', notexcludable => false, match1 => 'fb1071', match2 => '', scheduleurl => '', artfromuid => false },
-	fbpaysbasque => { fullname => 'France Bleu Pays Basque', stationid => '41', region => '', tuneinid => 's48682', notexcludable => false, match1 => 'fbpaysbasque', match2 => '', scheduleurl => '', artfromuid => false },
-	fbpaysdauvergne => { fullname => 'France Bleu Pays d&#039;Auvergne', stationid => '40', region => '', tuneinid => 's48683', notexcludable => false, match1 => 'fbpaysdauvergne', match2 => '', scheduleurl => '', artfromuid => false },
-	fbpaysdesavoie => { fullname => 'France Bleu Pays de Savoie', stationid => '42', region => '', tuneinid => 's45038', notexcludable => false, match1 => 'fbpaysdesavoie', match2 => '', scheduleurl => '', artfromuid => false },
-	fbperigord => { fullname => 'France Bleu Périgord', stationid => '43', region => '', tuneinid => 's2481', notexcludable => false, match1 => 'fbperigord', match2 => '', scheduleurl => '', artfromuid => false },
-	fbpicardie => { fullname => 'France Bleu Picardie', stationid => '44', region => '', tuneinid => 's25497', notexcludable => false, match1 => 'fbpicardie', match2 => '', scheduleurl => '', artfromuid => false },
-	fbpoitou => { fullname => 'France Bleu Poitou', stationid => '54', region => '', tuneinid => 's47471', notexcludable => false, match1 => 'fbpoitou', match2 => '', scheduleurl => '', artfromuid => false },
-	fbprovence => { fullname => 'France Bleu Provence', stationid => '45', region => '', tuneinid => 's1429', notexcludable => false, match1 => 'fbprovence', match2 => '', scheduleurl => '', artfromuid => false },
-	fbrcfm => { fullname => 'France Bleu RCFM', stationid => '11', region => '', tuneinid => 's48656', notexcludable => false, match1 => 'fbfrequenzamora', match2 => '', scheduleurl => '', artfromuid => false },
-	fbroussillon => { fullname => 'France Bleu Roussillon', stationid => '46', region => '', tuneinid => 's48689', notexcludable => false, match1 => 'fbroussillon', match2 => '', scheduleurl => '', artfromuid => false },
-	fbsaintetienneloire => { fullname => 'France Bleu Saint-Étienne Loire', stationid => '93', region => '', tuneinid => 's212244', notexcludable => false, match1 => 'fbstetienne', match2 => '', scheduleurl => '', artfromuid => false },
-	fbsudlorraine => { fullname => 'France Bleu Sud Lorraine', stationid => '33', region => '', tuneinid => 's45039', notexcludable => false, match1 => 'fbsudlorraine', match2 => '', scheduleurl => '', artfromuid => false },
-	fbtouraine => { fullname => 'France Bleu Touraine', stationid => '47', region => '', tuneinid => 's48694', notexcludable => false, match1 => 'fbtouraine', match2 => '', scheduleurl => '', artfromuid => false },
-	fbvaucluse => { fullname => 'France Bleu Vaucluse', stationid => '48', region => '', tuneinid => 's47474', notexcludable => false, match1 => 'fbvaucluse', match2 => '', scheduleurl => '', artfromuid => false },
+	fbalsace => { fullname => 'France Bleu Alsace', stationid => '12', region => '', tuneinid => 's2992', notexcludable => false, match1 => 'fbalsace', match2 => '', scheduleurl => '', artfromuid => true },
+	fbarmorique => { fullname => 'France Bleu Armorique', stationid => '13', region => '', tuneinid => 's25492', notexcludable => false, match1 => 'fbarmorique', match2 => '', scheduleurl => '', artfromuid => true },
+	fbauxerre => { fullname => 'France Bleu Auxerre', stationid => '14', region => '', tuneinid => 's47473', notexcludable => false, match1 => 'fbauxerre', match2 => '', scheduleurl => '', artfromuid => true },
+	fbazur => { fullname => 'France Bleu Azur', stationid => '49', region => '', tuneinid => 's45035', notexcludable => false, match1 => 'fbazur', match2 => '', scheduleurl => '', artfromuid => true },
+	fbbearn => { fullname => 'France Bleu Béarn', stationid => '15', region => '', tuneinid => 's48291', notexcludable => false, match1 => 'fbbearn', match2 => '', scheduleurl => '', artfromuid => true },
+	fbbelfort => { fullname => 'France Bleu Belfort-Montbéliard', stationid => '16', region => '', tuneinid => 's25493', notexcludable => false, match1 => 'fbbelfort', match2 => '', scheduleurl => '', artfromuid => true },
+	fbberry => { fullname => 'France Bleu Berry', stationid => '17', region => '', tuneinid => 's48650', notexcludable => false, match1 => 'fbberry', match2 => '', scheduleurl => '', artfromuid => true },
+	fbbesancon => { fullname => 'France Bleu Besançon', stationid => '18', region => '', tuneinid => 's48652', notexcludable => false, match1 => 'fbbesancon', match2 => '', scheduleurl => '', artfromuid => true },
+	fbbourgogne => { fullname => 'France Bleu Bourgogne', stationid => '19', region => '', tuneinid => 's36092', notexcludable => false, match1 => 'fbbourgogne', match2 => '', scheduleurl => '', artfromuid => true },
+	fbbreizhizel => { fullname => 'France Bleu Breizh Izel', stationid => '20', region => '', tuneinid => 's25494', notexcludable => false, match1 => 'fbbreizizel', match2 => '', scheduleurl => '', artfromuid => true },
+	fbchampagne => { fullname => 'France Bleu Champagne-Ardenne', stationid => '21', region => '', tuneinid => 's47472', notexcludable => false, match1 => 'fbchampagne', match2 => '', scheduleurl => '', artfromuid => true },
+	fbcotentin => { fullname => 'France Bleu Cotentin', stationid => '37', region => '', tuneinid => 's36093', notexcludable => false, match1 => 'fbcotentin', match2 => '', scheduleurl => '', artfromuid => true },
+	fbcreuse => { fullname => 'France Bleu Creuse', stationid => '23', region => '', tuneinid => 's2997', notexcludable => false, match1 => 'fbcreuse', match2 => '', scheduleurl => '', artfromuid => true },
+	fbdromeardeche => { fullname => 'France Bleu Drôme Ardèche', stationid => '24', region => '', tuneinid => 's48657', notexcludable => false, match1 => 'fbdromeardeche', match2 => '', scheduleurl => '', artfromuid => true },
+	fbelsass => { fullname => 'France Bleu Elsass', stationid => '90', region => '', tuneinid => 's74418', notexcludable => false, match1 => 'fbelsass', match2 => '', scheduleurl => '', artfromuid => true },
+	fbgardlozere => { fullname => 'France Bleu Gard Lozère', stationid => '25', region => '', tuneinid => 's36094', notexcludable => false, match1 => 'fbgardlozere', match2 => '', scheduleurl => '', artfromuid => true },
+	fbgascogne => { fullname => 'France Bleu Gascogne', stationid => '26', region => '', tuneinid => 's47470', notexcludable => false, match1 => 'fbgascogne', match2 => '', scheduleurl => '', artfromuid => true },
+	fbgironde => { fullname => 'France Bleu Gironde', stationid => '27', region => '', tuneinid => 's48659', notexcludable => false, match1 => 'fbgironde', match2 => '', scheduleurl => '', artfromuid => true },
+	fbherault => { fullname => 'France Bleu Hérault', stationid => '28', region => '', tuneinid => 's48665', notexcludable => false, match1 => 'fbherault', match2 => '', scheduleurl => '', artfromuid => true },
+	fbisere => { fullname => 'France Bleu Isère', stationid => '29', region => '', tuneinid => 's20328', notexcludable => false, match1 => 'fbisere', match2 => '', scheduleurl => '', artfromuid => true },
+	fblarochelle => { fullname => 'France Bleu La Rochelle', stationid => '30', region => '', tuneinid => 's48669', notexcludable => false, match1 => 'fblarochelle', match2 => '', ondemandurl => $radiofrancescheuleurl, ondemandheaders => \%radiofranceapiondemandheaderset, artfromuid => true },  #Possible alternate for schedule https://www.francebleu.fr/grid/la-rochelle/${unixtime}
+	fblimousin => { fullname => 'France Bleu Limousin', stationid => '31', region => '', tuneinid => 's48670', notexcludable => false, match1 => 'fblimousin', match2 => '', scheduleurl => '', artfromuid => true },
+	fbloireocean => { fullname => 'France Bleu Loire Océan', stationid => '32', region => '', tuneinid => 's36096', notexcludable => false, match1 => 'fbloireocean', match2 => '', scheduleurl => '', artfromuid => true },
+	fblorrainenord => { fullname => 'France Bleu Lorraine Nord', stationid => '50', region => '', tuneinid => 's48672', notexcludable => false, match1 => 'fblorrainenord', match2 => '', scheduleurl => '', artfromuid => true },
+	fbmaine => { fullname => 'France Bleu Maine', stationid => '91', region => '', tuneinid => 's127941', notexcludable => false, match1 => 'fbmaine', match2 => '', scheduleurl => '', artfromuid => true },
+	fbmayenne => { fullname => 'France Bleu Mayenne', stationid => '34', region => '', tuneinid => 's48673', notexcludable => false, match1 => 'fbmayenne', match2 => '', scheduleurl => '', artfromuid => true },
+	fbnord => { fullname => 'France Bleu Nord', stationid => '36', region => '', tuneinid => 's44237', notexcludable => false, match1 => 'fbnord', match2 => '', scheduleurl => '', artfromuid => true },
+	fbbassenormandie => { fullname => 'France Bleu Normandie (Calvados - Orne)', stationid => '22', region => '', tuneinid => 's48290', notexcludable => false, match1 => 'fbbassenormandie', match2 => '', scheduleurl => '', artfromuid => true },
+	fbhautenormandie => { fullname => 'France Bleu Normandie (Seine-Maritime - Eure)', stationid => '38', region => '', tuneinid => 's222667', notexcludable => false, match1 => 'fbhautenormandie', match2 => '', scheduleurl => '', artfromuid => true },
+	fbtoulouse => { fullname => 'France Bleu Occitanie', stationid => '92', region => '', tuneinid => 's50669', notexcludable => false, match1 => 'fbtoulouse', match2 => '', scheduleurl => '', artfromuid => true },
+	fborleans => { fullname => 'France Bleu Orléans', stationid => '39', region => '', tuneinid => 's1335', notexcludable => false, match1 => 'fborleans', match2 => '', scheduleurl => '', artfromuid => true },
+	fbparis => { fullname => 'France Bleu Paris', stationid => '68', region => '', tuneinid => 's52972', notexcludable => false, match1 => 'fb1071', match2 => '', scheduleurl => '', artfromuid => true },
+	fbpaysbasque => { fullname => 'France Bleu Pays Basque', stationid => '41', region => '', tuneinid => 's48682', notexcludable => false, match1 => 'fbpaysbasque', match2 => '', scheduleurl => '', artfromuid => true },
+	fbpaysdauvergne => { fullname => 'France Bleu Pays d&#039;Auvergne', stationid => '40', region => '', tuneinid => 's48683', notexcludable => false, match1 => 'fbpaysdauvergne', match2 => '', scheduleurl => '', artfromuid => true },
+	fbpaysdesavoie => { fullname => 'France Bleu Pays de Savoie', stationid => '42', region => '', tuneinid => 's45038', notexcludable => false, match1 => 'fbpaysdesavoie', match2 => '', scheduleurl => '', artfromuid => true },
+	fbperigord => { fullname => 'France Bleu Périgord', stationid => '43', region => '', tuneinid => 's2481', notexcludable => false, match1 => 'fbperigord', match2 => '', scheduleurl => '', artfromuid => true },
+	fbpicardie => { fullname => 'France Bleu Picardie', stationid => '44', region => '', tuneinid => 's25497', notexcludable => false, match1 => 'fbpicardie', match2 => '', scheduleurl => '', artfromuid => true },
+	fbpoitou => { fullname => 'France Bleu Poitou', stationid => '54', region => '', tuneinid => 's47471', notexcludable => false, match1 => 'fbpoitou', match2 => '', scheduleurl => '', artfromuid => true },
+	fbprovence => { fullname => 'France Bleu Provence', stationid => '45', region => '', tuneinid => 's1429', notexcludable => false, match1 => 'fbprovence', match2 => '', scheduleurl => '', artfromuid => true },
+	fbrcfm => { fullname => 'France Bleu RCFM', stationid => '11', region => '', tuneinid => 's48656', notexcludable => false, match1 => 'fbfrequenzamora', match2 => '', scheduleurl => '', artfromuid => true },
+	fbroussillon => { fullname => 'France Bleu Roussillon', stationid => '46', region => '', tuneinid => 's48689', notexcludable => false, match1 => 'fbroussillon', match2 => '', scheduleurl => '', artfromuid => true },
+	fbsaintetienneloire => { fullname => 'France Bleu Saint-Étienne Loire', stationid => '93', region => '', tuneinid => 's212244', notexcludable => false, match1 => 'fbstetienne', match2 => '', scheduleurl => '', artfromuid => true },
+	fbsudlorraine => { fullname => 'France Bleu Sud Lorraine', stationid => '33', region => '', tuneinid => 's45039', notexcludable => false, match1 => 'fbsudlorraine', match2 => '', scheduleurl => '', artfromuid => true },
+	fbtouraine => { fullname => 'France Bleu Touraine', stationid => '47', region => '', tuneinid => 's48694', notexcludable => false, match1 => 'fbtouraine', match2 => '', scheduleurl => '', artfromuid => true },
+	fbvaucluse => { fullname => 'France Bleu Vaucluse', stationid => '48', region => '', tuneinid => 's47474', notexcludable => false, match1 => 'fbvaucluse', match2 => '', scheduleurl => '', artfromuid => true },
 };
 
 
@@ -542,27 +542,27 @@ foreach my $metakey (keys(%$stationSet)){
 
 
 my $iconsIgnoreRegex = {
-	fipradio => '(fond_titres_diffuses_degrade.png|direct_default_cover_medium.png)',
-	fipbordeaux => '(fond_titres_diffuses_degrade.png|direct_default_cover_medium.png)',
-	fipnantes => '(fond_titres_diffuses_degrade.png|direct_default_cover_medium.png)',
-	fipstrasbourg => '(fond_titres_diffuses_degrade.png|direct_default_cover_medium.png)',
-	fiprock => '(fond_titres_diffuses_degrade.png|direct_default_cover_medium.png)',
-	fipjazz => '(fond_titres_diffuses_degrade.png|direct_default_cover_medium.png)',
-	fipgroove => '(fond_titres_diffuses_degrade.png|direct_default_cover_medium.png)',
-	fipmonde => '(fond_titres_diffuses_degrade.png|direct_default_cover_medium.png)',
-	fipnouveau => '(fond_titres_diffuses_degrade.png|direct_default_cover_medium.png)',
-	fipreggae => '(fond_titres_diffuses_degrade.png|direct_default_cover_medium.png)',
-	fipelectro => '(fond_titres_diffuses_degrade.png|direct_default_cover_medium.png)',
-	fipmetal => '(fond_titres_diffuses_degrade.png|direct_default_cover_medium.png)',
-	fippop => '(fond_titres_diffuses_degrade.png|direct_default_cover_medium.png)',
-	mouv => '(image_default_player.jpg)',
-	mouvxtra => '(image_default_player.jpg)',
-	mouvclassics => '(image_default_player.jpg)',
-	mouvdancehall => '(image_default_player.jpg)',
-	mouvrnb => '(image_default_player.jpg)',
-	mouvrapus => '(image_default_player.jpg)',
-	mouvrapfr => '(image_default_player.jpg)',
-	mouv100mix => '(image_default_player.jpg)',
+	fipradio => '(a0773022-c452-4206-9b16-76fe7147fec9|fond_titres_diffuses_degrade.png|direct_default_cover_medium.png)',
+	fipbordeaux => '(a0773022-c452-4206-9b16-76fe7147fec9|fond_titres_diffuses_degrade.png|direct_default_cover_medium.png)',
+	fipnantes => '(a0773022-c452-4206-9b16-76fe7147fec9|fond_titres_diffuses_degrade.png|direct_default_cover_medium.png)',
+	fipstrasbourg => '(a0773022-c452-4206-9b16-76fe7147fec9|fond_titres_diffuses_degrade.png|direct_default_cover_medium.png)',
+	fiprock => '(a0773022-c452-4206-9b16-76fe7147fec9|fond_titres_diffuses_degrade.png|direct_default_cover_medium.png)',
+	fipjazz => '(a0773022-c452-4206-9b16-76fe7147fec9|fond_titres_diffuses_degrade.png|direct_default_cover_medium.png)',
+	fipgroove => '(a0773022-c452-4206-9b16-76fe7147fec9|fond_titres_diffuses_degrade.png|direct_default_cover_medium.png)',
+	fipmonde => '(a0773022-c452-4206-9b16-76fe7147fec9|fond_titres_diffuses_degrade.png|direct_default_cover_medium.png)',
+	fipnouveau => '(a0773022-c452-4206-9b16-76fe7147fec9|fond_titres_diffuses_degrade.png|direct_default_cover_medium.png)',
+	fipreggae => '(a0773022-c452-4206-9b16-76fe7147fec9|fond_titres_diffuses_degrade.png|direct_default_cover_medium.png)',
+	fipelectro => '(a0773022-c452-4206-9b16-76fe7147fec9|fond_titres_diffuses_degrade.png|direct_default_cover_medium.png)',
+	fipmetal => '(a0773022-c452-4206-9b16-76fe7147fec9|fond_titres_diffuses_degrade.png|direct_default_cover_medium.png)',
+	fippop => '(a0773022-c452-4206-9b16-76fe7147fec9|fond_titres_diffuses_degrade.png|direct_default_cover_medium.png)',
+	mouv => '(a0773022-c452-4206-9b16-76fe7147fec9|image_default_player.jpg)',
+	mouvxtra => '(a0773022-c452-4206-9b16-76fe7147fec9|image_default_player.jpg)',
+	mouvclassics => '(a0773022-c452-4206-9b16-76fe7147fec9|image_default_player.jpg)',
+	mouvdancehall => '(a0773022-c452-4206-9b16-76fe7147fec9|image_default_player.jpg)',
+	mouvrnb => '(a0773022-c452-4206-9b16-76fe7147fec9|image_default_player.jpg)',
+	mouvrapus => '(a0773022-c452-4206-9b16-76fe7147fec9|image_default_player.jpg)',
+	mouvrapfr => '(a0773022-c452-4206-9b16-76fe7147fec9|image_default_player.jpg)',
+	mouv100mix => '(a0773022-c452-4206-9b16-76fe7147fec9|image_default_player.jpg)',
 };
 
 foreach my $metakey (keys(%$stationSet)){
@@ -570,7 +570,7 @@ foreach my $metakey (keys(%$stationSet)){
 	# main::DEBUGLOG && $log->is_debug && $log->debug("Initialising iconsIgnoreRegex - $metakey");
 	if ( not exists $iconsIgnoreRegex->{$metakey} ){
 		# Customise this if necessary per plugin
-		$iconsIgnoreRegex->{$metakey} = '(dummy)';
+		$iconsIgnoreRegex->{$metakey} = '(a0773022-c452-4206-9b16-76fe7147fec9)';
 	}
 }
 
@@ -1096,12 +1096,23 @@ sub getcover {
 		$thisartwork =~ s/\$?\{ratio\}/1x1/g;
 	}
 
-	if (($thisartwork ne '' && ($thisartwork !~ /$iconsIgnoreRegex/ || ($info ne '' && $thisartwork eq $info->{icon}))) &&
-	     ($thisartwork =~ /^https?:/i) || $thisartwork =~ /^.*-.*-.*-.*-/){
-	     # There is something, it is not excluded, it is not the station logo and (it appears to be a URL or an id)
-	     # example id "visual": "38fab9df-91cc-4e50-adc4-eb3a9f2a017a",
-		if ($thisartwork =~ /^.*-.*-.*-.*-/ && $thisartwork !~ /^https?:/i){
-			#main::DEBUGLOG && $log->is_debug && $log->debug("$station - image id $thisartwork");
+	if ( $thisartwork ne ''){
+		if ( exists($iconsIgnoreRegex->{$station}) && $iconsIgnoreRegex->{$station} ne '' && $thisartwork =~ /$iconsIgnoreRegex->{$station}/ ) {
+			# main::DEBUGLOG && $log->is_debug && $log->debug("getcover - Removing1 $thisartwork");
+			$thisartwork = '';
+		}
+	}
+
+	if ( $thisartwork ne ''){
+		if ($info ne '' && $thisartwork eq $info->{icon}) {
+			# main::DEBUGLOG && $log->is_debug && $log->debug("getcover - Removing2 $thisartwork");
+			$thisartwork = '';
+		}
+	}
+
+	if ( $thisartwork ne ''){
+		if ( $thisartwork !~ /^https?:/i && $thisartwork =~ /^.*-.*-.*-.*-/ ) {
+			# main::DEBUGLOG && $log->is_debug && $log->debug("getcover - Replacing $thisartwork");
 			my $rewriteart = true;
 			if ( $station && exists $stationSet->{$station}->{'artfromuid'} && defined($stationSet->{$station}->{'artfromuid'}) ){
 				$rewriteart = $stationSet->{$station}->{'artfromuid'};
@@ -1113,11 +1124,32 @@ sub getcover {
 				$thisartwork = '';
 			}
 		}
-		
-	} else {
-		# Icon not present or matches one to be ignored
-		# main::DEBUGLOG && $log->is_debug && $log->debug("Image: ".$playinginfo->{'visual'});
 	}
+
+
+	# if (($thisartwork ne '' && ($thisartwork !~ /$iconsIgnoreRegex->{$station}/ || ($info ne '' && $thisartwork eq $info->{icon}))) &&
+	     # ($thisartwork =~ /^https?:/i) || $thisartwork =~ /^.*-.*-.*-.*-/){
+	     # # There is something, it is not excluded, it is not the station logo and (it appears to be a URL or an id)
+	     # # example id "visual": "38fab9df-91cc-4e50-adc4-eb3a9f2a017a",
+		# if ($thisartwork =~ /^.*-.*-.*-.*-/ && $thisartwork !~ /^https?:/i){
+			# #main::DEBUGLOG && $log->is_debug && $log->debug("$station - image id $thisartwork");
+			# my $rewriteart = true;
+			# if ( $station && exists $stationSet->{$station}->{'artfromuid'} && defined($stationSet->{$station}->{'artfromuid'}) ){
+				# $rewriteart = $stationSet->{$station}->{'artfromuid'};
+			# }
+
+			# if ( $rewriteart ){
+				# $thisartwork = $imageapiprefix.$thisartwork.$imageapisuffix;
+			# } else {
+				# $thisartwork = '';
+			# }
+		# }
+		
+	# } else {
+		# # Icon not present or matches one to be ignored
+		# # main::DEBUGLOG && $log->is_debug && $log->debug("Image: ".$playinginfo->{'visual'});
+		# $thisartwork = '';
+	# }
 	
 	#main::DEBUGLOG && $log->is_debug && $log->debug("$station - getcover - returning: $thisartwork");
 	
