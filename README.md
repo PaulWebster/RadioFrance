@@ -70,6 +70,9 @@ Note: Radio France does not always provide track information in a timely manner 
 - If things are not working then enable Debug logging for this plugin via LMS/Settings/Advanced/Logging interface, repeat the problem and then check the LMS logs.  
 
 ## Version History
+**0.4.1 28-May-2022**
+- Replace icons for France Bleu stations
+
 **0.4.0 03-Jan-2022**
 - Restore programme details for Now Playing on all stations
 

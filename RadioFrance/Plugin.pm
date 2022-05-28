@@ -89,7 +89,7 @@ my $imageapisuffix = '?preset=400x400';
 my $type3prefix1fip = 'https://www.fip.fr/latest/api/graphql?operationName=NowList&variables=%7B%22bannerPreset%22%3A%22266x266%22%2C%22stationIds%22%3A%5B';
 my $type3prefix2fip = '%5D%7D';
 my $type3suffix    = '&extensions=%7B%22persistedQuery%22%3A%7B%22version%22%3A1%2C%22sha256Hash%22%3A%22a6f39630b68ceb8e56340a4478e099d05c9f5fc1959eaccdfb81e2ce295d82a5%22%7D%7D';
-my $type3suffixfip = '&extensions=%7B%22persistedQuery%22%3A%7B%22version%22%3A1%2C%22sha256Hash%22%3A%22151ca055b816d28507dae07f9c036c02031ed54e18defc3d16feee2551e9a731%22%7D%7D';
+my $type3suffixfip = '&extensions=%7B%22persistedQuery%22%3A%7B%22version%22%3A1%2C%22sha256Hash%22%3A%22151ca055b816d28507dae07f9c036c02031ed54e18defc3d16feee2551e9a731%22%7D%7D&timestamp=${unixtime}';
 
 my $radiofrancescheuleurl = 'https://api.radiofrance.fr/v1/stations/${stationid}/steps?filter[depth]=1&filter[start-time]=${datestring}T00:00&filter[end-time]=${datestring}T23:59&fields[shows]=title,visuals,stationId,mainImage&fields[diffusions]=title,startTime,endTime,mainImage,visuals,stationId&include=diffusion&include=show&include=diffusion.manifestations&include=diffusion.station&include=children-steps&include=children-steps.show&include=children-steps.diffusion&include=children-steps.diffusion.manifestations';
 my %radiofranceapiondemandheaderset = ( 'x-token' => '0cbe991e-18ac-4635-ad7f-773257c63797' );	# token as used by Radio France web interface
@@ -443,25 +443,25 @@ my $icons = {
 	fipbordeaux => 'http://mediateur.radiofrance.fr/wp-content/themes/radiofrance/img/fip.png',
 	fipnantes => 'http://mediateur.radiofrance.fr/wp-content/themes/radiofrance/img/fip.png',
 	fipstrasbourg => 'http://mediateur.radiofrance.fr/wp-content/themes/radiofrance/img/fip.png',
-	fiprock => 'https://cdn.radiofrance.fr/s3/cruiser-production/2019/06/f5b944ca-9a21-4970-8eed-e711dac8ac15/200x200_fip-rock_ok.jpg',
-	fipjazz => 'https://cdn.radiofrance.fr/s3/cruiser-production/2019/06/840a4431-0db0-4a94-aa28-53f8de011ab6/200x200_fip-jazz-01.jpg',
-	fipgroove => 'https://cdn.radiofrance.fr/s3/cruiser-production/2019/06/3673673e-30f7-4caf-92c6-4161485d284d/200x200_fip-groove_ok.jpg',
-	fipmonde => 'https://cdn.radiofrance.fr/s3/cruiser-production/2019/06/9a1d42c5-8a36-4253-bfae-bdbfb85cbe14/200x200_fip-monde_ok.jpg',
-	fipnouveau => 'https://cdn.radiofrance.fr/s3/cruiser-production/2019/06/e061141c-f6b4-4502-ba43-f6ec693a049b/200x200_fip-nouveau_ok.jpg',
-	fipreggae => 'https://cdn.radiofrance.fr/s3/cruiser-production/2019/06/15a58f25-86a5-4b1a-955e-5035d9397da3/200x200_fip-reggae_ok.jpg',
-	fipelectro => 'https://cdn.radiofrance.fr/s3/cruiser-production/2019/06/29044099-6469-4f2f-845c-54e607179806/200x200_fip-electro-ok.jpg',
+	fiprock => 'https://cdn.radiofrance.fr/s3/cruiser-production/2019/06/f5b944ca-9a21-4970-8eed-e711dac8ac15/300x300_fip-rock_ok.jpg',
+	fipjazz => 'https://cdn.radiofrance.fr/s3/cruiser-production/2019/06/840a4431-0db0-4a94-aa28-53f8de011ab6/300x300_fip-jazz-01.jpg',
+	fipgroove => 'https://cdn.radiofrance.fr/s3/cruiser-production/2019/06/3673673e-30f7-4caf-92c6-4161485d284d/300x300_fip-groove_ok.jpg',
+	fipmonde => 'https://cdn.radiofrance.fr/s3/cruiser-production/2019/06/9a1d42c5-8a36-4253-bfae-bdbfb85cbe14/300x300_fip-monde_ok.jpg',
+	fipnouveau => 'https://cdn.radiofrance.fr/s3/cruiser-production/2019/06/e061141c-f6b4-4502-ba43-f6ec693a049b/300x300_fip-nouveau_ok.jpg',
+	fipreggae => 'https://cdn.radiofrance.fr/s3/cruiser-production/2019/06/15a58f25-86a5-4b1a-955e-5035d9397da3/300x300_fip-reggae_ok.jpg',
+	fipelectro => 'https://cdn.radiofrance.fr/s3/cruiser-production/2019/06/29044099-6469-4f2f-845c-54e607179806/300x300_fip-electro-ok.jpg',
 	fipmetal => 'https://cdn.radiofrance.fr/s3/cruiser-production/2019/06/f5ce2c85-3c8a-4732-8bd7-b26ef5204147/200x200_fip-ete-metal_ok.jpg',
-	fippop => 'https://cdn.radiofrance.fr/s3/cruiser-production/2020/06/538d3800-c610-4b76-9cb1-37142abd755b/801x410_logopop.jpg',
+	fippop => 'https://cdn.radiofrance.fr/s3/cruiser-production/2020/06/14f16d25-960c-4cf4-8e39-682268b1a0c1/300x300_fip-pop_ok.jpg',
 	
-	fmclassiqueeasy => 'https://s3-eu-west-1.amazonaws.com/cruiser-production/2016/12/aca436ad-7f99-4765-9404-1b04bf216daf/fmwebradiosnormaleasy.jpg',
-	fmbaroque => 'https://www.radiofrance.fr/sites/default/files/press_releases/3086.jpg',
-	fmclassiqueplus => 'https://s3-eu-west-1.amazonaws.com/cruiser-production/2016/12/b8213b77-465c-487e-b5b6-07ce8e2862df/fmwebradiosnormalplus.jpg',
-	fmconcertsradiofrance => 'https://s3-eu-west-1.amazonaws.com/cruiser-production/2016/12/72f1a384-5b04-4b98-b511-ac07b35c7daf/fmwebradiosnormalconcerts.jpg',
-	fmlajazz => 'https://s3-eu-west-1.amazonaws.com/cruiser-production/2016/12/a2d34823-36a1-4fce-b3fa-f0579e056552/fmwebradiosnormaljazz.jpg',
-	fmlacontemporaine => 'https://s3-eu-west-1.amazonaws.com/cruiser-production/2016/12/92f9a1f4-5525-4b2a-af13-213ff3b0c0a6/fmwebradiosnormalcontemp.jpg',
-	fmocoramonde => 'https://s3-eu-west-1.amazonaws.com/cruiser-production/2016/12/22b8b3d6-e848-4090-8b24-141c25225861/fmwebradiosnormalocora.jpg',
+	fmclassiqueeasy => 'https://cdn.radiofrance.fr/s3/cruiser-production/2022/02/36c9fa83-a2c6-4432-9234-36f22ddabc24/300x300_webradios_fm_classique-easy.jpg',
+	fmbaroque => 'https://cdn.radiofrance.fr/s3/cruiser-production/2022/02/544d1b3c-fc0f-462d-bc6e-f96bb199c672/300x300_webradios_fm_la-baroque.jpg',
+	fmclassiqueplus => 'https://cdn.radiofrance.fr/s3/cruiser-production/2022/02/4eb2980e-2d53-4f4c-ba9d-ddbf3e96b9d8/300x300_webradios_fm_classique-plus.jpg',
+	fmconcertsradiofrance => 'https://cdn.radiofrance.fr/s3/cruiser-production/2022/02/c9c1dacf-6fc5-49ef-ac9e-7fa6145fd850/300x300_webradios_fm_concerts-radio-france.jpg',
+	fmlajazz => 'https://cdn.radiofrance.fr/s3/cruiser-production/2022/02/13381986-e962-4809-ad21-23e8260c8f75/300x300_webradios_fm_la-jazz.jpg',
+	fmlacontemporaine => 'https://cdn.radiofrance.fr/s3/cruiser-production/2022/02/b365b09f-8ca2-4ae3-beda-d45711df7a49/300x300_webradios_fm_la-contemporaine.jpg',
+	fmocoramonde => 'https://cdn.radiofrance.fr/s3/cruiser-production/2022/02/75db3a09-1545-487b-ab11-81db3642a5cd/300x300_webradios_fm_musiques-du-monde-ocora.jpg',
 	#fmevenementielle => 'https://cdn.radiofrance.fr/s3/cruiser-production/2017/06/d2ac7a26-843d-4f0c-a497-8ddf6f3b2f0f/200x200_fmwebbotout.jpg',
-	fmlabo => 'https://cdn.radiofrance.fr/s3/cruiser-production/2017/06/d2ac7a26-843d-4f0c-a497-8ddf6f3b2f0f/200x200_fmwebbotout.jpg',
+	fmlabo => 'https://cdn.radiofrance.fr/s3/cruiser-production/2022/02/1bf719f5-ade8-4de4-9e8a-6cc035fb461f/300x300_webradios_fm_bomusiquesfilms.jpg',
 	fmopera => 'https://cdn.radiofrance.fr/s3/cruiser-production/2020/10/c1fb2b03-5c04-42c9-b415-d56e4c61dcd9/fm-opera-webradio2x.png',
 	
 	#mouv => 'https://www.radiofrance.fr/sites/default/files/styles/format_16_9/public/2019-08/logo_mouv_bloc_c.png.jpeg',
@@ -484,51 +484,51 @@ my $icons = {
 	#franceculture => 'http://mediateur.radiofrance.fr/wp-content/themes/radiofrance/img/france-culture.png',
 	franceculture => 'http://oblique.radiofrance.fr/files/charte/logos/png600/FranceCulture.png',
 	
-	fbalsace => 'https://www.francebleu.fr/img/station/logo/logo_francebleu_alsace.jpg',
-	fbarmorique => 'https://www.francebleu.fr/img/station/logo/logo_francebleu_armorique.jpg',
-	fbauxerre => 'https://www.francebleu.fr/img/station/logo/logo_francebleu_auxerre.jpg',
-	fbazur => 'https://www.francebleu.fr/img/station/logo/logo_francebleu_azur.jpg',
-	fbbearn => 'https://www.francebleu.fr/img/station/logo/logo_francebleu_bearn.jpg',
-	fbbelfort => 'https://www.francebleu.fr/img/station/logo/logo_francebleu_belfort-montbeliard.jpg',
-	fbberry => 'https://www.francebleu.fr/img/station/logo/logo_francebleu_berry.jpg',
-	fbbesancon => 'https://www.francebleu.fr/img/station/logo/logo_francebleu_besancon.jpg',
-	fbbourgogne => 'https://www.francebleu.fr/img/station/logo/logo_francebleu_bourgogne.jpg',
-	fbbreizhizel => 'https://www.francebleu.fr/img/station/logo/logo_francebleu_breizh-izel.jpg',
-	fbchampagne => 'https://www.francebleu.fr/img/station/logo/logo_francebleu_champagne-ardenne.jpg',
-	fbcotentin => 'https://www.francebleu.fr/img/station/logo/logo_francebleu_cotentin.jpg',
-	fbcreuse => 'https://www.francebleu.fr/img/station/logo/logo_francebleu_creuse.jpg',
-	fbdromeardeche => 'https://www.francebleu.fr/img/station/logo/logo_francebleu_drome-ardeche.jpg',
-	fbelsass => 'https://mediateur.radiofrance.fr/wp-content/themes/radiofrance/img/france-bleu.png',	# Wrong logo
-	fbgardlozere => 'https://www.francebleu.fr/img/station/logo/logo_francebleu_gard-lozere.jpg',
-	fbgascogne => 'https://www.francebleu.fr/img/station/logo/logo_francebleu_gascogne.jpg',
-	fbgironde => 'https://www.francebleu.fr/img/station/logo/logo_francebleu_gironde.jpg',
-	fbherault => 'https://www.francebleu.fr/img/station/logo/logo_francebleu_herault.jpg',
-	fbisere => 'https://www.francebleu.fr/img/station/logo/logo_francebleu_isere.jpg',
-	fblarochelle => 'https://www.francebleu.fr/img/station/logo/logo_francebleu_la-rochelle.jpg',
-	fblimousin => 'https://www.francebleu.fr/img/station/logo/logo_francebleu_limousin.jpg',
-	fbloireocean => 'https://www.francebleu.fr/img/station/logo/logo_francebleu_loire-ocean.jpg',
-	fblorrainenord => 'https://www.francebleu.fr/img/station/logo/logo_francebleu_lorraine-nord.jpg',
-	fbmaine => 'https://www.francebleu.fr/img/station/logo/logo_francebleu_maine.jpg',
-	fbmayenne => 'https://www.francebleu.fr/img/station/logo/logo_francebleu_mayenne.jpg',
-	fbnord => 'https://www.francebleu.fr/img/station/logo/logo_francebleu_nord.jpg',
-	fbbassenormandie => 'https://www.francebleu.fr/img/station/logo/logo_francebleu_normandie.jpg',	# Wrong logo
-	fbhautenormandie => 'https://www.francebleu.fr/img/station/logo/logo_francebleu_normandie.jpg',	# Wrong logo
-	fbtoulouse => 'https://www.francebleu.fr/img/station/logo/logo_francebleu_toulouse.jpg',
-	fborleans => 'https://www.francebleu.fr/img/station/logo/logo_francebleu_orleans.jpg',
-	fbparis => 'https://www.francebleu.fr/img/station/logo/logo_francebleu_paris.png',
-	fbpaysbasque => 'https://www.francebleu.fr/img/station/logo/logo_francebleu_pays-basque.jpg',
-	fbpaysdauvergne => 'https://www.francebleu.fr/img/station/logo/logo_francebleu_auvergne.jpg',
-	fbpaysdesavoie => 'https://www.francebleu.fr/img/station/logo/logo_francebleu_savoie.jpg',
-	fbperigord => 'https://www.francebleu.fr/img/station/logo/logo_francebleu_perigord.jpg',
-	fbpicardie => 'https://www.francebleu.fr/img/station/logo/logo_francebleu_picardie.jpg',
-	fbpoitou => 'https://www.francebleu.fr/img/station/logo/logo_francebleu_poitou.jpg',
-	fbprovence => 'https://www.francebleu.fr/img/station/logo/logo_francebleu_provence.jpg',
-	fbrcfm => 'https://www.francebleu.fr/img/station/logo/logo_francebleu_rcfm.jpg',
-	fbroussillon => 'https://www.francebleu.fr/img/station/logo/logo_francebleu_roussillon.jpg',
-	fbsaintetienneloire => 'https://www.francebleu.fr/img/station/logo/logo_francebleu_saint-etienne-loire.jpg',
-	fbsudlorraine => 'https://www.francebleu.fr/img/station/logo/logo_francebleu_sud-lorraine.jpg',
-	fbtouraine => 'https://www.francebleu.fr/img/station/logo/logo_francebleu_touraine.jpg',
-	fbvaucluse => 'https://www.francebleu.fr/img/station/logo/logo_francebleu_vaucluse.jpg',
+	fbalsace => 'plugins/RadioFrance/html/images/fbalsace_svg.png',
+	fbarmorique => 'plugins/RadioFrance/html/images/fbarmorique_svg.png',
+	fbauxerre => 'plugins/RadioFrance/html/images/fbauxerre_svg.png',
+	fbazur => 'plugins/RadioFrance/html/images/fbazur_svg.png',
+	fbbearn => 'plugins/RadioFrance/html/images/fbbearn_svg.png',
+	fbbelfort => 'plugins/RadioFrance/html/images/fbbelfort-montbeliard_svg.png',
+	fbberry => 'plugins/RadioFrance/html/images/fbberry_svg.png',
+	fbbesancon => 'plugins/RadioFrance/html/images/fbbesancon_svg.png',
+	fbbourgogne => 'plugins/RadioFrance/html/images/fbbourgogne_svg.png',
+	fbbreizhizel => 'plugins/RadioFrance/html/images/fbbreizh-izel_svg.png',
+	fbchampagne => 'plugins/RadioFrance/html/images/fbchampagne-ardenne_svg.png',
+	fbcotentin => 'plugins/RadioFrance/html/images/fbcotentin_svg.png',
+	fbcreuse => 'plugins/RadioFrance/html/images/fbcreuse_svg.png',
+	fbdromeardeche => 'plugins/RadioFrance/html/images/fbdrome-ardeche_svg.png',
+	fbelsass => 'https://cdn.radiofrance.fr/s3/cruiser-production/2021/02/20586689-2380-4208-bf71-bd19b4868614/750x750_squareimage_francebleu_elsass.jpg',
+	fbgardlozere => 'plugins/RadioFrance/html/images/fbgard-lozere_svg.png',
+	fbgascogne => 'plugins/RadioFrance/html/images/fbgascogne_svg.png',
+	fbgironde => 'plugins/RadioFrance/html/images/fbgironde_svg.png',
+	fbherault => 'plugins/RadioFrance/html/images/fbherault_svg.png',
+	fbisere => 'plugins/RadioFrance/html/images/fbisere_svg.png',
+	fblarochelle => 'plugins/RadioFrance/html/images/fbla-rochelle_svg.png',
+	fblimousin => 'plugins/RadioFrance/html/images/fblimousin_svg.png',
+	fbloireocean => 'plugins/RadioFrance/html/images/fbloire-ocean_svg.png',
+	fblorrainenord => 'plugins/RadioFrance/html/images/fblorraine-nord_svg.png',
+	fbmaine => 'plugins/RadioFrance/html/images/fbmaine_svg.png',
+	fbmayenne => 'plugins/RadioFrance/html/images/fbmayenne_svg.png',
+	fbnord => 'plugins/RadioFrance/html/images/fbnord_svg.png',
+	fbbassenormandie => 'plugins/RadioFrance/html/images/fbnormandie_svg.png',	# Wrong logo
+	fbhautenormandie => 'plugins/RadioFrance/html/images/fbnormandie_svg.png',	# Wrong logo
+	fbtoulouse => 'plugins/RadioFrance/html/images/fboccitanie_svg.png',
+	fborleans => 'plugins/RadioFrance/html/images/fborleans_svg.png',
+	fbparis => 'plugins/RadioFrance/html/images/fbparis_svg.png',
+	fbpaysbasque => 'plugins/RadioFrance/html/images/fbpays-basque_svg.png',
+	fbpaysdauvergne => 'plugins/RadioFrance/html/images/fbauvergne_svg.png',
+	fbpaysdesavoie => 'plugins/RadioFrance/html/images/fbsavoie_svg.png',
+	fbperigord => 'plugins/RadioFrance/html/images/fbperigord_svg.png',
+	fbpicardie => 'plugins/RadioFrance/html/images/fbpicardie_svg.png',
+	fbpoitou => 'plugins/RadioFrance/html/images/fbpoitou_svg.png',
+	fbprovence => 'plugins/RadioFrance/html/images/fbprovence_svg.png',
+	fbrcfm => 'plugins/RadioFrance/html/images/fbrcfm_svg.png',
+	fbroussillon => 'plugins/RadioFrance/html/images/fbroussillon_svg.png',
+	fbsaintetienneloire => 'plugins/RadioFrance/html/images/fbsaint-etienne-loire_svg.png',
+	fbsudlorraine => 'plugins/RadioFrance/html/images/fbsud-lorraine_svg.png',
+	fbtouraine => 'plugins/RadioFrance/html/images/fbtouraine_svg.png',
+	fbvaucluse => 'plugins/RadioFrance/html/images/fbvaucluse_svg.png',
 };
 
 foreach my $metakey (keys(%$stationSet)){
@@ -1203,6 +1203,7 @@ sub getmeta {
 				$sourceUrl =~ s/\$\{stationid\}/$stationSet->{$station}->{'stationid'}/g;
 				$sourceUrl =~ s/\$\{region\}/$stationSet->{$station}->{'region'}/g;
 				$sourceUrl =~ s/\$\{progid\}/$calculatedPlaying->{$station}->{'progid'}/g;
+				$sourceUrl =~ s/\$\{unixtime\}/$hiResTime/g;
 			}
 			
 			main::DEBUGLOG && $log->is_debug && $log->debug("$station - Fetching data from $sourceUrl");
@@ -1228,6 +1229,7 @@ sub getmeta {
 					$sourceUrl =~ s/\$\{stationid\}/$stationSet->{$station}->{'stationid'}/g;
 					$sourceUrl =~ s/\$\{region\}/$stationSet->{$station}->{'region'}/g;
 					$sourceUrl =~ s/\$\{progid\}/$calculatedPlaying->{$station}->{'progid'}/g;
+					$sourceUrl =~ s/\$\{unixtime\}/$hiResTime/g;
 				}
 				
 				$meta->{$station}->{busy} = $meta->{$station}->{busy}+1;	# Increment busy counter - might be possible that the one above already finished so increment rather than set to 2
@@ -2550,7 +2552,9 @@ sub parseContent {
 			# Only has programme info
 			$thisItem = $perl_data->{'now'};
 			
-			#main::DEBUGLOG && $log->is_debug && $log->debug("$dataType: Now: $hiResTime Start: ".$thisItem->{'startTime'}." End: $thisItem->{'endTime'}");
+			#$dumped =  Dumper $thisItem;
+			#$dumped =~ s/\n {44}/\n/g;
+			#main::DEBUGLOG && $log->is_debug && $log->debug("$dataType: Now: $hiResTime thisItem: $dumped");
 			
 			if ( exists $thisItem->{'startTime'} && defined($thisItem->{'startTime'}) && $thisItem->{'startTime'} <= $hiResTime && 
 				exists $thisItem->{'endTime'} && defined($thisItem->{'endTime'}) && 
