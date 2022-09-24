@@ -4,20 +4,22 @@
 		<title lang="EN">Paul Webster's Squeezecenter Plugin for Radio France</title>
 	</details>
 	<plugins>
-		<plugin name="RadioFrance" version="0.4.2" minTarget="7.5" maxTarget="*">
+		<plugin name="RadioFrance" version="0.4.3" minTarget="7.5" maxTarget="*">
 			<title lang="EN">Radio France</title>
 			<desc  lang="EN">Radio France programme and track information plus on demand replay</desc>
 			<desc  lang="FR">Radio France - info sur le programme et morceau de musique, ainsi que la lecture à la demande</desc>
 			<creator>Paul Webster</creator>
 			<email></email>
 			<changes lang="EN">
-				- Also replace icon for France Bleu Elsass station
+				- Reinstate song information on France Musique (note - will not work for all tracks)
+				- Add FIP Metal and FIP Hip-Hop
 			</changes>
 			<changes lang="FR">
-				- Remplacer également l'icone de la station France Bleu Alsace
+				- Rétablir les informations de la chanson sur France Musique (note - ne fonctionnera pas pour toutes les pistes)
+				- Ajouter FIP Metal et FIP Hip-Hop
 			</changes>
-			<url>https://paulwebster.github.io/RadioFrance/RadioFrance-0.4.2.zip</url>
-			<sha>75eae4b9b3e0028374d60d61ff44692238698beb</sha>
+			<url>https://paulwebster.github.io/RadioFrance/RadioFrance-0.4.3.zip</url>
+			<sha>5a3493b97e0dddfe3484f3f49f55f9590755ca3f</sha>
 		</plugin>
 	</plugins>
 </extensions>
