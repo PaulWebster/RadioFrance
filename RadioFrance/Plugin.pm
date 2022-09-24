@@ -68,7 +68,7 @@ my $prefs = preferences('plugin.'.$pluginName);
 
 use constant cacheTTL => 20;
 use constant maxSongLth => 900;		# Assumed maximum song length in seconds - if appears longer then no duration shown
-use constant maxShowLth => 5400;	# Assumed maximum programme length in seconds - if appears longer then no duration shown
+use constant maxShowLth => 7200;	# Assumed maximum programme length in seconds - if appears longer then no duration shown
 					# because might be a problem with the data
 					# Having no duration should mean earlier call back to try again
 					
@@ -90,6 +90,10 @@ my $type3prefix1fip = 'https://www.fip.fr/latest/api/graphql?operationName=NowLi
 my $type3prefix2fip = '%5D%7D';
 my $type3suffix    = '&extensions=%7B%22persistedQuery%22%3A%7B%22version%22%3A1%2C%22sha256Hash%22%3A%22a6f39630b68ceb8e56340a4478e099d05c9f5fc1959eaccdfb81e2ce295d82a5%22%7D%7D';
 my $type3suffixfip = '&extensions=%7B%22persistedQuery%22%3A%7B%22version%22%3A1%2C%22sha256Hash%22%3A%22151ca055b816d28507dae07f9c036c02031ed54e18defc3d16feee2551e9a731%22%7D%7D&timestamp=${unixtime}';
+
+# Example https://www.radiofrance.fr/api/v1.9/stations/fip/webradios/fip_hiphop
+my $type4prefix = 'https://www.radiofrance.fr/api/v1.9/stations/fip/webradios/';
+my $type4suffix = '';
 
 my $radiofrancescheuleurl = 'https://api.radiofrance.fr/v1/stations/${stationid}/steps?filter[depth]=1&filter[start-time]=${datestring}T00:00&filter[end-time]=${datestring}T23:59&fields[shows]=title,visuals,stationId,mainImage&fields[diffusions]=title,startTime,endTime,mainImage,visuals,stationId&include=diffusion&include=show&include=diffusion.manifestations&include=diffusion.station&include=children-steps&include=children-steps.show&include=children-steps.diffusion&include=children-steps.diffusion.manifestations';
 my %radiofranceapiondemandheaderset = ( 'x-token' => '0cbe991e-18ac-4635-ad7f-773257c63797' );	# token as used by Radio France web interface
@@ -118,8 +122,9 @@ my $stationSet = { # Take extra care if pasting in from external spreadsheet ...
 	fipnouveau => { fullname => 'Tout nouveau, tout Fip', stationid => '70', region => '', tuneinid => 's262540', notexcludable => true, match1 => 'fip-webradio5.', match2 => 'fipnouveautes' },
 	fipreggae => { fullname => 'FIP Reggae', stationid => '71', region => '', tuneinid => 's293090', notexcludable => true, match1 => 'fip-webradio6.', match2 => 'fipreggae' },
 	fipelectro => { fullname => 'FIP Electro', stationid => '74', region => '', tuneinid => 's293089', notexcludable => true, match1 => 'fip-webradio8.', match2 => 'fipelectro' },
-	fipmetal => { fullname => 'FIP L\'été Metal', stationid => '77', region => '', tuneinid => 's308366', notexcludable => true, match1 => 'fip-webradio7.', match2 => 'fipmetal' },
+	fipmetal => { fullname => 'FIP Metal', stationid => '77', region => '', tuneinid => 's308366', notexcludable => true, match1 => 'fip-webradio7.', match2 => 'fipmetal' },
 	fippop => { fullname => 'FIP Pop', stationid => '78', region => '', tuneinid => '', notexcludable => true, match1 => 'fip-webradio8.', match2 => 'fippop' },
+	fiphiphop => { fullname => 'FIP Hip-Hop', stationid => 'fip_hiphop', region => '', tuneinid => '', notexcludable => true, match1 => '', match2 => 'fiphiphop' },
 
 	fmclassiqueeasy => { fullname => 'France Musique Classique Easy', stationid => '401', region => '', tuneinid => 's283174', notexcludable => true, match1 => 'francemusiqueeasyclassique', match2 => '' },
 	fmbaroque => { fullname => 'France Musique La Baroque', stationid => '408', region => '', tuneinid => 's309415', notexcludable => true, match1 => 'francemusiquebaroque', match2 => '' },
@@ -144,7 +149,7 @@ my $stationSet = { # Take extra care if pasting in from external spreadsheet ...
 
 	franceinter => { fullname => 'France Inter', stationid => '1', region => '', tuneinid => 's24875', notexcludable => false, match1 => 'franceinter', match2 => '', ondemandurl => $radiofrancescheuleurl, ondemandheaders => \%radiofranceapiondemandheaderset },
 	franceinfo => { fullname => 'France Info', stationid => '2', region => '', tuneinid => 's9948', notexcludable => false, match1 => 'franceinfo', match2 => '', ondemandurl => $radiofrancescheuleurl, ondemandheaders => \%radiofranceapiondemandheaderset, artfromuid => true },
-	francemusique => { fullname => 'France Musique', stationid => '4', region => '', tuneinid => 's15198', notexcludable => false, match1 => 'francemusique', match2 => '', ondemandurl => $radiofrancescheuleurl, ondemandheaders => \%radiofranceapiondemandheaderset },
+	francemusique => { fullname => 'France Musique', stationid => '4', region => '', tuneinid => 's15198', notexcludable => false, match1 => 'francemusique', match2 => '', ondemandurl => $radiofrancescheuleurl, ondemandheaders => \%radiofranceapiondemandheaderset, individualprogurl => ['https://www.radiofrance.fr/api/v1.7/path?value=${progpath}', 'https://www.radiofrance.fr/api/v1.7/stations/francemusique/songs?pageCursor=Mg%3D%3D&startDate=${progstart}&endDate=${progend}&isPad=false'] },
 	franceculture => { fullname => 'France Culture', stationid => '5', region => '', tuneinid => 's2442', notexcludable => false, match1 => 'franceculture', match2 => '', ondemandurl => $radiofrancescheuleurl, ondemandheaders => \%radiofranceapiondemandheaderset, artfromuid => true },
 
 	fbalsace => { fullname => 'France Bleu Alsace', stationid => '12', region => '', tuneinid => 's2992', notexcludable => false, match1 => 'fbalsace', match2 => '', scheduleurl => '', artfromuid => true },
@@ -270,6 +275,7 @@ my $urls = {
 # finished December 2020 - fipmetal => 'https://api.radiofrance.fr/livemeta/pull/${stationid}',
 	fipmetal => 'https://api.radiofrance.fr/livemeta/live/${stationid}/inter_player',
 	fipmetal_alt => $type3prefix1fip.'${stationid}'.$type3prefix2fip.$type3suffixfip,
+	fiphiphop => $type4prefix.'${stationid}'.$type4suffix,
 	
 # finished December 2020 - fmclassiqueeasy => 'https://api.radiofrance.fr/livemeta/pull/${stationid}',
 	fmclassiqueeasy => 'https://api.radiofrance.fr/livemeta/live/${stationid}/inter_player',
@@ -450,8 +456,9 @@ my $icons = {
 	fipnouveau => 'https://cdn.radiofrance.fr/s3/cruiser-production/2019/06/e061141c-f6b4-4502-ba43-f6ec693a049b/300x300_fip-nouveau_ok.jpg',
 	fipreggae => 'https://cdn.radiofrance.fr/s3/cruiser-production/2019/06/15a58f25-86a5-4b1a-955e-5035d9397da3/300x300_fip-reggae_ok.jpg',
 	fipelectro => 'https://cdn.radiofrance.fr/s3/cruiser-production/2019/06/29044099-6469-4f2f-845c-54e607179806/300x300_fip-electro-ok.jpg',
-	fipmetal => 'https://cdn.radiofrance.fr/s3/cruiser-production/2019/06/f5ce2c85-3c8a-4732-8bd7-b26ef5204147/200x200_fip-ete-metal_ok.jpg',
+	fipmetal => 'https://www.radiofrance.fr/s3/cruiser-production/2022/07/160994f8-296b-4cd8-97a0-34c9111cdd9d/300x300_fip-metal-20222x_2.jpg',
 	fippop => 'https://cdn.radiofrance.fr/s3/cruiser-production/2020/06/14f16d25-960c-4cf4-8e39-682268b1a0c1/300x300_fip-pop_ok.jpg',
+	fiphiphop => 'https://www.radiofrance.fr/s3/cruiser-production/2022/07/af67eb80-feac-441e-aea6-ba7c653e220d/300x300_fip-hip-hop-2022-v12x-1.jpg',
 	
 	fmclassiqueeasy => 'https://cdn.radiofrance.fr/s3/cruiser-production/2022/02/36c9fa83-a2c6-4432-9234-36f22ddabc24/300x300_webradios_fm_classique-easy.jpg',
 	fmbaroque => 'https://cdn.radiofrance.fr/s3/cruiser-production/2022/02/544d1b3c-fc0f-462d-bc6e-f96bb199c672/300x300_webradios_fm_la-baroque.jpg',
@@ -555,6 +562,7 @@ my $iconsIgnoreRegex = {
 	fipelectro => '(a0773022-c452-4206-9b16-76fe7147fec9|fond_titres_diffuses_degrade.png|direct_default_cover_medium.png)',
 	fipmetal => '(a0773022-c452-4206-9b16-76fe7147fec9|fond_titres_diffuses_degrade.png|direct_default_cover_medium.png)',
 	fippop => '(a0773022-c452-4206-9b16-76fe7147fec9|fond_titres_diffuses_degrade.png|direct_default_cover_medium.png)',
+	fiphiphop => '(a0773022-c452-4206-9b16-76fe7147fec9|fond_titres_diffuses_degrade.png|direct_default_cover_medium.png)',
 	mouv => '(a0773022-c452-4206-9b16-76fe7147fec9|image_default_player.jpg)',
 	mouvxtra => '(a0773022-c452-4206-9b16-76fe7147fec9|image_default_player.jpg)',
 	mouvclassics => '(a0773022-c452-4206-9b16-76fe7147fec9|image_default_player.jpg)',
@@ -639,7 +647,7 @@ foreach my $metakey (keys(%$stationSet)){
 # [ { "name": "banner", "visual_uuid": "4256a1da-f202-4cfa-8c0b-db0fb846da66" },
 #   { "name": "concept_visual", "visual_uuid": "aeb5db31-ea32-4149-8106-bc66c3ab26b7" } ]
 
-my @coverFieldsArr = ( 'cover', 'visual', 'coverUuid', 'visualBanner', 'mainImage', '@name|square_banner|visual_uuid', '@name|banner|visual_uuid', '@name|concept_visual|visual_uuid' );
+my @coverFieldsArr = ( 'cover', 'visual', 'coverUuid', 'visualBanner', 'mainImage', '@name|square_banner|visual_uuid', '@name|banner|visual_uuid', '@name|concept_visual|visual_uuid', 'src' );
 
 
 # $myClientInfo holds data about the clients/devices using this plugin - used to schedule next poll
@@ -1287,6 +1295,115 @@ sub getmeta {
 }
 
 
+sub getindividualprogrammemeta {
+	
+	my ( $client, $url, $progpath ) = @_;
+	
+	$prefs = preferences('plugin.'.$pluginName);
+
+	my $whenFetchedKey = 'individualprog';
+	my $deviceName = "";
+
+	my $station = &matchStation( $url );
+	
+	if (!$client->name){
+		# No name present - this is odd
+		main::DEBUGLOG && $log->is_debug && $log->debug("$station - getindividualprogrammemeta - no device name");
+	} else {
+		$deviceName = $client->name;
+	};
+
+	if ($station ne '' && 
+	    (( exists $urls->{$pluginName.'progdata'} && $urls->{$pluginName.'progdata'} ne '') ||
+	    (exists $stationSet->{$station}->{'individualprogurl'} && 
+	    ( ref $stationSet->{$station}->{'individualprogurl'} eq "ARRAY" || $stationSet->{$station}->{'individualprogurl'} ne '' ) ) ) ){
+		# main::DEBUGLOG && $log->is_debug && $log->debug("$station - Client: $deviceName - IsPlaying=".$client->isPlaying." called with URL $url");
+
+		my $hiResTime = getLocalAdjustedTime;
+
+		if ( not exists $programmeMeta->{'whenfetched'}->{$whenFetchedKey} ){
+			$programmeMeta->{'whenfetched'}->{$whenFetchedKey} = '';
+		}
+		
+		my @urlsarr;
+		
+		my $tmpsongurl = $stationSet->{$station}->{'individualprogurl'};
+		
+		#main::DEBUGLOG && $log->is_debug && $log->debug("$station - songurl - $tmpsongurl") if $tmpsongurl;
+
+		# Do not use songurl if single and does not start http - allows station override of fetch
+		if ( $tmpsongurl && ( ref $tmpsongurl eq 'ARRAY' || $tmpsongurl =~ /^http/i ) ){
+			if ( ref $tmpsongurl eq 'ARRAY' ){
+				push @urlsarr, @$tmpsongurl;
+			} else {
+				push @urlsarr, $tmpsongurl;
+			}
+		}
+		
+		if ( $client->isPlaying && ($programmeMeta->{'whenfetched'}->{$whenFetchedKey} eq '' || $programmeMeta->{'whenfetched'}->{$whenFetchedKey} <= $hiResTime - 30)) {
+			
+			$programmeMeta->{'whenfetched'}->{$whenFetchedKey} = $hiResTime;	# Say we have fetched it now - even if it fails
+
+			my $loopCnt = -1;
+			
+			for my $loopUrl ( @urlsarr ){
+				
+				my $sourceUrl = $loopUrl;
+				
+				$loopCnt++;
+
+				my $http = Slim::Networking::SimpleAsyncHTTP->new(
+					sub {
+						$meta->{ $station } = parseContent($client, shift->content, $station, $url);
+					},
+					sub {
+						# in case of an error, don't try too hard...
+						$meta->{ $station } = parseContent($client, '', $station, $url);
+					},
+				);
+				
+				# if ( exists $stationSet->{$station}->{'individualprogurl'} && $stationSet->{$station}->{'individualprogurl'} ne ''){
+					# $sourceUrl = $stationSet->{$station}->{'individualprogurl'};
+				# }
+
+				if ( $sourceUrl =~ /\$\{.*\}/ ){
+					# Special string to be replaced
+					$sourceUrl =~ s/\$\{stationid\}/$stationSet->{$station}->{'stationid'}/g;
+					$sourceUrl =~ s/\$\{region\}/$stationSet->{$station}->{'region'}/g;
+					$sourceUrl =~ s/\$\{progid\}/$calculatedPlaying->{$station}->{'progid'}/g;
+					$sourceUrl =~ s/\$\{progstart\}/$calculatedPlaying->{$station}->{'progstart'}/g;
+					$sourceUrl =~ s/\$\{progend\}/$calculatedPlaying->{$station}->{'progend'}/g;
+					$sourceUrl =~ s/\$\{progpath\}/$progpath/g;
+					$sourceUrl =~ s/\$\{unixtime\}/$hiResTime/g;
+				}
+				
+				if ( $sourceUrl =~ /\$\{.*\}/ ){
+					# Something did not convert - so do not use
+					main::DEBUGLOG && $log->is_debug && $log->debug("$station - not risking $sourceUrl");
+				} else {
+					my %headers = ();
+					 
+					if ( exists $stationSet->{$station}->{'progheaders'} && $stationSet->{$station}->{'progheaders'} ne ''){
+						%headers = %{ $stationSet->{$station}->{'progheaders'} };
+					}				
+					main::DEBUGLOG && $log->is_debug && $log->debug("$station - Fetching programme data from $sourceUrl");
+					$http->get($sourceUrl, %headers);
+				}
+			}	# end loop
+		}
+
+		# No need to set up a timer for this as the song fetch will trigger a new one if needed
+		return $meta->{$station};
+
+	} else {
+		# Not fatal since might not have been configured
+		# main::INFOLOG && $log->is_info && $log->info("progdata provider not found $station for URL $url");
+		return $meta->{'dummy'}
+	}
+}
+
+
+
 sub getprogrammemeta {
 	
 	my ( $client, $url, $fromProvider, $perStation ) = @_;
@@ -1308,7 +1425,7 @@ sub getprogrammemeta {
 	if ($station ne '' && 
 	    (( exists $urls->{$pluginName.'progdata'} && $urls->{$pluginName.'progdata'} ne '') ||
 	    (exists $stationSet->{$station}->{'scheduleurl'} && $stationSet->{$station}->{'scheduleurl'} ne '') ) ){
-		# main::DEBUGLOG && $log->is_debug && $log->debug("$station - Client: $deviceName - IsPlaying=".$client->isPlaying." getmeta called with URL $url");
+		# main::DEBUGLOG && $log->is_debug && $log->debug("$station - Client: $deviceName - IsPlaying=".$client->isPlaying." called with URL $url");
 
 		my $hiResTime = getLocalAdjustedTime;
 		
@@ -2241,7 +2358,7 @@ sub parseContent {
 
 			} else {
 
-				main::DEBUGLOG && $log->is_debug && $log->debug("$station - Did not find Current Song in retrieved data");
+				main::DEBUGLOG && $log->is_debug && $log->debug("$station ($dataType) - Did not find Current Song in retrieved data");
 
 			}
 			
@@ -2491,7 +2608,7 @@ sub parseContent {
 
 			} else {
 
-				main::DEBUGLOG && $log->is_debug && $log->debug("$station - Did not find Current Song in retrieved data");
+				main::DEBUGLOG && $log->is_debug && $log->debug("$station ($dataType) - Did not find Current Song in retrieved data");
 
 			}
 			
@@ -2593,6 +2710,31 @@ sub parseContent {
 						if ($progDuration > 0) {$calculatedPlaying->{$station}->{'proglth'} = $progDuration};
 					}
 
+					my $programmePath = '';
+					if ( exists $thisItem->{'secondLinePath'} && defined($thisItem->{'secondLinePath'}) && $thisItem->{'secondLinePath'} ne '' ){
+						$programmePath = $thisItem->{'secondLinePath'};
+					}
+
+					# Seen example where secondLinePath points to the set of shows rather than the specific
+					# but the array secondLinePaths had the real one ... but which ... try the longest
+					# Example:
+					# "secondLinePath": "francemusique/podcasts/disques-de-legende",
+					# "secondLinePaths": [
+						# "francemusique/podcasts/disques-de-legende",
+						# "francemusique/podcasts/disques-de-legende/disques-de-legende-du-mercredi-29-juin-2022-3753240"
+					# ],
+					if ( exists $thisItem->{'secondLinePaths'} && ref( $thisItem->{'secondLinePaths'} ) eq "ARRAY" ){
+						foreach my $tryPath ( @{$thisItem->{'secondLinePaths'}} ){
+							if ( length $tryPath > length $programmePath ){
+								$programmePath = $tryPath;
+							}
+						}
+					}
+					
+					if ( $programmePath ne '' ){
+						# Path exists ... which might mean that song data is available
+						&getindividualprogrammemeta( $client, $url, $programmePath );
+					}
 					# Artwork - only include if not one of the defaults - to give chance for something else to add it
 					# Regex check to see if present using $iconsIgnoreRegex
 
@@ -2605,6 +2747,721 @@ sub parseContent {
 					#main::DEBUGLOG && $log->is_debug && $log->debug("Found show name in Type $dataType: $calculatedPlaying->{$station}->{'progtitle'}");
 				} 
 			}			
+		} elsif ( ref($perl_data) ne "ARRAY" && 
+			  ( exists $perl_data->{'content'} && exists $perl_data->{'content'}->{'songs'} && ref($perl_data->{'content'}->{'songs'}) eq "ARRAY" ) ||
+			  (  exists $perl_data->{'songs'} && ref($perl_data->{'songs'}) eq "ARRAY" ) ) {
+			# France Musique podcast type json
+			# "https://www.radiofrance.fr/api/v1.7/path?value=francemusique/podcasts/allegretto/allegretto-du-mercredi-29-juin-2022-3801081"
+			# or an alternative version that only has the songs array
+			# https://www.radiofrance.fr/api/v1.7/stations/francemusique/songs?pageCursor=Mg%3D%3D&startDate=1656507600&endDate=1656514680&isPad=false
+			# Sample Response
+			# {
+				# "content": {
+					# "type": "Expression",
+					# "id": "da42670b-5cb8-4ac7-848f-e5b503527fcb",
+					# "title": "Bach part en vacances",
+					# "seoTitle": "",
+					# "seoDescription": "",
+					# "stationIds": [
+						# 4
+					# ],
+					# "kind": "episode",
+					# "path": "francemusique/podcasts/allegretto/allegretto-du-mercredi-29-juin-2022-3801081",
+					# "migrated": true,
+					# "standFirst": "Avec Bartok, Dave Brubeck, Mozart, Richard Morton Sherman, Jethro Tull, Lalo Schiffrin...",
+					# "isPad": false,
+					# "place": null,
+					# "latestRediffusion": null,
+					# "bodyJson": [
+						# {
+							# "type": "heading",
+							# "level": 3,
+							# "value": "Des places à gagner"
+						# },
+						# {
+							# "type": "text",
+							# "children": [
+								# {
+									# "type": "text",
+									# "value": "<strong>Pour tenter de gagner deux places, c'est ici :</strong> \" "
+								# },
+								# {
+									# "type": "link",
+									# "data": {
+										# "href": "https://www.radiofrance.fr/francemusique/contact/formulaire?concept=23813bbb-82bf-46a7-99f8-336b01019095"
+									# },
+									# "value": "Contactez l'émission"
+								# },
+								# {
+									# "type": "text",
+									# "value": " \""
+								# }
+							# ]
+						# },
+						# {
+							# "type": "heading",
+							# "level": 3,
+							# "value": "Quelle musique entendez-vous sur \" Ouessant, côte nord-est \" ?"
+						# },
+						# {
+							# "type": "image",
+							# "data": {
+								# "src": "https://cdn.radiofrance.fr/s3/cruiser-production/2022/06/f45163f6-fd00-4799-a347-8472f954d645/860_meheut.jpg",
+								# "webpSrc": "https://cdn.radiofrance.fr/s3/cruiser-production/2022/06/f45163f6-fd00-4799-a347-8472f954d645/860_meheut.webp",
+								# "width": 860,
+								# "height": 483,
+								# "ratio": "56.16279069767442%",
+								# "alt": "Mathurin Méheut (1882-1958), Ouessant, côte nord-est. Gouache et fusain sur carton, H. 49 ; l. 64 cm. Musée Mathurin Méheut, Lamballe-Armor",
+								# "preview": "data:image/jpeg;charset=utf-8;base64, /9j/2wBDACgcHiMeGSgjISMtKygwPGRBPDc3PHtYXUlkkYCZlo+AjIqgtObDoKrarYqMyP/L2u71////m8H////6/+b9//j/2wBDASstLTw1PHZBQXb4pYyl+Pj4+Pj4+Pj4+Pj4+Pj4+Pj4+Pj4+Pj4+Pj4+Pj4+Pj4+Pj4+Pj4+Pj4+Pj4+Pj4+Pj/wAARCAAXACoDASIAAhEBAxEB/8QAGAABAQEBAQAAAAAAAAAAAAAABAADAgH/xAAiEAACAgIABgMAAAAAAAAAAAAAAQIRBSEDBBIxQXFCUWH/xAAWAQADAAAAAAAAAAAAAAAAAAAAAQL/xAAVEQEBAAAAAAAAAAAAAAAAAAAAAf/aAAwDAQACEQMRAD8AfzrpRCapsTkPgFT1RNNm3L8OW3s0qzKUHepAD8W74c/Y4DjFUJ+xxUITnlqLvsDS8kRNOOWurzR4opd9kQA/H10Sr7FkRUJ//9k=",
+								# "sizes": "(max-width: 480px) 200px, (max-width: 1024px) 1000px, 2000px",
+								# "srcset": "https://cdn.radiofrance.fr/s3/cruiser-production/2022/06/f45163f6-fd00-4799-a347-8472f954d645/860_meheut.jpg 860w",
+								# "webpSrcset": "https://cdn.radiofrance.fr/s3/cruiser-production/2022/06/f45163f6-fd00-4799-a347-8472f954d645/860_meheut.webp 860w",
+								# "copyright": null,
+								# "author": "© Musée Mathurin Méheut, Lamballe-Armor / ADAGP, Paris 2022"
+							# }
+						# },
+						# {
+							# "type": "list",
+							# "ordered": false,
+							# "children": [
+								# {
+									# "type": "list_item",
+									# "children": [
+										# {
+											# "type": "text",
+											# "value": "<strong>Allegretto vous propose de participer à la programmation musicale du vendredi 1er juillet en vous inspirant de ce tableau de Mathurin Méheut visible dans l'exposition</strong> "
+										# },
+										# {
+											# "type": "link",
+											# "data": {
+												# "href": "https://www.radiofrance.fr/francemusique/quelle-musique-entendez-vous-sur-ouessant-cote-nord-est-4584610"
+											# },
+											# "value": "<em>Mathurin Méheut Arpenteur de la Bretagne</em>"
+										# },
+										# {
+											# "type": "text",
+											# "value": " <strong>jusqu'au 31 décembre au Musée de Pont-Aven.</strong>"
+										# }
+									# ]
+								# }
+							# ]
+						# },
+						# {
+							# "type": "text",
+							# "children": [
+								# {
+									# "type": "text",
+									# "value": "<strong>Pour vos propositions, c'est ici :</strong> \" "
+								# },
+								# {
+									# "type": "link",
+									# "data": {
+										# "href": "https://www.radiofrance.fr/francemusique/contact/formulaire?concept=23813bbb-82bf-46a7-99f8-336b01019095"
+									# },
+									# "value": "Contactez l'émission"
+								# },
+								# {
+									# "type": "text",
+									# "value": " \""
+								# }
+							# ]
+						# }
+					# ],
+					# "startDate": 1656493200,
+					# "endDate": 1656498510,
+					# "guest": [],
+					# "serie": null,
+					# "visual": {
+						# "src": "https://cdn.radiofrance.fr/s3/cruiser-production/2022/06/a089496b-0608-42ea-ac69-a7e1990ccaf8/560x315_arnstadt.jpg",
+						# "webpSrc": "https://cdn.radiofrance.fr/s3/cruiser-production/2022/06/a089496b-0608-42ea-ac69-a7e1990ccaf8/560x315_arnstadt.webp",
+						# "legend": "Gravure de la ville d' Arnstadt où JS Bach vécu de 1703 à 1707 ©Getty - Culture Club/Getty Images",
+						# "copyright": "Getty",
+						# "author": "Culture Club/Getty Images",
+						# "width": 560,
+						# "height": 315,
+						# "preview": "/9j/2wBDACgcHiMeGSgjISMtKygwPGRBPDc3PHtYXUlkkYCZlo+AjIqgtObDoKrarYqMyP/L2u71////m8H////6/+b9//j/2wBDASstLTw1PHZBQXb4pYyl+Pj4+Pj4+Pj4+Pj4+Pj4+Pj4+Pj4+Pj4+Pj4+Pj4+Pj4+Pj4+Pj4+Pj4+Pj4+Pj4+Pj/wAARCAAXACoDASIAAhEBAxEB/8QAGAAAAwEBAAAAAAAAAAAAAAAAAAMFBAH/xAAiEAACAgAGAgMAAAAAAAAAAAAAAQIRAwQFEiExNFEiQnH/xAAWAQEBAQAAAAAAAAAAAAAAAAABAgD/xAAVEQEBAAAAAAAAAAAAAAAAAAAAAf/aAAwDAQACEQMRAD8Ap5x1l5USYTkpP50inqHiTJCVUFY6M6k+Xfs7LEffLFxpO93B2LTl2SW/TsRzU7XRtMWnff0bSoCc348uLJD2ppKwAKTHBRX6Kdb1wABApae7jI2ABUZ//9k="
+					# },
+					# "visual_400x400": {
+						# "src": "https://cdn.radiofrance.fr/s3/cruiser-production/2022/06/a089496b-0608-42ea-ac69-a7e1990ccaf8/400x400_arnstadt.jpg",
+						# "webpSrc": "https://cdn.radiofrance.fr/s3/cruiser-production/2022/06/a089496b-0608-42ea-ac69-a7e1990ccaf8/400x400_arnstadt.webp",
+						# "legend": "Gravure de la ville d' Arnstadt où JS Bach vécu de 1703 à 1707",
+						# "copyright": "Getty",
+						# "author": "Culture Club/Getty Images",
+						# "width": 400,
+						# "height": 400,
+						# "preview": "/9j/2wBDACgcHiMeGSgjISMtKygwPGRBPDc3PHtYXUlkkYCZlo+AjIqgtObDoKrarYqMyP/L2u71////m8H////6/+b9//j/2wBDASstLTw1PHZBQXb4pYyl+Pj4+Pj4+Pj4+Pj4+Pj4+Pj4+Pj4+Pj4+Pj4+Pj4+Pj4+Pj4+Pj4+Pj4+Pj4+Pj4+Pj/wAARCAAqACoDASIAAhEBAxEB/8QAGAAAAwEBAAAAAAAAAAAAAAAAAQIDBAD/xAAmEAACAgEDAwMFAAAAAAAAAAABAgARAxIhMQQTUSJBcTIzQmGh/8QAFgEBAQEAAAAAAAAAAAAAAAAAAQAC/8QAFxEBAQEBAAAAAAAAAAAAAAAAABEBMf/aAAwDAQACEQMRAD8A7H1jUQw39qlD1TMNgRMqaVa7lWZSgvk8TO7qUx5MirbUY5z6gbNzNjcj0jmNqYD9Suo4bmuY/fmdtVWhqTvJ5/kK1cAaQTYjkHTsu1Tit2a28wBjd77SZFGP4rcZiQsAdiO4oo/EUsxNsLklFs0SQRH0DzJYsg0laO3Erov2MKk3xgelXBHzG0O2MGhqG23iZmE0dKTfMeGHN1pJryJNm4IHEpl+5IniGAcf1FhtcPcPl5EcmVjBX//Z"
+					# },
+					# "visual_1000x563": {
+						# "src": "https://cdn.radiofrance.fr/s3/cruiser-production/2022/06/a089496b-0608-42ea-ac69-a7e1990ccaf8/1000x563_arnstadt.jpg",
+						# "webpSrc": "https://cdn.radiofrance.fr/s3/cruiser-production/2022/06/a089496b-0608-42ea-ac69-a7e1990ccaf8/1000x563_arnstadt.webp",
+						# "legend": "Gravure de la ville d' Arnstadt où JS Bach vécu de 1703 à 1707",
+						# "copyright": "Getty",
+						# "author": "Culture Club/Getty Images",
+						# "width": 1000,
+						# "height": 563,
+						# "preview": "/9j/2wBDACgcHiMeGSgjISMtKygwPGRBPDc3PHtYXUlkkYCZlo+AjIqgtObDoKrarYqMyP/L2u71////m8H////6/+b9//j/2wBDASstLTw1PHZBQXb4pYyl+Pj4+Pj4+Pj4+Pj4+Pj4+Pj4+Pj4+Pj4+Pj4+Pj4+Pj4+Pj4+Pj4+Pj4+Pj4+Pj4+Pj/wAARCAAXACoDASIAAhEBAxEB/8QAGAAAAwEBAAAAAAAAAAAAAAAAAAMFBAH/xAAhEAACAgEDBQEAAAAAAAAAAAAAAQIRBQQhMQMSIjRRcf/EABYBAQEBAAAAAAAAAAAAAAAAAAECAP/EABURAQEAAAAAAAAAAAAAAAAAAAAB/9oADAMBAAIRAxEAPwCnrHWnkSYTkpPzpFPIepIkJVQVjozqT3d/Tsuo+d2LVJ33bHYtOXJJb8d1HNTtcG0xY7mfw2lQE6z15bWSG4JpJsACkxwUF+im13q0ABApY93GRsACoz//2Q=="
+					# },
+					# "visual_2048x640": {
+						# "src": "https://cdn.radiofrance.fr/s3/cruiser-production/2022/06/a089496b-0608-42ea-ac69-a7e1990ccaf8/2048x640_arnstadt.jpg",
+						# "webpSrc": "https://cdn.radiofrance.fr/s3/cruiser-production/2022/06/a089496b-0608-42ea-ac69-a7e1990ccaf8/2048x640_arnstadt.webp",
+						# "legend": "Gravure de la ville d' Arnstadt où JS Bach vécu de 1703 à 1707",
+						# "copyright": "Getty",
+						# "author": "Culture Club/Getty Images",
+						# "width": 1280,
+						# "height": 400,
+						# "preview": "/9j/2wBDACgcHiMeGSgjISMtKygwPGRBPDc3PHtYXUlkkYCZlo+AjIqgtObDoKrarYqMyP/L2u71////m8H////6/+b9//j/2wBDASstLTw1PHZBQXb4pYyl+Pj4+Pj4+Pj4+Pj4+Pj4+Pj4+Pj4+Pj4+Pj4+Pj4+Pj4+Pj4+Pj4+Pj4+Pj4+Pj4+Pj/wAARCAANACoDASIAAhEBAxEB/8QAGAAAAwEBAAAAAAAAAAAAAAAAAgQFAAP/xAAhEAACAQQBBQEAAAAAAAAAAAAAAQIEESFRBQMiMTJBQv/EABYBAQEBAAAAAAAAAAAAAAAAAAACAf/EABYRAQEBAAAAAAAAAAAAAAAAAAABMf/aAAwDAQACEQMRAD8ApVrtSzZHhJp3wWK5XpZojfm+iaDUu5vwE84yc1J52vplNqe7mChxkbPqD4lx69nsdKmD/9k="
+					# },
+					# "squaredVisual": {
+						# "src": "https://cdn.radiofrance.fr/s3/cruiser-production/2022/06/a089496b-0608-42ea-ac69-a7e1990ccaf8/400x400_arnstadt.jpg",
+						# "webpSrc": "https://cdn.radiofrance.fr/s3/cruiser-production/2022/06/a089496b-0608-42ea-ac69-a7e1990ccaf8/400x400_arnstadt.webp",
+						# "legend": "Gravure de la ville d' Arnstadt où JS Bach vécu de 1703 à 1707",
+						# "copyright": "Getty",
+						# "author": "Culture Club/Getty Images",
+						# "width": 400,
+						# "height": 400,
+						# "preview": "/9j/2wBDACgcHiMeGSgjISMtKygwPGRBPDc3PHtYXUlkkYCZlo+AjIqgtObDoKrarYqMyP/L2u71////m8H////6/+b9//j/2wBDASstLTw1PHZBQXb4pYyl+Pj4+Pj4+Pj4+Pj4+Pj4+Pj4+Pj4+Pj4+Pj4+Pj4+Pj4+Pj4+Pj4+Pj4+Pj4+Pj4+Pj/wAARCAAqACoDASIAAhEBAxEB/8QAGAAAAwEBAAAAAAAAAAAAAAAAAQIDBAD/xAAmEAACAgEDAwMFAAAAAAAAAAABAgARAxIhMQQTUSJBcTIzQmGh/8QAFgEBAQEAAAAAAAAAAAAAAAAAAQAC/8QAFxEBAQEBAAAAAAAAAAAAAAAAABEBMf/aAAwDAQACEQMRAD8A7H1jUQw39qlD1TMNgRMqaVa7lWZSgvk8TO7qUx5MirbUY5z6gbNzNjcj0jmNqYD9Suo4bmuY/fmdtVWhqTvJ5/kK1cAaQTYjkHTsu1Tit2a28wBjd77SZFGP4rcZiQsAdiO4oo/EUsxNsLklFs0SQRH0DzJYsg0laO3Erov2MKk3xgelXBHzG0O2MGhqG23iZmE0dKTfMeGHN1pJryJNm4IHEpl+5IniGAcf1FhtcPcPl5EcmVjBX//Z"
+					# },
+					# "producers": [
+						# {
+							# "id": "192bc212-a71c-4de0-b339-c5b3838c1b79",
+							# "name": "Denisa Kerschova",
+							# "path": "personnes/denisa-kerschova",
+							# "migrated": true,
+							# "visual": {
+								# "src": "https://cdn.radiofrance.fr/s3/cruiser-production/2022/03/8b75a339-396c-4dc5-87bd-2fbd6ee1d3b5/120x120_keschova-15763-19-0051-1280x720.jpg",
+								# "webpSrc": "https://cdn.radiofrance.fr/s3/cruiser-production/2022/03/8b75a339-396c-4dc5-87bd-2fbd6ee1d3b5/120x120_keschova-15763-19-0051-1280x720.webp",
+								# "legend": "Denisa Kerschova",
+								# "copyright": "Radio France",
+								# "author": "Christophe Abramowitz",
+								# "width": 120,
+								# "height": 120,
+								# "preview": "/9j/2wBDACgcHiMeGSgjISMtKygwPGRBPDc3PHtYXUlkkYCZlo+AjIqgtObDoKrarYqMyP/L2u71////m8H////6/+b9//j/2wBDASstLTw1PHZBQXb4pYyl+Pj4+Pj4+Pj4+Pj4+Pj4+Pj4+Pj4+Pj4+Pj4+Pj4+Pj4+Pj4+Pj4+Pj4+Pj4+Pj4+Pj/wAARCAAqACoDASIAAhEBAxEB/8QAGQAAAwEBAQAAAAAAAAAAAAAAAAQFAwIG/8QAJRAAAQQBBAIBBQAAAAAAAAAAAQACAxEEBRIhMRNBURUiMjRy/8QAFwEBAQEBAAAAAAAAAAAAAAAAAgABA//EABkRAQEAAwEAAAAAAAAAAAAAAAABAhEhMf/aAAwDAQACEQMRAD8AspPNynRODI63H5Tik6kzbkh+78h0srY6gzMjyDyUWqjE/wAjbqlPiY3xA9lP44qIWslblNNEIQkIUrVg0Stc6x6v0qqja7e+P4pSjoS3AOrHsJyHIO5oNbaXnmSuZ0eFT097ntc53DAjrR8yWQbCFjBJyWHg9hbJAEjquMJoN90WJ5Y5f6sn8qSONOaYNwdbz0mHNEQixme+XLvA5galnk/VByj7XS86sRt+1pIHAWiB0hJzf//Z"
+							# },
+							# "role": "production"
+						# }
+					# ],
+					# "staff": [
+						# {
+							# "id": "44fb935c-fd36-4ff4-86c4-f3547bf995ee",
+							# "name": "Arnaud Chappatte",
+							# "path": "personnes/arnaud-chappatte",
+							# "migrated": true,
+							# "visual": null,
+							# "role": "realisation"
+						# },
+						# {
+							# "id": "4c644ffa-c13b-40cd-bf3a-ed775287791b",
+							# "name": "Laurent Lefrançois",
+							# "path": "personnes/laurent-lefrancois",
+							# "migrated": true,
+							# "visual": {
+								# "src": "https://cdn.radiofrance.fr/s3/cruiser-production/2016/04/fa423c2e-3815-4b31-850f-6877c5dedc0f/120x120_lefrancois_149x185.jpg",
+								# "webpSrc": "https://cdn.radiofrance.fr/s3/cruiser-production/2016/04/fa423c2e-3815-4b31-850f-6877c5dedc0f/120x120_lefrancois_149x185.webp",
+								# "legend": "Laurent Lefrançois © okarinamusique.com",
+								# "copyright": null,
+								# "author": null,
+								# "width": 120,
+								# "height": 120,
+								# "preview": "/9j/2wBDACgcHiMeGSgjISMtKygwPGRBPDc3PHtYXUlkkYCZlo+AjIqgtObDoKrarYqMyP/L2u71////m8H////6/+b9//j/2wBDASstLTw1PHZBQXb4pYyl+Pj4+Pj4+Pj4+Pj4+Pj4+Pj4+Pj4+Pj4+Pj4+Pj4+Pj4+Pj4+Pj4+Pj4+Pj4+Pj4+Pj/wAARCAAqACoDASIAAhEBAxEB/8QAGQAAAwEBAQAAAAAAAAAAAAAAAgMEAQUA/8QAIxAAAgICAgIBBQAAAAAAAAAAAAECAxEhBDEiURMSMjNhcf/EABYBAQEBAAAAAAAAAAAAAAAAAAIBA//EABcRAQEBAQAAAAAAAAAAAAAAAAABETH/2gAMAwEAAhEDEQA/ADFWz8lFDCa7VrZmcVVZ1oo+lWQaxpkvFnZZGcXr0U8ZTWpPoNNHW3Vc4PoqNsqipSk0CIKSBbHKT9BGlRlc1C30mWwbck10c3K+bCekdOheKwCnpPKbdiinhdg5GcleS/gkUGl4eBc3LGmPEz6ZUDXXnfs6XHSrhtkFP5Uv0UyekSlOGxkrpy9dID4T3E+5lBUf/9k="
+							# },
+							# "role": "realisation"
+						# },
+						# {
+							# "id": "93942217-e716-4229-89fc-6f1bfa8a075b",
+							# "name": "Maud Noury",
+							# "path": "personnes/maud-noury",
+							# "migrated": true,
+							# "visual": null,
+							# "role": "collaboration"
+						# }
+					# ],
+					# "composer": [],
+					# "conductor": [],
+					# "orchestra": [],
+					# "choir": [],
+					# "choirmaster": [],
+					# "soloist": [],
+					# "themes": [
+						# {
+							# "id": "c495dd3c-4a42-4ac9-bcde-78c325bef412",
+							# "title": "Musiques et actualité musicale",
+							# "migrated": true,
+							# "path": "musique",
+							# "parent": null
+						# },
+						# {
+							# "id": "deee56fd-dd7c-4ef8-b51e-236778faaa75",
+							# "title": "Musique classique",
+							# "migrated": true,
+							# "path": "musique/classique",
+							# "parent": {
+								# "id": "c495dd3c-4a42-4ac9-bcde-78c325bef412",
+								# "title": "Musiques et actualité musicale",
+								# "path": "musique",
+								# "parent": null
+							# }
+						# }
+					# ],
+					# "tagsAndPersonalities": [
+						# {
+							# "id": "eb3bf11e-a4e4-4050-9a9f-2bd2a43e71fa",
+							# "title": "Programmation musicale",
+							# "path": "sujets/programmation-musicale",
+							# "migrated": true
+						# },
+						# {
+							# "id": "9522ccdc-86c8-42a1-96dc-0a887b7b545e",
+							# "path": "personnes/johann-sebastian-bach",
+							# "migrated": true,
+							# "title": "Jean-Sébastien Bach"
+						# }
+					# ],
+					# "concept": {
+						# "podcast": {
+							# "rss": "https://radiofrance-podcast.net/podcast09/rss_14497.xml",
+							# "itune": {
+								# "url": "https://podcasts.apple.com/fr/podcast/allegretto-programme-musical-de-denisa-kerschova/id1037705293"
+							# }
+						# },
+						# "id": "23813bbb-82bf-46a7-99f8-336b01019095",
+						# "title": "Allegretto",
+						# "path": "francemusique/podcasts/allegretto",
+						# "visual": {
+							# "src": "https://cdn.radiofrance.fr/s3/cruiser-production/2021/11/d4bc9ce0-c767-4940-a287-4792333fb553/120x120_fm-allegretto.jpg",
+							# "webpSrc": "https://cdn.radiofrance.fr/s3/cruiser-production/2021/11/d4bc9ce0-c767-4940-a287-4792333fb553/120x120_fm-allegretto.webp",
+							# "legend": "visuel  podcast  Allegretto",
+							# "copyright": "Radio France",
+							# "author": "Christophe Abramowitz - DN",
+							# "width": 120,
+							# "height": 120,
+							# "preview": "/9j/2wBDACgcHiMeGSgjISMtKygwPGRBPDc3PHtYXUlkkYCZlo+AjIqgtObDoKrarYqMyP/L2u71////m8H////6/+b9//j/2wBDASstLTw1PHZBQXb4pYyl+Pj4+Pj4+Pj4+Pj4+Pj4+Pj4+Pj4+Pj4+Pj4+Pj4+Pj4+Pj4+Pj4+Pj4+Pj4+Pj4+Pj/wAARCAAqACoDASIAAhEBAxEB/8QAGQAAAwEBAQAAAAAAAAAAAAAAAQQFAgMA/8QAJBAAAQQBBAEFAQAAAAAAAAAAAQACAxEEEiExUUETFCNScZH/xAAYAQADAQEAAAAAAAAAAAAAAAAAAQIDBP/EABwRAQEAAQUBAAAAAAAAAAAAAAABMQIDERITYf/aAAwDAQACEQMRAD8AoNC08iOMuPgItC9MPgf+JgpBlvkfuwaTxScI2Kl4szWtaLBo7qqxwkbYUynYhSxP1uOna1z0O6KvGCP6rHt4/qqbTedWoyN1xOaPIpBpXGXMbE5zdJJCGEluEhmHKH2TQB3VjEssDhxwpRM59SiKeb/E9jZbIoWx6TY5SX1vGD5WUbsA9rNpoJtz4R5KDpsZ9uLTZ8qUt2eyh0+UmALJy46bq9lQxzCIm+pGdY5SQca5K9qd2f6gdPqmc+EbWRSHv4eypLuSggeOl//Z"
+						# },
+						# "connections": [
+							# {
+								# "type": "mail",
+								# "title": null,
+								# "url": "Maud.NOURY@radiofrance.com"
+							# },
+							# {
+								# "type": "mail",
+								# "title": null,
+								# "url": "Denisa.KERSCHOVA@radiofrance.com"
+							# },
+							# {
+								# "type": "mail",
+								# "title": null,
+								# "url": "allegretto@radiofrance.com"
+							# },
+							# {
+								# "type": "mail",
+								# "title": null,
+								# "url": "Come.JOCTEUR-MONROZIER@radiofrance.com"
+							# }
+						# ]
+					# },
+					# "manifestations": [],
+					# "videos": [],
+					# "mainResource": null,
+					# "interpretations": [],
+					# "concerts": [],
+					# "authors": [],
+					# "manualUpdate": 1656493200,
+					# "publishedDate": 1656493200,
+					# "songs": [
+						# {
+							# "id": "ce67ff9a-e35d-4575-b109-0804cb72c9fd",
+							# "firstLine": "Jean-Sébastien Bach (Compositeur), Dimitri Naiditch (Compositeur)",
+							# "secondLine": "Suite n°2 en si min BWV 1067 : Badinerie",
+							# "thirdLine": 2019,
+							# "interpreters": [
+								# "Jean-Sébastien Bach (Compositeur)",
+								# "Dimitri Naiditch (Compositeur)",
+								# "Dimitri Naïditch (Piano)",
+								# "Gilles Naturel (Contrebasse)",
+								# "Arthur Alard (Batterie)",
+								# "Dimitri Naïditch"
+							# ],
+							# "release": {
+								# "year": 2019,
+								# "title": "Bach Up.",
+								# "label": "Dinaï",
+								# "reference": null
+							# },
+							# "visual": {
+								# "src": "https://cdn.radiofrance.fr/s3/cruiser-production/2019/09/f5e573ed-0147-408e-ac1b-2989a9f96ce1/200x200_rf_omm_0001799327_dnc.0087193924.jpg",
+								# "webpSrc": "https://cdn.radiofrance.fr/s3/cruiser-production/2019/09/f5e573ed-0147-408e-ac1b-2989a9f96ce1/200x200_rf_omm_0001799327_dnc.0087193924.webp",
+								# "legend": null,
+								# "copyright": null,
+								# "author": null,
+								# "width": 200,
+								# "height": 200,
+								# "preview": "/9j/2wBDACgcHiMeGSgjISMtKygwPGRBPDc3PHtYXUlkkYCZlo+AjIqgtObDoKrarYqMyP/L2u71////m8H////6/+b9//j/2wBDASstLTw1PHZBQXb4pYyl+Pj4+Pj4+Pj4+Pj4+Pj4+Pj4+Pj4+Pj4+Pj4+Pj4+Pj4+Pj4+Pj4+Pj4+Pj4+Pj4+Pj/wAARCAAqACoDASIAAhEBAxEB/8QAFwAAAwEAAAAAAAAAAAAAAAAAAwQFAv/EACYQAAEEAQQCAAcAAAAAAAAAAAEAAgMREgQhMUETIhQyNFFScZH/xAAWAQEBAQAAAAAAAAAAAAAAAAACAQD/xAAZEQEBAQEBAQAAAAAAAAAAAAAAARFBAiH/2gAMAwEAAhEDEQA/AHHyP8+AdW63qJPFDlybQXfUg9WtTyMwaHnYnhGdP1xmKQyBtkndDMLHEk82lJNW6A4xne1vT6kyZZVa3Bub8bmjAitp2BTrHejf0kRG6R4s009Jr4Z35lKXBs0SWNrng7JDWyBkkZ+wNKg5zW2TVAbqHqZvNLfQ4UK2guJcST2j6V2MnF7IHaPEMZxS1RS05Jd7cp+lPhPuNtyVQRhUhqXMwcXmrUc0CUxrifPVpYpi0xpc4AC1Wgiui5oxU3TcOR4nOv5j/VKsuKOLGmwCjZpVhJG5RlMZ/9k="
+							# },
+							# "links": [],
+							# "start": "1656493197",
+							# "end": "1656493471"
+						# },
+						# {
+							# "id": "81391cc3-4566-494d-a80f-2e2f85ddf9be",
+							# "firstLine": "Jean Sebastien Bach (Compositeur)",
+							# "secondLine": "L'art de la fugue bwv 1080 : contrapunctus I",
+							# "thirdLine": 1985,
+							# "interpreters": [
+								# "Canadian Brass"
+							# ],
+							# "release": {
+								# "year": 1985,
+								# "title": "Best of the Canadian brass",
+								# "label": "CBS",
+								# "reference": "MK 45744"
+							# },
+							# "visual": {
+								# "src": "https://cdn.radiofrance.fr/s3/cruiser-production/2019/12/7edae92b-4249-43da-9cca-457ba953de4a/200x200_rf_omm_0000353440_dnc.0054252708.jpg",
+								# "webpSrc": "https://cdn.radiofrance.fr/s3/cruiser-production/2019/12/7edae92b-4249-43da-9cca-457ba953de4a/200x200_rf_omm_0000353440_dnc.0054252708.webp",
+								# "legend": null,
+								# "copyright": null,
+								# "author": null,
+								# "width": 200,
+								# "height": 200,
+								# "preview": "/9j/2wBDACgcHiMeGSgjISMtKygwPGRBPDc3PHtYXUlkkYCZlo+AjIqgtObDoKrarYqMyP/L2u71////m8H////6/+b9//j/2wBDASstLTw1PHZBQXb4pYyl+Pj4+Pj4+Pj4+Pj4+Pj4+Pj4+Pj4+Pj4+Pj4+Pj4+Pj4+Pj4+Pj4+Pj4+Pj4+Pj4+Pj/wAARCAAqACoDASIAAhEBAxEB/8QAGAABAQEBAQAAAAAAAAAAAAAABAMCAQD/xAAlEAABBAEDBQADAQAAAAAAAAABAAIDEQQSITMiIzEyQUJRcYH/xAAWAQEBAQAAAAAAAAAAAAAAAAABAAL/xAAVEQEBAAAAAAAAAAAAAAAAAAAAAf/aAAwDAQACEQMRAD8ALHFHpYa3IWZG6DRWo3M0N6hdKc03VpABv6slprqF1YWm04W4EH4oXojc113exSYxTRbrtJQyB0IqblDtlCTGa3F7FeHvZ8LsXssv2cVImWPU0vDumt1lrnOa0D54XIHF0T2HxS9jAl42/wBQ0vljsoKblntkIKWarj8ipLB+V0FPH5Qly8ZUg43aA4fsK2JG7k+eEVNwvR39UXcodslCTsviQVCv/9k="
+							# },
+							# "links": [],
+							# "start": "1656493544",
+							# "end": "1656493701"
+						# }
+					# ],
+					# "songsCursor": null,
+					# "isTimeshiftable": true,
+					# "background": {
+						# "src": "https://cdn.radiofrance.fr/s3/cruiser-production/2022/06/a089496b-0608-42ea-ac69-a7e1990ccaf8/2048x640_arnstadt.jpg",
+						# "webpSrc": "https://cdn.radiofrance.fr/s3/cruiser-production/2022/06/a089496b-0608-42ea-ac69-a7e1990ccaf8/2048x640_arnstadt.webp",
+						# "legend": "Gravure de la ville d' Arnstadt où JS Bach vécu de 1703 à 1707",
+						# "copyright": "Getty",
+						# "author": "Culture Club/Getty Images",
+						# "width": 1280,
+						# "height": 400,
+						# "preview": "/9j/2wBDACgcHiMeGSgjISMtKygwPGRBPDc3PHtYXUlkkYCZlo+AjIqgtObDoKrarYqMyP/L2u71////m8H////6/+b9//j/2wBDASstLTw1PHZBQXb4pYyl+Pj4+Pj4+Pj4+Pj4+Pj4+Pj4+Pj4+Pj4+Pj4+Pj4+Pj4+Pj4+Pj4+Pj4+Pj4+Pj4+Pj/wAARCAANACoDASIAAhEBAxEB/8QAGAAAAwEBAAAAAAAAAAAAAAAAAgQFAAP/xAAhEAACAQQBBQEAAAAAAAAAAAAAAQIEESFRBQMiMTJBQv/EABYBAQEBAAAAAAAAAAAAAAAAAAACAf/EABYRAQEBAAAAAAAAAAAAAAAAAAABMf/aAAwDAQACEQMRAD8ApVrtSzZHhJp3wWK5XpZojfm+iaDUu5vwE84yc1J52vplNqe7mChxkbPqD4lx69nsdKmD/9k=",
+						# "srcset": "https://cdn.radiofrance.fr/s3/cruiser-production/2022/06/a089496b-0608-42ea-ac69-a7e1990ccaf8/400x400_arnstadt.jpg 400w, https://cdn.radiofrance.fr/s3/cruiser-production/2022/06/a089496b-0608-42ea-ac69-a7e1990ccaf8/1000x563_arnstadt.jpg 1000w, https://cdn.radiofrance.fr/s3/cruiser-production/2022/06/a089496b-0608-42ea-ac69-a7e1990ccaf8/2048x640_arnstadt.jpg 2048w",
+						# "webpSrcset": "https://cdn.radiofrance.fr/s3/cruiser-production/2022/06/a089496b-0608-42ea-ac69-a7e1990ccaf8/400x400_arnstadt.webp 400w, https://cdn.radiofrance.fr/s3/cruiser-production/2022/06/a089496b-0608-42ea-ac69-a7e1990ccaf8/1000x563_arnstadt.webp 1000w, https://cdn.radiofrance.fr/s3/cruiser-production/2022/06/a089496b-0608-42ea-ac69-a7e1990ccaf8/2048x640_arnstadt.webp 2048w"
+					# },
+					# "timeshiftStreams": []
+				# }
+			# }
+
+			$dataType = 'rf5';
+			my $nowplaying;
+			my $parentItem = '';
+			my $thisItem;
+			
+			# Try to find what is playing (priority to song over programme)
+
+			my @items = ();
+			# songs[] seems to have a maximum of 10 items - after that need to use pageCursor with different URL
+			if ( exists $perl_data->{'songs'} && ref($perl_data->{'songs'}) eq "ARRAY" ){
+				$dataType = $dataType.'b';
+				@items = @{ $perl_data->{'songs'} };
+				#$dumped =  Dumper @items;
+				#main::DEBUGLOG && $log->is_debug && $log->debug("songs: $dumped");
+			} else {
+				@items = @{ $perl_data->{'content'}->{'songs'} };
+			}
+				
+			# $dumped =  Dumper @levels;
+			# print $dumped;
+
+			foreach my $thisItem ( @items ){
+				# main::DEBUGLOG && $log->is_debug && $log->debug("item: $thisItem");
+				
+				if ( exists $thisItem->{'start'} && $thisItem->{'start'} <= $hiResTime && 
+					exists $thisItem->{'end'} && $thisItem->{'end'} >= $hiResTime &&
+					!$info->{isSong}) {
+					# This one is in range and not already found a song (might have found a programme or segment but song trumps it)
+					# main::DEBUGLOG && $log->is_debug && $log->debug("Current playing $item");
+					if ((exists $thisItem->{'firstLine'} && $thisItem->{'firstLine'} ne '' ) ||
+					    $thisItem->{'end'} - $thisItem->{'start'} <= maxSongLth ) {
+						$nowplaying = $thisItem;
+						$info->{isSong} = true;
+					}
+				} else {
+					if ( exists $thisItem->{'start'} && exists $thisItem->{'end'} ){
+						#main::DEBUGLOG && $log->is_debug && $log->debug("Now: $hiResTime, Start: $thisItem->{'start'}, End: $thisItem->{'end'}");
+					}
+				}
+			}		
+			
+			if ( $info->{isSong} ) {
+			
+				# $dumped =  Dumper $nowplaying;
+				# $dumped =~ s/\n {44}/\n/g;   
+				# main::DEBUGLOG && $log->is_debug && $log->debug($dumped);
+
+				# main::DEBUGLOG && $log->is_debug && $log->debug("Time: ".time." Ends: ".$nowplaying->{'end'});
+				
+				if (exists $nowplaying->{'start'}){ $calculatedPlaying->{$station}->{'songstart'} = $nowplaying->{'start'}};
+				
+				my $expectedEndTime = $hiResTime;
+				
+				if (exists $nowplaying->{'end'}){ $expectedEndTime = $nowplaying->{'end'}};
+				
+				if ( $expectedEndTime > $hiResTime-30 ){
+					# If looks like this should not have already finished (allowing for some leniency for clock drift and other delays) then get the details
+					# This requires that the time on the machine running LMS should be accurate - and timezone set correctly
+
+					$calculatedPlaying->{$station}->{'songartist'} = '';
+					if ( exists $nowplaying->{'firstLine'} && $nowplaying->{'firstLine'} ne '' ) {
+						$calculatedPlaying->{$station}->{'songartist'} = $nowplaying->{'firstLine'};
+					}
+					
+					$calculatedPlaying->{$station}->{'songtitle'} = '';
+					if (exists $nowplaying->{'secondLine'} && $nowplaying->{'secondLine'} ne ''){
+						$calculatedPlaying->{$station}->{'songtitle'} = $nowplaying->{'secondLine'};
+					} else {
+						if (exists $nowplaying->{'title'}) {$calculatedPlaying->{$station}->{'songtitle'} = _lowercase($nowplaying->{'title'})};
+					}
+					
+					$calculatedPlaying->{$station}->{'songyear'} = '';
+					if (exists $nowplaying->{'release'}->{'year'}) {$calculatedPlaying->{$station}->{'songyear'} = $nowplaying->{'release'}->{'year'}};
+					$calculatedPlaying->{$station}->{'songlabel'} = '';
+					if (exists $nowplaying->{'release'}->{'label'}) {$calculatedPlaying->{$station}->{'songlabel'} = $nowplaying->{'release'}->{'label'}};
+					
+					# main::DEBUGLOG && $log->is_debug && $log->debug('Preferences: DisableAlbumName='.$prefs->get('disablealbumname'));
+					$calculatedPlaying->{$station}->{'songalbum'} = '';
+					if (exists $nowplaying->{'release'}->{'title'}) {$calculatedPlaying->{$station}->{'songalbum'} = $nowplaying->{'release'}->{'title'}};
+					
+					# Artwork - only include if not one of the defaults - to give chance for something else to add it
+					# Regex check to see if present using $iconsIgnoreRegex
+					my $thisartwork = '';
+					
+					if ( exists $nowplaying->{'visual'} ){
+						$thisartwork = getcover($nowplaying->{'visual'}, $station, $info);
+					}
+					
+					#if ($thisartwork ne ''){
+						$calculatedPlaying->{$station}->{'songcover'} = $thisartwork;
+					#}
+					
+					if ( exists $nowplaying->{'end'} && exists $nowplaying->{'start'} ){
+						# Work out song duration and return if plausible
+						$songDuration = $nowplaying->{'end'} - $nowplaying->{'start'};
+						
+						# main::DEBUGLOG && $log->is_debug && $log->debug("$station - Duration $songDuration");
+						
+						if ($songDuration > 0) {$calculatedPlaying->{$station}->{'songlth'} = $songDuration};
+					}
+					
+					# Try to update the predicted end time to give better chance for timely display of next song
+					$calculatedPlaying->{$station}->{'songend'} = $expectedEndTime;
+					
+				} else {
+					# This song that is playing should have already finished so returning largely blank data should reset what is displayed
+					main::DEBUGLOG && $log->is_debug && $log->debug("$station - Song already finished - expected end $expectedEndTime and now $hiResTime");
+				}
+
+			} else {
+
+				main::DEBUGLOG && $log->is_debug && $log->debug("$station - ($dataType) Did not find Current Song in retrieved data");
+
+			}
+			
+			#$dumped =  Dumper $calculatedPlaying->{$station};
+			#$dumped =~ s/\n {44}/\n/g;   
+			#main::DEBUGLOG && $log->is_debug && $log->debug("Type $dataType:$dumped");
+
+		} elsif ( ref($perl_data) ne "ARRAY" && ( exists $perl_data->{'now'} && exists $perl_data->{'media'} && exists $perl_data->{'slug'}) ) {
+			
+			# {
+				# "now": {
+					# "firstLine": "All things",
+					# "secondLine": "Hieroglyphics",
+					# "cover": {
+						# "src": "https://www.radiofrance.fr/s3/cruiser-production/2021/10/09062710-ffa6-4526-979d-a681b252682c/400x400_rf_omm_0002143886_dnc.0123241567.jpg",
+						# "webpSrc": "https://www.radiofrance.fr/s3/cruiser-production/2021/10/09062710-ffa6-4526-979d-a681b252682c/400x400_rf_omm_0002143886_dnc.0123241567.webp",
+						# "legend": null,
+						# "copyright": null,
+						# "author": null,
+						# "width": 400,
+						# "height": 400,
+						# "preview": "/9j/2wBDACgcHiMeGSgjISMtKygwPGRBPDc3PHtYXUlkkYCZlo+AjIqgtObDoKrarYqMyP/L2u71////m8H////6/+b9//j/2wBDASstLTw1PHZBQXb4pYyl+Pj4+Pj4+Pj4+Pj4+Pj4+Pj4+Pj4+Pj4+Pj4+Pj4+Pj4+Pj4+Pj4+Pj4+Pj4+Pj4+Pj/wAARCAAqACoDASIAAhEBAxEB/8QAGQAAAwEBAQAAAAAAAAAAAAAAAgMEBQAB/8QAIxAAAgICAgICAwEAAAAAAAAAAQIAEQMhEjEEURNBFCJxMv/EABcBAQEBAQAAAAAAAAAAAAAAAAIAAQP/xAAZEQADAQEBAAAAAAAAAAAAAAAAAQIRMSH/2gAMAwEAAhEDEQA/AJ/BxgpyIuUthx5AbWR+JneqvQEuxOMgIOmlLnjMe9JfwFJsNqNHi4lANWRDDi+IYEwr3uNSg6xbpj+MkqNCZZqzqa9cgRM9vGbkf7BaSYp9C8VVC2PuPK67icKsuIVQv3CVm+Snqvc4vp0BwoyEj7vUYzZTlB5AAfUMuo/yRFkKTfKSplh2NsuNmJYEH3OPlizoTwn9TRuRG7iW10zhoAJwUN2J4UULYFyTITy7lGE2hgawQOvUNAp71AbsQX0DNIecag2uQfySFdncFSeXcE9zpgD/2Q==",
+						# "id": "09062710-ffa6-4526-979d-a681b252682c"
+					# },
+					# "song": {
+						# "id": "0091febc-b622-4f87-bb53-6112e74b6890",
+						# "title": "All things",
+						# "year": 1998,
+						# "release": {
+							# "title": "3rd eye vision",
+							# "label": "HIEROGLYPHICS IMPERIUM",
+							# "reference": null
+						# },
+						# "interpreters": []
+					# },
+					# "nowTime": 1663944657,
+					# "nowPercent": 90.72164948453609
+				# },
+				# "next": {
+					# "firstLine": "Drop it like it's hot",
+					# "secondLine": "Snoop Dogg & Pharrell Williams",
+					# "cover": {
+						# "src": "https://www.radiofrance.fr/s3/cruiser-production/2019/10/57994664-e633-41a7-a05f-beb048dec3ce/400x400_rf_omm_0001583467_dnc.0072299238.jpg",
+						# "webpSrc": "https://www.radiofrance.fr/s3/cruiser-production/2019/10/57994664-e633-41a7-a05f-beb048dec3ce/400x400_rf_omm_0001583467_dnc.0072299238.webp",
+						# "legend": null,
+						# "copyright": null,
+						# "author": null,
+						# "width": 400,
+						# "height": 400,
+						# "preview": "/9j/2wBDACgcHiMeGSgjISMtKygwPGRBPDc3PHtYXUlkkYCZlo+AjIqgtObDoKrarYqMyP/L2u71////m8H////6/+b9//j/2wBDASstLTw1PHZBQXb4pYyl+Pj4+Pj4+Pj4+Pj4+Pj4+Pj4+Pj4+Pj4+Pj4+Pj4+Pj4+Pj4+Pj4+Pj4+Pj4+Pj4+Pj/wAARCAAqACoDASIAAhEBAxEB/8QAGQAAAgMBAAAAAAAAAAAAAAAAAwQAAQUC/8QAKBAAAQQBAgUEAwEAAAAAAAAAAQACAxEEITEFEhMyUSJBUnEUgZHR/8QAFgEBAQEAAAAAAAAAAAAAAAAAAQAC/8QAGREBAQEBAQEAAAAAAAAAAAAAABEBMVES/9oADAMBAAIRAxEAPwAnFMowBrWdxSuNkzP3tw+kXi0YPI+9tEPDlijaeYkEewR9LMHfIxjgXV+11NIGAU0epZWQ5zpi4WWg6WjGUys7j/iRDGXM1jNWWdrSX5Q+KmVM54a0kmkqoxoZmSJ3co7R7pdoN6FQx1Hzf1DDqRkUjQErAAOnYOhBVZMUcLWuZ6r3r2Q8Vr53iMb+VeSx2PKWEgrQAbjSSO0Gh8pocJnrZqJjytmNEhpGw8rRGVQAIWL63PGe7GBi5A9uqzXxlshYNaTRJs6rpgFXQVwdE4a/pvqxtsr4k1hYHjvvVBi0mH2ry9ZdU4tJWb3RevL8iuqHgKUPCg//2Q==",
+						# "id": "57994664-e633-41a7-a05f-beb048dec3ce"
+					# },
+					# "song": {
+						# "id": "5c2fb4fd-67ff-40ac-a57e-f59e72dbbb78",
+						# "title": "Drop it like it's hot",
+						# "year": 2004,
+						# "release": {
+							# "title": "Rhythm & gangsta",
+							# "label": null,
+							# "reference": null
+						# },
+						# "interpreters": []
+					# }
+				# },
+				# "delayToRefresh": 18000,
+				# "slug": "fip_hiphop",
+				# "media": {
+					# "sources": [
+						# {
+							# "url": "https://stream.radiofrance.fr/fiphiphop/fiphiphop.m3u8?id=radiofrance",
+							# "broadcastType": "live",
+							# "format": "hls",
+							# "bitrate": 0
+						# },
+						# {
+							# "url": "https://icecast.radiofrance.fr/fiphiphop-hifi.aac?id=radiofrance",
+							# "broadcastType": "live",
+							# "format": "aac",
+							# "bitrate": 192
+						# },
+						# {
+							# "url": "https://icecast.radiofrance.fr/fiphiphop-midfi.mp3?id=radiofrance",
+							# "broadcastType": "live",
+							# "format": "mp3",
+							# "bitrate": 128
+						# }
+					# ],
+					# "startTime": 1663944481,
+					# "endTime": 1663944675
+				# },
+				# "visual": {
+					# "src": "https://www.radiofrance.fr/s3/cruiser-production/2022/07/af67eb80-feac-441e-aea6-ba7c653e220d/300x300_fip-hip-hop-2022-v12x-1.jpg",
+					# "webpSrc": "https://www.radiofrance.fr/s3/cruiser-production/2022/07/af67eb80-feac-441e-aea6-ba7c653e220d/300x300_fip-hip-hop-2022-v12x-1.webp",
+					# "legend": "FIP Hip-hop",
+					# "copyright": "Aucun(e)",
+					# "author": "",
+					# "width": 300,
+					# "height": 300,
+					# "preview": "/9j/2wBDACgcHiMeGSgjISMtKygwPGRBPDc3PHtYXUlkkYCZlo+AjIqgtObDoKrarYqMyP/L2u71////m8H////6/+b9//j/2wBDASstLTw1PHZBQXb4pYyl+Pj4+Pj4+Pj4+Pj4+Pj4+Pj4+Pj4+Pj4+Pj4+Pj4+Pj4+Pj4+Pj4+Pj4+Pj4+Pj4+Pj/wAARCAAqACoDASIAAhEBAxEB/8QAGQABAQEBAQEAAAAAAAAAAAAAAwUEAQAC/8QAKBAAAQQBAwIFBQAAAAAAAAAAAQACAxEEBRIxEyEUMkFRYSI0QnGB/8QAFwEBAQEBAAAAAAAAAAAAAAAAAwEAAv/EABoRAQEBAAMBAAAAAAAAAAAAAAABAxExMhL/2gAMAwEAAhEDEQA/AK0d/wARZWW3GZuIJr2SRuG7b6qfmxyuyHDbcbhyjx8R1JzeCR6rHJIGBpFml12qMbI5mx1g0sAjMbwAwbr7LWcX6y/puLndzSWx1pn8N2POJ4t4BH7SosZmyECq+ClUGzs+5A+E0kbZG7XcIZBUEjx5gOVMOTI7uHuCLHxF6qqMSLeHUbCZS4chzcaS3uv8SUXiZX3TyAO6Vrbe1letS8OaR+SLe43yPRU1kGWdSFzPcUsjtOcT5wt0fC+kWPiLQPx92N0xV1VrMdPfdteBfKoLyVAYuP0GuBIJJ5TLq4sz/9k=",
+					# "id": "af67eb80-feac-441e-aea6-ba7c653e220d"
+				# }
+			# }
+			
+			$dataType = 'rf6';
+			my $nowplaying;
+			my $thisItem;
+			my $songItem;
+			
+			$thisItem = $perl_data;
+			
+			if ( exists($thisItem->{'now'}->{'song'} ) ){
+				$songItem = $thisItem->{'now'}->{'song'};
+				
+				if (exists($songItem->{'title'}) && defined($songItem->{'title'}) && $songItem->{'title'} ne '' &&
+				    exists($thisItem->{'now'}->{'firstLine'}) && $thisItem->{'now'}->{'firstLine'} eq $songItem->{'title'} && 
+				    exists($thisItem->{'now'}->{'secondLine'}) && $thisItem->{'now'}->{'secondLine'} ne '' ){
+					$info->{isSong} = true;
+					$nowplaying = $perl_data;
+				}
+			}
+			
+			if ( $info->{isSong} ) {
+			
+				# $dumped =  Dumper $nowplaying;
+				# $dumped =~ s/\n {44}/\n/g;   
+				# main::DEBUGLOG && $log->is_debug && $log->debug($dumped);
+
+				# main::DEBUGLOG && $log->is_debug && $log->debug("Time: ".time." Ends: ".$nowplaying->{'end_time'});
+				# main::DEBUGLOG && $log->is_debug && $log->debug("Current artist: ".$nowplaying->{'title'}." song: ".$nowplaying->{'subtitle'});
+				# main::DEBUGLOG && $log->is_debug && $log->debug("Image: ".$nowplaying->{'cover'});
+				
+				if (exists $nowplaying->{'media'}->{'startTime'}){ $calculatedPlaying->{$station}->{'songstart'} = $nowplaying->{'media'}->{'startTime'}};
+				
+				my $expectedEndTime = $hiResTime;
+				
+				if ( exists $nowplaying->{'media'}->{'endTime'} && $nowplaying->{'media'}->{'endTime'} > 0 ){ $expectedEndTime = $nowplaying->{'media'}->{'endTime'}};
+				
+				if ( $expectedEndTime > $hiResTime-30 ){
+					# If looks like this should not have already finished (allowing for some leniency for clock drift and other delays) then get the details
+					# This requires that the time on the machine running LMS should be accurate - and timezone set correctly
+					if (exists $thisItem->{'now'}->{'secondLine'} && defined($thisItem->{'now'}->{'secondLine'}) && $thisItem->{'now'}->{'secondLine'} ne '') {
+						$calculatedPlaying->{$station}->{'songartist'} = _lowercase($thisItem->{'now'}->{'secondLine'});
+					}
+
+					if (exists $songItem->{'title'} && defined($songItem->{'title'}) && $songItem->{'title'} ne '') {
+						$calculatedPlaying->{$station}->{'songtitle'} = _lowercase($songItem->{'title'});
+					}
+
+					$calculatedPlaying->{$station}->{'songyear'} = '';
+					if (exists $nowplaying->{'year'} && defined($nowplaying->{'year'}) ) {
+						$calculatedPlaying->{$station}->{'songyear'} = $nowplaying->{'year'};
+					}
+
+					# Note - Label and Album are not available in the "playing_item" but are in "song"
+					# Take year if it is present and have seen times when not present above
+					if ( exists $songItem->{'year'} && defined($songItem->{'year'}) ) {$calculatedPlaying->{$station}->{'songyear'} = $songItem->{'year'}};
+					
+					$calculatedPlaying->{$station}->{'songlabel'} = '';
+					if ( exists $songItem->{'release'}->{'label'} && defined( $songItem->{'release'}->{'label'} ) && $songItem->{'release'}->{'label'} ne '' ) {$calculatedPlaying->{$station}->{'songlabel'} = _lowercase($songItem->{'release'}->{'label'})};
+					
+					$calculatedPlaying->{$station}->{'songalbum'} = '';
+					if (exists $songItem->{'release'}->{'album'} && defined( $songItem->{'release'}->{'album'} ) && $songItem->{'release'}->{'album'} ne '' ) {$calculatedPlaying->{$station}->{'songalbum'} = _lowercase($songItem->{'release'}->{'album'})};
+					
+					# Artwork - only include if not one of the defaults - to give chance for something else to add it
+					# Regex check to see if present using $iconsIgnoreRegex
+					my $thisartwork = '';
+					
+					if ( $thisartwork eq '' && exists $nowplaying->{'now'}->{'cover'} ){
+						# Try to get it from the now playing
+						$thisartwork = getcover($nowplaying->{'now'}->{'cover'}, $station, $info);
+					}
+
+					if ($thisartwork ne ''){
+						$calculatedPlaying->{$station}->{'songcover'} = $thisartwork;
+					}
+					
+					if ( exists $nowplaying->{'media'}->{'endTime'} && exists $nowplaying->{'media'}->{'startTime'} ){
+						# Work out song duration and return if plausible
+						$songDuration = $nowplaying->{'media'}->{'endTime'} - $nowplaying->{'media'}->{'startTime'};
+						
+						# main::DEBUGLOG && $log->is_debug && $log->debug("$station - Duration $songDuration");
+						
+						if ($songDuration > 0) {$calculatedPlaying->{$station}->{'songlth'} = $songDuration};
+					}
+					
+					# Try to update the predicted end time to give better chance for timely display of next song
+					$calculatedPlaying->{$station}->{'songend'} = $expectedEndTime;
+					
+				} else {
+					# This song that is playing should have already finished so returning largely blank data should reset what is displayed
+					main::DEBUGLOG && $log->is_debug && $log->debug("$station - Song already finished - expected end $expectedEndTime and now $hiResTime");
+				}
+
+			} else {
+
+				main::DEBUGLOG && $log->is_debug && $log->debug("$station ($dataType) - Did not find Current Song in retrieved data");
+
+			}
+			
+			#$dumped =  Dumper $calculatedPlaying->{$station};
+			#$dumped =~ s/\n {44}/\n/g;   
+			#main::DEBUGLOG && $log->is_debug && $log->debug("Type $dataType:$dumped");
 		} else {
 			# Do not know how to parse this - probably a mistake in setup of $meta or $station
 			main::INFOLOG && $log->is_info && $log->info("Called for station $station - but do not know which format parser to use");
@@ -3988,6 +4845,54 @@ sub toplevel {
 								type	=> 'audio',
 								icon	=> $icons->{fipgroove},
 								url	=> 'http://icecast.radiofrance.fr/fipgroove-midfi.mp3',
+								on_select	=> 'play'
+							},
+						]
+					},{
+						name	=> 'Metal',
+						image	=> $icons->{fipmetal},
+						items	=> [
+							{
+								name	=> 'FIP Metal (HLS)',
+								type	=> 'audio',
+								icon	=> $icons->{fipmetal},
+								url	=> 'https://stream.radiofrance.fr/fipmetal/fipmetal.m3u8',
+								on_select	=> 'play'
+							},{
+								name	=> 'FIP Metal (AAC)',
+								type	=> 'audio',
+								icon	=> $icons->{fipmetal},
+								url	=> 'http://icecast.radiofrance.fr/fipmetal-hifi.aac',
+								on_select	=> 'play'
+							},{
+								name	=> 'FIP Metal (MP3)',
+								type	=> 'audio',
+								icon	=> $icons->{fipmetal},
+								url	=> 'http://icecast.radiofrance.fr/fipmetal-midfi.mp3',
+								on_select	=> 'play'
+							},
+						]
+					},{
+						name	=> 'Hip-Hop',
+						image	=> $icons->{fiphiphop},
+						items	=> [
+							{
+								name	=> 'FIP Hip-Hop (HLS)',
+								type	=> 'audio',
+								icon	=> $icons->{fiphiphop},
+								url	=> 'https://stream.radiofrance.fr/fiphiphop/fiphiphop.m3u8',
+								on_select	=> 'play'
+							},{
+								name	=> 'FIP Hip-Hop (AAC)',
+								type	=> 'audio',
+								icon	=> $icons->{fiphiphop},
+								url	=> 'http://icecast.radiofrance.fr/fiphiphop-hifi.aac',
+								on_select	=> 'play'
+							},{
+								name	=> 'FIP Hip-Hop (MP3)',
+								type	=> 'audio',
+								icon	=> $icons->{fiphiphop},
+								url	=> 'http://icecast.radiofrance.fr/fiphiphop-midfi.mp3',
 								on_select	=> 'play'
 							},
 						]
