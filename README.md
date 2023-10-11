@@ -39,7 +39,7 @@ If the plugin is working then you should see artist details appear around the ti
 You can also access the list of stations and schedules from the "My Apps" or "Radio" menu item in LMS (you can configure which one it appears under).
 
 **FIP stations supported:**
-FIP (including regional variants while they last), FIP ... Rock, Jazz, Groove, Monde, Electro, Reggae, Tout Nouveau, Pop, Metal, Hip-Hop --
+FIP, FIP ... Rock, Jazz, Groove, Monde, Electro, Reggae, Tout Nouveau, Pop, Metal, Hip-Hop, Sacré français ! --
 
 **France Musique stations supported:**
 France Musique
@@ -51,7 +51,7 @@ Concerts Radio France
 La Jazz
 La Contemporaine
 Ocora Monde
-Evenementielle / Classique Kids / B.O.
+Evenementielle / Classique Kids / B.O. (Films)
 
 **Mouv' stations supported:**
 Mouv'
@@ -70,6 +70,23 @@ Note: Radio France does not always provide track information in a timely manner 
 - If things are not working then enable Debug logging for this plugin via LMS/Settings/Advanced/Logging interface, repeat the problem and then check the LMS logs.  
 
 ## Version History
+
+**0.4.8 11-Oct-2023**
+- Add FIP Sacre francais !
+- API calls for song info changed again
+
+**0.4.7 07-Sep-2023**
+- Restore missing song info for FIP Pop
+
+**0.4.6 25-Jul-2023**
+- Data format change prevented old programmes from France Inter being shown
+
+**0.4.5 14-Jul-2023**
+- Switch artist and title around due to Radio France data format change
+
+**0.4.4 07-Jul-2023**
+- API calls for song info changed
+
 **0.4.3 24-Sep-2022**
 - Reinstate song information on France Musique (note - will not work for all tracks)
 - Add FIP Metal and FIP Hip-Hop

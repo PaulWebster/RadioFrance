@@ -92,7 +92,9 @@ my $type3suffix    = '&extensions=%7B%22persistedQuery%22%3A%7B%22version%22%3A1
 my $type3suffixfip = '&extensions=%7B%22persistedQuery%22%3A%7B%22version%22%3A1%2C%22sha256Hash%22%3A%22151ca055b816d28507dae07f9c036c02031ed54e18defc3d16feee2551e9a731%22%7D%7D&timestamp=${unixtime}';
 
 # Example https://www.radiofrance.fr/api/v1.9/stations/fip/webradios/fip_hiphop
-my $type4prefix = 'https://www.radiofrance.fr/api/v1.9/stations/fip/webradios/';
+# my $type4prefix = 'https://www.radiofrance.fr/api/v1.9/stations/fip/webradios/';
+# until Oct-2023 - my $type4prefix = 'https://www.radiofrance.fr/api/v2.1/stations/fip/live/webradios/';
+my $type4prefix = 'https://www.radiofrance.fr/fip/api/live/webradios/';
 my $type4suffix = '';
 
 my $radiofrancescheuleurl = 'https://api.radiofrance.fr/v1/stations/${stationid}/steps?filter[depth]=1&filter[start-time]=${datestring}T00:00&filter[end-time]=${datestring}T23:59&fields[shows]=title,visuals,stationId,mainImage&fields[diffusions]=title,startTime,endTime,mainImage,visuals,stationId&include=diffusion&include=show&include=diffusion.manifestations&include=diffusion.station&include=children-steps&include=children-steps.show&include=children-steps.diffusion&include=children-steps.diffusion.manifestations';
@@ -111,92 +113,93 @@ my $progInfoSuffix = '';
 my $progDetailsURL = '';
 
 my $stationSet = { # Take extra care if pasting in from external spreadsheet ... station name with single quote, TuneIn ids, longer match1 for duplicate
-	fipradio => { fullname => 'FIP', stationid => '7', region => '', tuneinid => 's15200', notexcludable => true, match1 => '', match2 => 'fip', ondemandurl => $radiofrancescheuleurl, ondemandheaders => \%radiofranceapiondemandheaderset },
-	fipbordeaux => { fullname => 'FIP Bordeaux', stationid => '7', region => '', tuneinid => 's50706', notexcludable => true, match1 => 'fipbordeaux', match2 => '' },
-	fipnantes => { fullname => 'FIP Nantes', stationid => '7', region => '', tuneinid => 's50770', notexcludable => true, match1 => 'fipnantes', match2 => '' },
-	fipstrasbourg => { fullname => 'FIP Strasbourg', stationid => '7', region => '', tuneinid => 's111944', notexcludable => true, match1 => 'fipstrasbourg', match2 => '' },
-	fiprock => { fullname => 'FIP Rock', stationid => '64', region => '', tuneinid => 's262528', notexcludable => true, match1 => 'fip-webradio1.', match2 => 'fiprock' },
-	fipjazz => { fullname => 'FIP Jazz', stationid => '65', region => '', tuneinid => 's262533', notexcludable => true, match1 => 'fip-webradio2.', match2 => 'fipjazz' },
-	fipgroove => { fullname => 'FIP Groove', stationid => '66', region => '', tuneinid => 's262537', notexcludable => true, match1 => 'fip-webradio3.', match2 => 'fipgroove' },
-	fipmonde => { fullname => 'FIP Monde', stationid => '69', region => '', tuneinid => 's262538', notexcludable => true, match1 => 'fip-webradio4.', match2 => 'fipworld' },
-	fipnouveau => { fullname => 'Tout nouveau, tout Fip', stationid => '70', region => '', tuneinid => 's262540', notexcludable => true, match1 => 'fip-webradio5.', match2 => 'fipnouveautes' },
-	fipreggae => { fullname => 'FIP Reggae', stationid => '71', region => '', tuneinid => 's293090', notexcludable => true, match1 => 'fip-webradio6.', match2 => 'fipreggae' },
-	fipelectro => { fullname => 'FIP Electro', stationid => '74', region => '', tuneinid => 's293089', notexcludable => true, match1 => 'fip-webradio8.', match2 => 'fipelectro' },
-	fipmetal => { fullname => 'FIP Metal', stationid => '77', region => '', tuneinid => 's308366', notexcludable => true, match1 => 'fip-webradio7.', match2 => 'fipmetal' },
-	fippop => { fullname => 'FIP Pop', stationid => '78', region => '', tuneinid => '', notexcludable => true, match1 => 'fip-webradio8.', match2 => 'fippop' },
-	fiphiphop => { fullname => 'FIP Hip-Hop', stationid => 'fip_hiphop', region => '', tuneinid => '', notexcludable => true, match1 => '', match2 => 'fiphiphop' },
+	fipradio => { fullname => 'FIP', stationid => '7', fetchid => 'fip', region => '', tuneinid => 's15200', notexcludable => true, match1 => '', match2 => 'fip', ondemandurl => $radiofrancescheuleurl, ondemandheaders => \%radiofranceapiondemandheaderset },
+	fipbordeaux => { fullname => 'FIP Bordeaux', stationid => '7', fetchid => 'fip', region => '', tuneinid => 's50706', notexcludable => true, match1 => 'fipbordeaux', match2 => '' },
+	fipnantes => { fullname => 'FIP Nantes', stationid => '7', fetchid => 'fip', region => '', tuneinid => 's50770', notexcludable => true, match1 => 'fipnantes', match2 => '' },
+	fipstrasbourg => { fullname => 'FIP Strasbourg', stationid => '7', fetchid => 'fip', region => '', tuneinid => 's111944', notexcludable => true, match1 => 'fipstrasbourg', match2 => '' },
+	fiprock => { fullname => 'FIP Rock', stationid => '64', fetchid => 'fip_rock', region => '', tuneinid => 's262528', notexcludable => true, match1 => 'fip-webradio1.', match2 => 'fiprock' },
+	fipjazz => { fullname => 'FIP Jazz', stationid => '65', fetchid => 'fip_jazz', region => '', tuneinid => 's262533', notexcludable => true, match1 => 'fip-webradio2.', match2 => 'fipjazz' },
+	fipgroove => { fullname => 'FIP Groove', stationid => '66', fetchid => 'fip_groove', region => '', tuneinid => 's262537', notexcludable => true, match1 => 'fip-webradio3.', match2 => 'fipgroove' },
+	fipmonde => { fullname => 'FIP Monde', stationid => '69', fetchid => 'fip_world', region => '', tuneinid => 's262538', notexcludable => true, match1 => 'fip-webradio4.', match2 => 'fipworld' },
+	fipnouveau => { fullname => 'Tout nouveau, tout Fip', stationid => '70', fetchid => 'fip_nouveautes', region => '', tuneinid => 's262540', notexcludable => true, match1 => 'fip-webradio5.', match2 => 'fipnouveautes' },
+	fipreggae => { fullname => 'FIP Reggae', stationid => '71', fetchid => 'fip_reggae', region => '', tuneinid => 's293090', notexcludable => true, match1 => 'fip-webradio6.', match2 => 'fipreggae' },
+	fipelectro => { fullname => 'FIP Electro', stationid => '74', fetchid => 'fip_electro', region => '', tuneinid => 's293089', notexcludable => true, match1 => 'fip-webradio8.', match2 => 'fipelectro' },
+	fipmetal => { fullname => 'FIP Metal', stationid => '77', fetchid => 'fip_metal', region => '', tuneinid => 's308366', notexcludable => true, match1 => 'fip-webradio7.', match2 => 'fipmetal' },
+	fippop => { fullname => 'FIP Pop', stationid => '78', fetchid => 'fip_pop', region => '', tuneinid => '', notexcludable => true, match1 => 'fip-webradio8.', match2 => 'fippop' },
+	fiphiphop => { fullname => 'FIP Hip-Hop', stationid => 'fip_hiphop', fetchid => 'fip_hiphop', region => '', tuneinid => '', notexcludable => true, match1 => '', match2 => 'fiphiphop' },
+	fipsacre => { fullname => 'FIP Sacré français !', stationid => 'fip_sacre_francais', fetchid => 'fip_sacre_francais', region => '', tuneinid => '', notexcludable => true, match1 => '', match2 => 'fipsacrefrancais' },
 
-	fmclassiqueeasy => { fullname => 'France Musique Classique Easy', stationid => '401', region => '', tuneinid => 's283174', notexcludable => true, match1 => 'francemusiqueeasyclassique', match2 => '' },
-	fmbaroque => { fullname => 'France Musique La Baroque', stationid => '408', region => '', tuneinid => 's309415', notexcludable => true, match1 => 'francemusiquebaroque', match2 => '' },
-	fmclassiqueplus => { fullname => 'France Musique Classique Plus', stationid => '402', region => '', tuneinid => 's283175', notexcludable => true, match1 => 'francemusiqueclassiqueplus', match2 => '' },
-	fmconcertsradiofrance => { fullname => 'France Musique Concerts', stationid => '403', region => '', tuneinid => 's283176', notexcludable => true, match1 => 'francemusiqueconcertsradiofrance', match2 => '' },
-	fmlajazz => { fullname => 'France Musique La Jazz', stationid => '405', region => '', tuneinid => 's283178', notexcludable => true, match1 => 'francemusiquelajazz', match2 => '' },
-	fmlacontemporaine => { fullname => 'France Musique La Contemporaine', stationid => '406', region => '', tuneinid => 's283179', notexcludable => true, match1 => 'francemusiquelacontemporaine', match2 => '' },
-	fmocoramonde => { fullname => 'France Musique Ocora Monde', stationid => '404', region => '', tuneinid => 's283177', notexcludable => true, match1 => 'francemusiqueocoramonde', match2 => '' },
-	#fmevenementielle => { fullname => 'France Musique Evenementielle', stationid => '407', region => '', tuneinid => 's285660&|id=s306575', notexcludable => true, match1 => 'francemusiquelevenementielle', match2 => '' }, # Special case ... 2 TuneIn Id
-	fmlabo => { fullname => 'France Musique La B.O. de Films', stationid => '407', region => '', tuneinid => 's306575', notexcludable => true, match1 => 'francemusiquelabo', match2 => '' }, 
-	fmopera => { fullname => 'France Musique Opéra', stationid => '409', region => '', tuneinid => '', notexcludable => true, match1 => 'francemusiqueopera', match2 => '' },
+	fmclassiqueeasy => { fullname => 'France Musique Classique Easy', stationid => '401', fetchid => 'francemusique_classique_easy', region => '', tuneinid => 's283174', notexcludable => true, match1 => 'francemusiqueeasyclassique', match2 => '' },
+	fmbaroque => { fullname => 'France Musique La Baroque', stationid => '408', fetchid => 'francemusique_baroque', region => '', tuneinid => 's309415', notexcludable => true, match1 => 'francemusiquebaroque', match2 => '' },
+	fmclassiqueplus => { fullname => 'France Musique Classique Plus', stationid => '402', fetchid => 'francemusique_classique_plus', region => '', tuneinid => 's283175', notexcludable => true, match1 => 'francemusiqueclassiqueplus', match2 => '' },
+	fmconcertsradiofrance => { fullname => 'France Musique Concerts', stationid => '403', fetchid => 'francemusique_concert_rf', region => '', tuneinid => 's283176', notexcludable => true, match1 => 'francemusiqueconcertsradiofrance', match2 => '' },
+	fmlajazz => { fullname => 'France Musique La Jazz', stationid => '405', fetchid => 'francemusique_la_jazz', region => '', tuneinid => 's283178', notexcludable => true, match1 => 'francemusiquelajazz', match2 => '' },
+	fmlacontemporaine => { fullname => 'France Musique La Contemporaine', stationid => '406', fetchid => 'francemusique_la_contemporaine', region => '', tuneinid => 's283179', notexcludable => true, match1 => 'francemusiquelacontemporaine', match2 => '' },
+	fmocoramonde => { fullname => 'France Musique Ocora Monde', stationid => '404', fetchid => 'francemusique_ocora_monde', region => '', tuneinid => 's283177', notexcludable => true, match1 => 'francemusiqueocoramonde', match2 => '' },
+	#fmevenementielle => { fullname => 'France Musique Evenementielle', stationid => '407', fetchid => 'francemusique_evenementielle', region => '', tuneinid => 's285660&|id=s306575', notexcludable => true, match1 => 'francemusiquelevenementielle', match2 => '' }, # Special case ... 2 TuneIn Id
+	fmlabo => { fullname => 'France Musique Films', stationid => '407', fetchid => 'francemusique_evenementielle', region => '', tuneinid => 's306575', notexcludable => true, match1 => 'francemusiquelabo', match2 => '' }, 
+	fmopera => { fullname => 'France Musique Opéra', stationid => '409', fetchid => 'francemusique_opera', region => '', tuneinid => '', notexcludable => true, match1 => 'francemusiqueopera', match2 => '' },
 
-	mouv => { fullname => 'Mouv\'', stationid => '6', region => '', tuneinid => 's6597', notexcludable => true, match1 => 'mouv', match2 => '', ondemandurl => $radiofrancescheuleurl, ondemandheaders => \%radiofranceapiondemandheaderset, artfromuid => true },
-	mouvxtra => { fullname => 'Mouv\' Xtra', stationid => '75', region => '', tuneinid => '', notexcludable => true, match1 => 'mouvxtra', match2 => '' },
-	mouvclassics => { fullname => 'Mouv\' Classics', stationid => '601', region => '', tuneinid => 's307696', notexcludable => true, match1 => 'mouvclassics', match2 => '' },
-	mouvdancehall => { fullname => 'Mouv\' Dancehall', stationid => '602', region => '', tuneinid => 's307697', notexcludable => true, match1 => 'mouvdancehall', match2 => '' },
-	mouvrnb => { fullname => 'Mouv\' R\'N\'B', stationid => '603', region => '', tuneinid => 's307695', notexcludable => true, match1 => 'mouvrnb', match2 => '' },
-	mouvrapus => { fullname => 'Mouv\' RAP US', stationid => '604', region => '', tuneinid => 's307694', notexcludable => true, match1 => 'mouvrapus', match2 => '' },
-	mouvrapfr => { fullname => 'Mouv\' RAP Français', stationid => '605', region => '', tuneinid => 's307693', notexcludable => true, match1 => 'mouvrapfr', match2 => '' },
-	mouvkidsnfamily => { fullname => 'Mouv\' Kids\'n Family', stationid => '606', region => '', tuneinid => '', notexcludable => true, match1 => 'mouvkidsnfamily', match2 => '' },
-	mouv100mix => { fullname => 'Mouv\' 100\% Mix', stationid => '75', region => '', tuneinid => 's244069', notexcludable => true, match1 => 'mouv100p100mix', match2 => '' },
+	mouv => { fullname => 'Mouv\'', stationid => '6', fetchid => 'mouv', region => '', tuneinid => 's6597', notexcludable => true, match1 => 'mouv', match2 => '', ondemandurl => $radiofrancescheuleurl, ondemandheaders => \%radiofranceapiondemandheaderset, artfromuid => true },
+	mouvxtra => { fullname => 'Mouv\' Xtra', stationid => '75', fetchid => '', region => '', tuneinid => '', notexcludable => true, match1 => 'mouvxtra', match2 => '' },
+	mouvclassics => { fullname => 'Mouv\' Classics', stationid => '601', fetchid => 'mouv_classics', region => '', tuneinid => 's307696', notexcludable => true, match1 => 'mouvclassics', match2 => '' },
+	mouvdancehall => { fullname => 'Mouv\' Dancehall', stationid => '602', fetchid => 'mouv_dancehall', region => '', tuneinid => 's307697', notexcludable => true, match1 => 'mouvdancehall', match2 => '' },
+	mouvrnb => { fullname => 'Mouv\' R\'N\'B', stationid => '603', fetchid => 'mouv_rnb', region => '', tuneinid => 's307695', notexcludable => true, match1 => 'mouvrnb', match2 => '' },
+	mouvrapus => { fullname => 'Mouv\' RAP US', stationid => '604', fetchid => 'mouv_rapus', region => '', tuneinid => 's307694', notexcludable => true, match1 => 'mouvrapus', match2 => '' },
+	mouvrapfr => { fullname => 'Mouv\' RAP Français', stationid => '605', fetchid => 'mouv_rapfr', region => '', tuneinid => 's307693', notexcludable => true, match1 => 'mouvrapfr', match2 => '' },
+	mouvkidsnfamily => { fullname => 'Mouv\' Kids\'n Family', stationid => '606', fetchid => 'mouv_kids_n_family', region => '', tuneinid => '', notexcludable => true, match1 => 'mouvkidsnfamily', match2 => '' },
+	mouv100mix => { fullname => 'Mouv\' 100\% Mix', stationid => '75', fetchid => 'mouv_100mix', region => '', tuneinid => 's244069', notexcludable => true, match1 => 'mouv100p100mix', match2 => '' },
 
-	franceinter => { fullname => 'France Inter', stationid => '1', region => '', tuneinid => 's24875', notexcludable => false, match1 => 'franceinter', match2 => '', ondemandurl => $radiofrancescheuleurl, ondemandheaders => \%radiofranceapiondemandheaderset },
-	franceinfo => { fullname => 'France Info', stationid => '2', region => '', tuneinid => 's9948', notexcludable => false, match1 => 'franceinfo', match2 => '', ondemandurl => $radiofrancescheuleurl, ondemandheaders => \%radiofranceapiondemandheaderset, artfromuid => true },
-	francemusique => { fullname => 'France Musique', stationid => '4', region => '', tuneinid => 's15198', notexcludable => false, match1 => 'francemusique', match2 => '', ondemandurl => $radiofrancescheuleurl, ondemandheaders => \%radiofranceapiondemandheaderset, individualprogurl => ['https://www.radiofrance.fr/api/v1.7/path?value=${progpath}', 'https://www.radiofrance.fr/api/v1.7/stations/francemusique/songs?pageCursor=Mg%3D%3D&startDate=${progstart}&endDate=${progend}&isPad=false'] },
-	franceculture => { fullname => 'France Culture', stationid => '5', region => '', tuneinid => 's2442', notexcludable => false, match1 => 'franceculture', match2 => '', ondemandurl => $radiofrancescheuleurl, ondemandheaders => \%radiofranceapiondemandheaderset, artfromuid => true },
+	franceinter => { fullname => 'France Inter', stationid => '1', fetchid => '', region => '', tuneinid => 's24875', notexcludable => false, match1 => 'franceinter', match2 => '', ondemandurl => $radiofrancescheuleurl, ondemandheaders => \%radiofranceapiondemandheaderset },
+	franceinfo => { fullname => 'France Info', stationid => '2', fetchid => '', region => '', tuneinid => 's9948', notexcludable => false, match1 => 'franceinfo', match2 => '', ondemandurl => $radiofrancescheuleurl, ondemandheaders => \%radiofranceapiondemandheaderset, artfromuid => true },
+	francemusique => { fullname => 'France Musique', stationid => '4', fetchid => 'francemusique', region => '', tuneinid => 's15198', notexcludable => false, match1 => 'francemusique', match2 => '', ondemandurl => $radiofrancescheuleurl, ondemandheaders => \%radiofranceapiondemandheaderset, individualprogurl => ['https://www.radiofrance.fr/api/v1.7/path?value=${progpath}', 'https://www.radiofrance.fr/api/v1.7/stations/francemusique/songs?pageCursor=Mg%3D%3D&startDate=${progstart}&endDate=${progend}&isPad=false'] },
+	franceculture => { fullname => 'France Culture', stationid => '5', fetchid => '', region => '', tuneinid => 's2442', notexcludable => false, match1 => 'franceculture', match2 => '', ondemandurl => $radiofrancescheuleurl, ondemandheaders => \%radiofranceapiondemandheaderset, artfromuid => true },
 
-	fbalsace => { fullname => 'France Bleu Alsace', stationid => '12', region => '', tuneinid => 's2992', notexcludable => false, match1 => 'fbalsace', match2 => '', scheduleurl => '', artfromuid => true },
-	fbarmorique => { fullname => 'France Bleu Armorique', stationid => '13', region => '', tuneinid => 's25492', notexcludable => false, match1 => 'fbarmorique', match2 => '', scheduleurl => '', artfromuid => true },
-	fbauxerre => { fullname => 'France Bleu Auxerre', stationid => '14', region => '', tuneinid => 's47473', notexcludable => false, match1 => 'fbauxerre', match2 => '', scheduleurl => '', artfromuid => true },
-	fbazur => { fullname => 'France Bleu Azur', stationid => '49', region => '', tuneinid => 's45035', notexcludable => false, match1 => 'fbazur', match2 => '', scheduleurl => '', artfromuid => true },
-	fbbearn => { fullname => 'France Bleu Béarn', stationid => '15', region => '', tuneinid => 's48291', notexcludable => false, match1 => 'fbbearn', match2 => '', scheduleurl => '', artfromuid => true },
-	fbbelfort => { fullname => 'France Bleu Belfort-Montbéliard', stationid => '16', region => '', tuneinid => 's25493', notexcludable => false, match1 => 'fbbelfort', match2 => '', scheduleurl => '', artfromuid => true },
-	fbberry => { fullname => 'France Bleu Berry', stationid => '17', region => '', tuneinid => 's48650', notexcludable => false, match1 => 'fbberry', match2 => '', scheduleurl => '', artfromuid => true },
-	fbbesancon => { fullname => 'France Bleu Besançon', stationid => '18', region => '', tuneinid => 's48652', notexcludable => false, match1 => 'fbbesancon', match2 => '', scheduleurl => '', artfromuid => true },
-	fbbourgogne => { fullname => 'France Bleu Bourgogne', stationid => '19', region => '', tuneinid => 's36092', notexcludable => false, match1 => 'fbbourgogne', match2 => '', scheduleurl => '', artfromuid => true },
-	fbbreizhizel => { fullname => 'France Bleu Breizh Izel', stationid => '20', region => '', tuneinid => 's25494', notexcludable => false, match1 => 'fbbreizizel', match2 => '', scheduleurl => '', artfromuid => true },
-	fbchampagne => { fullname => 'France Bleu Champagne-Ardenne', stationid => '21', region => '', tuneinid => 's47472', notexcludable => false, match1 => 'fbchampagne', match2 => '', scheduleurl => '', artfromuid => true },
-	fbcotentin => { fullname => 'France Bleu Cotentin', stationid => '37', region => '', tuneinid => 's36093', notexcludable => false, match1 => 'fbcotentin', match2 => '', scheduleurl => '', artfromuid => true },
-	fbcreuse => { fullname => 'France Bleu Creuse', stationid => '23', region => '', tuneinid => 's2997', notexcludable => false, match1 => 'fbcreuse', match2 => '', scheduleurl => '', artfromuid => true },
-	fbdromeardeche => { fullname => 'France Bleu Drôme Ardèche', stationid => '24', region => '', tuneinid => 's48657', notexcludable => false, match1 => 'fbdromeardeche', match2 => '', scheduleurl => '', artfromuid => true },
-	fbelsass => { fullname => 'France Bleu Elsass', stationid => '90', region => '', tuneinid => 's74418', notexcludable => false, match1 => 'fbelsass', match2 => '', scheduleurl => '', artfromuid => true },
-	fbgardlozere => { fullname => 'France Bleu Gard Lozère', stationid => '25', region => '', tuneinid => 's36094', notexcludable => false, match1 => 'fbgardlozere', match2 => '', scheduleurl => '', artfromuid => true },
-	fbgascogne => { fullname => 'France Bleu Gascogne', stationid => '26', region => '', tuneinid => 's47470', notexcludable => false, match1 => 'fbgascogne', match2 => '', scheduleurl => '', artfromuid => true },
-	fbgironde => { fullname => 'France Bleu Gironde', stationid => '27', region => '', tuneinid => 's48659', notexcludable => false, match1 => 'fbgironde', match2 => '', scheduleurl => '', artfromuid => true },
-	fbherault => { fullname => 'France Bleu Hérault', stationid => '28', region => '', tuneinid => 's48665', notexcludable => false, match1 => 'fbherault', match2 => '', scheduleurl => '', artfromuid => true },
-	fbisere => { fullname => 'France Bleu Isère', stationid => '29', region => '', tuneinid => 's20328', notexcludable => false, match1 => 'fbisere', match2 => '', scheduleurl => '', artfromuid => true },
-	fblarochelle => { fullname => 'France Bleu La Rochelle', stationid => '30', region => '', tuneinid => 's48669', notexcludable => false, match1 => 'fblarochelle', match2 => '', ondemandurl => $radiofrancescheuleurl, ondemandheaders => \%radiofranceapiondemandheaderset, artfromuid => true },  #Possible alternate for schedule https://www.francebleu.fr/grid/la-rochelle/${unixtime}
-	fblimousin => { fullname => 'France Bleu Limousin', stationid => '31', region => '', tuneinid => 's48670', notexcludable => false, match1 => 'fblimousin', match2 => '', scheduleurl => '', artfromuid => true },
-	fbloireocean => { fullname => 'France Bleu Loire Océan', stationid => '32', region => '', tuneinid => 's36096', notexcludable => false, match1 => 'fbloireocean', match2 => '', scheduleurl => '', artfromuid => true },
-	fblorrainenord => { fullname => 'France Bleu Lorraine Nord', stationid => '50', region => '', tuneinid => 's48672', notexcludable => false, match1 => 'fblorrainenord', match2 => '', scheduleurl => '', artfromuid => true },
-	fbmaine => { fullname => 'France Bleu Maine', stationid => '91', region => '', tuneinid => 's127941', notexcludable => false, match1 => 'fbmaine', match2 => '', scheduleurl => '', artfromuid => true },
-	fbmayenne => { fullname => 'France Bleu Mayenne', stationid => '34', region => '', tuneinid => 's48673', notexcludable => false, match1 => 'fbmayenne', match2 => '', scheduleurl => '', artfromuid => true },
-	fbnord => { fullname => 'France Bleu Nord', stationid => '36', region => '', tuneinid => 's44237', notexcludable => false, match1 => 'fbnord', match2 => '', scheduleurl => '', artfromuid => true },
-	fbbassenormandie => { fullname => 'France Bleu Normandie (Calvados - Orne)', stationid => '22', region => '', tuneinid => 's48290', notexcludable => false, match1 => 'fbbassenormandie', match2 => '', scheduleurl => '', artfromuid => true },
-	fbhautenormandie => { fullname => 'France Bleu Normandie (Seine-Maritime - Eure)', stationid => '38', region => '', tuneinid => 's222667', notexcludable => false, match1 => 'fbhautenormandie', match2 => '', scheduleurl => '', artfromuid => true },
-	fbtoulouse => { fullname => 'France Bleu Occitanie', stationid => '92', region => '', tuneinid => 's50669', notexcludable => false, match1 => 'fbtoulouse', match2 => '', scheduleurl => '', artfromuid => true },
-	fborleans => { fullname => 'France Bleu Orléans', stationid => '39', region => '', tuneinid => 's1335', notexcludable => false, match1 => 'fborleans', match2 => '', scheduleurl => '', artfromuid => true },
-	fbparis => { fullname => 'France Bleu Paris', stationid => '68', region => '', tuneinid => 's52972', notexcludable => false, match1 => 'fb1071', match2 => '', scheduleurl => '', artfromuid => true },
-	fbpaysbasque => { fullname => 'France Bleu Pays Basque', stationid => '41', region => '', tuneinid => 's48682', notexcludable => false, match1 => 'fbpaysbasque', match2 => '', scheduleurl => '', artfromuid => true },
-	fbpaysdauvergne => { fullname => 'France Bleu Pays d&#039;Auvergne', stationid => '40', region => '', tuneinid => 's48683', notexcludable => false, match1 => 'fbpaysdauvergne', match2 => '', scheduleurl => '', artfromuid => true },
-	fbpaysdesavoie => { fullname => 'France Bleu Pays de Savoie', stationid => '42', region => '', tuneinid => 's45038', notexcludable => false, match1 => 'fbpaysdesavoie', match2 => '', scheduleurl => '', artfromuid => true },
-	fbperigord => { fullname => 'France Bleu Périgord', stationid => '43', region => '', tuneinid => 's2481', notexcludable => false, match1 => 'fbperigord', match2 => '', scheduleurl => '', artfromuid => true },
-	fbpicardie => { fullname => 'France Bleu Picardie', stationid => '44', region => '', tuneinid => 's25497', notexcludable => false, match1 => 'fbpicardie', match2 => '', scheduleurl => '', artfromuid => true },
-	fbpoitou => { fullname => 'France Bleu Poitou', stationid => '54', region => '', tuneinid => 's47471', notexcludable => false, match1 => 'fbpoitou', match2 => '', scheduleurl => '', artfromuid => true },
-	fbprovence => { fullname => 'France Bleu Provence', stationid => '45', region => '', tuneinid => 's1429', notexcludable => false, match1 => 'fbprovence', match2 => '', scheduleurl => '', artfromuid => true },
-	fbrcfm => { fullname => 'France Bleu RCFM', stationid => '11', region => '', tuneinid => 's48656', notexcludable => false, match1 => 'fbfrequenzamora', match2 => '', scheduleurl => '', artfromuid => true },
-	fbroussillon => { fullname => 'France Bleu Roussillon', stationid => '46', region => '', tuneinid => 's48689', notexcludable => false, match1 => 'fbroussillon', match2 => '', scheduleurl => '', artfromuid => true },
-	fbsaintetienneloire => { fullname => 'France Bleu Saint-Étienne Loire', stationid => '93', region => '', tuneinid => 's212244', notexcludable => false, match1 => 'fbstetienne', match2 => '', scheduleurl => '', artfromuid => true },
-	fbsudlorraine => { fullname => 'France Bleu Sud Lorraine', stationid => '33', region => '', tuneinid => 's45039', notexcludable => false, match1 => 'fbsudlorraine', match2 => '', scheduleurl => '', artfromuid => true },
-	fbtouraine => { fullname => 'France Bleu Touraine', stationid => '47', region => '', tuneinid => 's48694', notexcludable => false, match1 => 'fbtouraine', match2 => '', scheduleurl => '', artfromuid => true },
-	fbvaucluse => { fullname => 'France Bleu Vaucluse', stationid => '48', region => '', tuneinid => 's47474', notexcludable => false, match1 => 'fbvaucluse', match2 => '', scheduleurl => '', artfromuid => true },
+	fbalsace => { fullname => 'France Bleu Alsace', stationid => '12', fetchid => '', region => '', tuneinid => 's2992', notexcludable => false, match1 => 'fbalsace', match2 => '', scheduleurl => '', artfromuid => true },
+	fbarmorique => { fullname => 'France Bleu Armorique', stationid => '13', fetchid => '', region => '', tuneinid => 's25492', notexcludable => false, match1 => 'fbarmorique', match2 => '', scheduleurl => '', artfromuid => true },
+	fbauxerre => { fullname => 'France Bleu Auxerre', stationid => '14', fetchid => '', region => '', tuneinid => 's47473', notexcludable => false, match1 => 'fbauxerre', match2 => '', scheduleurl => '', artfromuid => true },
+	fbazur => { fullname => 'France Bleu Azur', stationid => '49', fetchid => '', region => '', tuneinid => 's45035', notexcludable => false, match1 => 'fbazur', match2 => '', scheduleurl => '', artfromuid => true },
+	fbbearn => { fullname => 'France Bleu Béarn', stationid => '15', fetchid => '', region => '', tuneinid => 's48291', notexcludable => false, match1 => 'fbbearn', match2 => '', scheduleurl => '', artfromuid => true },
+	fbbelfort => { fullname => 'France Bleu Belfort-Montbéliard', stationid => '16', fetchid => '', region => '', tuneinid => 's25493', notexcludable => false, match1 => 'fbbelfort', match2 => '', scheduleurl => '', artfromuid => true },
+	fbberry => { fullname => 'France Bleu Berry', stationid => '17', fetchid => '', region => '', tuneinid => 's48650', notexcludable => false, match1 => 'fbberry', match2 => '', scheduleurl => '', artfromuid => true },
+	fbbesancon => { fullname => 'France Bleu Besançon', stationid => '18', fetchid => '', region => '', tuneinid => 's48652', notexcludable => false, match1 => 'fbbesancon', match2 => '', scheduleurl => '', artfromuid => true },
+	fbbourgogne => { fullname => 'France Bleu Bourgogne', stationid => '19', fetchid => '', region => '', tuneinid => 's36092', notexcludable => false, match1 => 'fbbourgogne', match2 => '', scheduleurl => '', artfromuid => true },
+	fbbreizhizel => { fullname => 'France Bleu Breizh Izel', stationid => '20', fetchid => '', region => '', tuneinid => 's25494', notexcludable => false, match1 => 'fbbreizizel', match2 => '', scheduleurl => '', artfromuid => true },
+	fbchampagne => { fullname => 'France Bleu Champagne-Ardenne', stationid => '21', fetchid => '', region => '', tuneinid => 's47472', notexcludable => false, match1 => 'fbchampagne', match2 => '', scheduleurl => '', artfromuid => true },
+	fbcotentin => { fullname => 'France Bleu Cotentin', stationid => '37', fetchid => '', region => '', tuneinid => 's36093', notexcludable => false, match1 => 'fbcotentin', match2 => '', scheduleurl => '', artfromuid => true },
+	fbcreuse => { fullname => 'France Bleu Creuse', stationid => '23', fetchid => '', region => '', tuneinid => 's2997', notexcludable => false, match1 => 'fbcreuse', match2 => '', scheduleurl => '', artfromuid => true },
+	fbdromeardeche => { fullname => 'France Bleu Drôme Ardèche', stationid => '24', fetchid => '', region => '', tuneinid => 's48657', notexcludable => false, match1 => 'fbdromeardeche', match2 => '', scheduleurl => '', artfromuid => true },
+	fbelsass => { fullname => 'France Bleu Elsass', stationid => '90', fetchid => '', region => '', tuneinid => 's74418', notexcludable => false, match1 => 'fbelsass', match2 => '', scheduleurl => '', artfromuid => true },
+	fbgardlozere => { fullname => 'France Bleu Gard Lozère', stationid => '25', fetchid => '', region => '', tuneinid => 's36094', notexcludable => false, match1 => 'fbgardlozere', match2 => '', scheduleurl => '', artfromuid => true },
+	fbgascogne => { fullname => 'France Bleu Gascogne', stationid => '26', fetchid => '', region => '', tuneinid => 's47470', notexcludable => false, match1 => 'fbgascogne', match2 => '', scheduleurl => '', artfromuid => true },
+	fbgironde => { fullname => 'France Bleu Gironde', stationid => '27', fetchid => '', region => '', tuneinid => 's48659', notexcludable => false, match1 => 'fbgironde', match2 => '', scheduleurl => '', artfromuid => true },
+	fbherault => { fullname => 'France Bleu Hérault', stationid => '28', fetchid => '', region => '', tuneinid => 's48665', notexcludable => false, match1 => 'fbherault', match2 => '', scheduleurl => '', artfromuid => true },
+	fbisere => { fullname => 'France Bleu Isère', stationid => '29', fetchid => '', region => '', tuneinid => 's20328', notexcludable => false, match1 => 'fbisere', match2 => '', scheduleurl => '', artfromuid => true },
+	fblarochelle => { fullname => 'France Bleu La Rochelle', stationid => '30', fetchid => '', region => '', tuneinid => 's48669', notexcludable => false, match1 => 'fblarochelle', match2 => '', ondemandurl => $radiofrancescheuleurl, ondemandheaders => \%radiofranceapiondemandheaderset, artfromuid => true },  #Possible alternate for schedule https://www.francebleu.fr/grid/la-rochelle/${unixtime}
+	fblimousin => { fullname => 'France Bleu Limousin', stationid => '31', fetchid => '', region => '', tuneinid => 's48670', notexcludable => false, match1 => 'fblimousin', match2 => '', scheduleurl => '', artfromuid => true },
+	fbloireocean => { fullname => 'France Bleu Loire Océan', stationid => '32', fetchid => '', region => '', tuneinid => 's36096', notexcludable => false, match1 => 'fbloireocean', match2 => '', scheduleurl => '', artfromuid => true },
+	fblorrainenord => { fullname => 'France Bleu Lorraine Nord', stationid => '50', fetchid => '', region => '', tuneinid => 's48672', notexcludable => false, match1 => 'fblorrainenord', match2 => '', scheduleurl => '', artfromuid => true },
+	fbmaine => { fullname => 'France Bleu Maine', stationid => '91', fetchid => '', region => '', tuneinid => 's127941', notexcludable => false, match1 => 'fbmaine', match2 => '', scheduleurl => '', artfromuid => true },
+	fbmayenne => { fullname => 'France Bleu Mayenne', stationid => '34', fetchid => '', region => '', tuneinid => 's48673', notexcludable => false, match1 => 'fbmayenne', match2 => '', scheduleurl => '', artfromuid => true },
+	fbnord => { fullname => 'France Bleu Nord', stationid => '36', fetchid => '', region => '', tuneinid => 's44237', notexcludable => false, match1 => 'fbnord', match2 => '', scheduleurl => '', artfromuid => true },
+	fbbassenormandie => { fullname => 'France Bleu Normandie (Calvados - Orne)', stationid => '22', fetchid => '', region => '', tuneinid => 's48290', notexcludable => false, match1 => 'fbbassenormandie', match2 => '', scheduleurl => '', artfromuid => true },
+	fbhautenormandie => { fullname => 'France Bleu Normandie (Seine-Maritime - Eure)', stationid => '38', fetchid => '', region => '', tuneinid => 's222667', notexcludable => false, match1 => 'fbhautenormandie', match2 => '', scheduleurl => '', artfromuid => true },
+	fbtoulouse => { fullname => 'France Bleu Occitanie', stationid => '92', fetchid => '', region => '', tuneinid => 's50669', notexcludable => false, match1 => 'fbtoulouse', match2 => '', scheduleurl => '', artfromuid => true },
+	fborleans => { fullname => 'France Bleu Orléans', stationid => '39', fetchid => '', region => '', tuneinid => 's1335', notexcludable => false, match1 => 'fborleans', match2 => '', scheduleurl => '', artfromuid => true },
+	fbparis => { fullname => 'France Bleu Paris', stationid => '68', fetchid => '', region => '', tuneinid => 's52972', notexcludable => false, match1 => 'fb1071', match2 => '', scheduleurl => '', artfromuid => true },
+	fbpaysbasque => { fullname => 'France Bleu Pays Basque', stationid => '41', fetchid => '', region => '', tuneinid => 's48682', notexcludable => false, match1 => 'fbpaysbasque', match2 => '', scheduleurl => '', artfromuid => true },
+	fbpaysdauvergne => { fullname => 'France Bleu Pays d&#039;Auvergne', stationid => '40', fetchid => '', region => '', tuneinid => 's48683', notexcludable => false, match1 => 'fbpaysdauvergne', match2 => '', scheduleurl => '', artfromuid => true },
+	fbpaysdesavoie => { fullname => 'France Bleu Pays de Savoie', stationid => '42', fetchid => '', region => '', tuneinid => 's45038', notexcludable => false, match1 => 'fbpaysdesavoie', match2 => '', scheduleurl => '', artfromuid => true },
+	fbperigord => { fullname => 'France Bleu Périgord', stationid => '43', fetchid => '', region => '', tuneinid => 's2481', notexcludable => false, match1 => 'fbperigord', match2 => '', scheduleurl => '', artfromuid => true },
+	fbpicardie => { fullname => 'France Bleu Picardie', stationid => '44', fetchid => '', region => '', tuneinid => 's25497', notexcludable => false, match1 => 'fbpicardie', match2 => '', scheduleurl => '', artfromuid => true },
+	fbpoitou => { fullname => 'France Bleu Poitou', stationid => '54', fetchid => '', region => '', tuneinid => 's47471', notexcludable => false, match1 => 'fbpoitou', match2 => '', scheduleurl => '', artfromuid => true },
+	fbprovence => { fullname => 'France Bleu Provence', stationid => '45', fetchid => '', region => '', tuneinid => 's1429', notexcludable => false, match1 => 'fbprovence', match2 => '', scheduleurl => '', artfromuid => true },
+	fbrcfm => { fullname => 'France Bleu RCFM', stationid => '11', fetchid => '', region => '', tuneinid => 's48656', notexcludable => false, match1 => 'fbfrequenzamora', match2 => '', scheduleurl => '', artfromuid => true },
+	fbroussillon => { fullname => 'France Bleu Roussillon', stationid => '46', fetchid => '', region => '', tuneinid => 's48689', notexcludable => false, match1 => 'fbroussillon', match2 => '', scheduleurl => '', artfromuid => true },
+	fbsaintetienneloire => { fullname => 'France Bleu Saint-Étienne Loire', stationid => '93', fetchid => '', region => '', tuneinid => 's212244', notexcludable => false, match1 => 'fbstetienne', match2 => '', scheduleurl => '', artfromuid => true },
+	fbsudlorraine => { fullname => 'France Bleu Sud Lorraine', stationid => '33', fetchid => '', region => '', tuneinid => 's45039', notexcludable => false, match1 => 'fbsudlorraine', match2 => '', scheduleurl => '', artfromuid => true },
+	fbtouraine => { fullname => 'France Bleu Touraine', stationid => '47', fetchid => '', region => '', tuneinid => 's48694', notexcludable => false, match1 => 'fbtouraine', match2 => '', scheduleurl => '', artfromuid => true },
+	fbvaucluse => { fullname => 'France Bleu Vaucluse', stationid => '48', fetchid => '', region => '', tuneinid => 's47474', notexcludable => false, match1 => 'fbvaucluse', match2 => '', scheduleurl => '', artfromuid => true },
 };
 
 
@@ -217,7 +220,7 @@ my $programmeMeta = {
 # URL for remote web site that is polled to get the information about what is playing
 # Old URLs that used to work but were phased out are commented out as they might help in future if Radio France changes things again
 # When FIP Pop was added there was only a GraphQL URL ... so maybe the livemeta/pull URLs are on the way out
-# However, having both versions can lead to oddities e.g. artist names represented slightly differently when multiple so# for now leave the livemeta/pull as
+# However, having both versions can lead to oddities e.g. artist names represented slightly differently when multiple so for now leave the livemeta/pull as
 # primary and do not use _alt but left in the code to make it fairly easy to switch later if livemeta/pull is retired
 
 my $urls = {
@@ -230,100 +233,121 @@ my $urls = {
 	# Note - loop below adds one hash for each station
 # finished 1521553005 - 2018-03-20 13:36:45	fipradio_alt => 'http://www.fipradio.fr/sites/default/files/import_si/si_titre_antenne/FIP_player_current.json',
 # finished December 2020 - fipradio => 'https://api.radiofrance.fr/livemeta/pull/${stationid}',
-	fipradio => 'https://api.radiofrance.fr/livemeta/live/${stationid}/inter_player',
-	fipradio_alt => $type3prefix1fip.'${stationid}'.$type3prefix2fip.$type3suffixfip,
+	# finished mid-2023 - fipradio => 'https://api.radiofrance.fr/livemeta/live/${stationid}/webrf_fip_player?preset=400x400',
+	fipradio => $type4prefix.'${fetchid}'.$type4suffix,
+	# fipradio_alt => $type3prefix1fip.'${stationid}'.$type3prefix2fip.$type3suffixfip,
 # finished 1521553005 - 2018-03-20 13:36:45	fipbordeaux_alt => 'http://www.fipradio.fr/sites/default/files/import_si/si_titre_antenne/FIP_player_current.json',
 # finished December 2020 - fipbordeaux => 'https://api.radiofrance.fr/livemeta/pull/${stationid}',
-	fipbordeaux => 'https://api.radiofrance.fr/livemeta/live/${stationid}/inter_player',
-	fipbordeaux_alt => $type3prefix1fip.'${stationid}'.$type3prefix2fip.$type3suffixfip,
+	fipbordeaux => $type4prefix.'${fetchid}'.$type4suffix,
+	# fipbordeaux_alt => $type3prefix1fip.'${stationid}'.$type3prefix2fip.$type3suffixfip,
 # finished 1521553005 - 2018-03-20 13:36:45	fipnantes_alt => 'http://www.fipradio.fr/sites/default/files/import_si/si_titre_antenne/FIP_player_current.json',
 # finished December 2020 - fipnantes => 'https://api.radiofrance.fr/livemeta/pull/${stationid}',
-	fipnantes => 'https://api.radiofrance.fr/livemeta/live/${stationid}/inter_player',
-	fipnantes_alt => $type3prefix1fip.'${stationid}'.$type3prefix2fip.$type3suffixfip,
+	fipnantes => $type4prefix.'${fetchid}'.$type4suffix,
+	# fipnantes_alt => $type3prefix1fip.'${stationid}'.$type3prefix2fip.$type3suffixfip,
 # finished 1521553005 - 2018-03-20 13:36:45	fipstrasbourg_alt => 'http://www.fipradio.fr/sites/default/files/import_si/si_titre_antenne/FIP_player_current.json',
 # finished December 2020 - fipstrasbourg => 'https://api.radiofrance.fr/livemeta/pull/${stationid}',
-	fipstrasbourg => 'https://api.radiofrance.fr/livemeta/live/${stationid}/inter_player',
-	fipstrasbourg_alt => $type3prefix1fip.'${stationid}'.$type3prefix2fip.$type3suffixfip,
+	fipstrasbourg => $type4prefix.'${fetchid}'.$type4suffix,
+	# fipstrasbourg_alt => $type3prefix1fip.'${stationid}'.$type3prefix2fip.$type3suffixfip,
 # finished 1507650288 - 2017-10-10 16:44:48	fiprock_alt => 'http://www.fipradio.fr/sites/default/files/import_si_webradio_1/si_titre_antenne/FIP_player_current.json',
 # finished December 2020 - fiprock => 'https://api.radiofrance.fr/livemeta/pull/${stationid}',
-	fiprock => 'https://api.radiofrance.fr/livemeta/live/${stationid}/inter_player',
-	fiprock_alt => $type3prefix1fip.'${stationid}'.$type3prefix2fip.$type3suffixfip,
+	fiprock => $type4prefix.'${fetchid}'.$type4suffix,
+	# fiprock_alt => $type3prefix1fip.'${stationid}'.$type3prefix2fip.$type3suffixfip,
 # finished 1507650914 - 2017-10-10 16:55:14	fipjazz_alt => 'http://www.fipradio.fr/sites/default/files/import_si_webradio_2/si_titre_antenne/FIP_player_current.json',
 # finished December 2020 - fipjazz => 'https://api.radiofrance.fr/livemeta/pull/${stationid}',
-	fipjazz => 'https://api.radiofrance.fr/livemeta/live/${stationid}/inter_player',
-	fipjazz_alt => $type3prefix1fip.'${stationid}'.$type3prefix2fip.$type3suffixfip,
+	fipjazz => $type4prefix.'${fetchid}'.$type4suffix,
+	# fipjazz_alt => $type3prefix1fip.'${stationid}'.$type3prefix2fip.$type3suffixfip,
 # finished 1507650885 - 2017-10-10 16:54:45	fipgroove_alt => 'http://www.fipradio.fr/sites/default/files/import_si_webradio_3/si_titre_antenne/FIP_player_current.json',
-# finished December 2020 - fipgroove => 'https://api.radiofrance.fr/livemeta//pull/${stationid}',
-	fipgroove => 'https://api.radiofrance.fr/livemeta/live/${stationid}/inter_player',
-	fipgroove_alt => $type3prefix1fip.'${stationid}'.$type3prefix2fip.$type3suffixfip,
+# finished December 2020 - fipgroove => 'https://api.radiofrance.fr/livemeta/pull/${stationid}',
+	fipgroove => $type4prefix.'${fetchid}'.$type4suffix,
+	# fipgroove_alt => $type3prefix1fip.'${stationid}'.$type3prefix2fip.$type3suffixfip,
 # finished 1507650800 - 2017-10-10 16:53:20	fipmonde_alt => 'http://www.fipradio.fr/sites/default/files/import_si_webradio_4/si_titre_antenne/FIP_player_current.json',
 # finished December 2020 - fipmonde => 'https://api.radiofrance.fr/livemeta/pull/${stationid}',
-	fipmonde => 'https://api.radiofrance.fr/livemeta/live/${stationid}/inter_player',
-	fipmonde_alt => $type3prefix1fip.'${stationid}'.$type3prefix2fip.$type3suffixfip,
+	fipmonde => $type4prefix.'${fetchid}'.$type4suffix,
+	# fipmonde_alt => $type3prefix1fip.'${stationid}'.$type3prefix2fip.$type3suffixfip,
 # finished 1507650797 - 2017-10-10 16:53:17	fipnouveau_alt => 'http://www.fipradio.fr/sites/default/files/import_si_webradio_5/si_titre_antenne/FIP_player_current.json',
 # finished December 2020 - fipnouveau => 'https://api.radiofrance.fr/livemeta/pull/${stationid}',
-	fipnouveau => 'https://api.radiofrance.fr/livemeta/live/${stationid}/inter_player',
-	fipnouveau_alt => $type3prefix1fip.'${stationid}'.$type3prefix2fip.$type3suffixfip,
+	fipnouveau => $type4prefix.'${fetchid}'.$type4suffix,
+	# fipnouveau_alt => $type3prefix1fip.'${stationid}'.$type3prefix2fip.$type3suffixfip,
 # finished 1507650800 - 2017-10-10 16:53:20	fipevenement_alt => 'http://www.fipradio.fr/sites/default/files/import_si_webradio_6/si_titre_antenne/FIP_player_current.json',
 # FIP Evenement became FIP Autour Du Reggae
 # finished December 2020 - fipreggae => 'https://api.radiofrance.fr/livemeta/pull/${stationid}',
-	fipreggae => 'https://api.radiofrance.fr/livemeta/live/${stationid}/inter_player',
-	fipreggae_alt => $type3prefix1fip.'${stationid}'.$type3prefix2fip.$type3suffixfip,
+	fipreggae => $type4prefix.'${fetchid}'.$type4suffix,
+	# fipreggae_alt => $type3prefix1fip.'${stationid}'.$type3prefix2fip.$type3suffixfip,
 # finished December 2020 - fipelectro => 'https://api.radiofrance.fr/livemeta/pull/${stationid}',
-	fipelectro => 'https://api.radiofrance.fr/livemeta/live/${stationid}/inter_player',
-	fipelectro_alt => $type3prefix1fip.'${stationid}'.$type3prefix2fip.$type3suffixfip,
+	fipelectro => $type4prefix.'${fetchid}'.$type4suffix,
+	# fipelectro_alt => $type3prefix1fip.'${stationid}'.$type3prefix2fip.$type3suffixfip,
 # finished December 2020 - fipmetal => 'https://api.radiofrance.fr/livemeta/pull/${stationid}',
-	fipmetal => 'https://api.radiofrance.fr/livemeta/live/${stationid}/inter_player',
-	fipmetal_alt => $type3prefix1fip.'${stationid}'.$type3prefix2fip.$type3suffixfip,
-	fiphiphop => $type4prefix.'${stationid}'.$type4suffix,
+	fipmetal => $type4prefix.'${fetchid}'.$type4suffix,
+	# fipmetal_alt => $type3prefix1fip.'${stationid}'.$type3prefix2fip.$type3suffixfip,
+	fippop => $type4prefix.'${fetchid}'.$type4suffix,
+	fiphiphop => $type4prefix.'${fetchid}'.$type4suffix,
+	fipsacre => $type4prefix.'${fetchid}'.$type4suffix,
 	
 # finished December 2020 - fmclassiqueeasy => 'https://api.radiofrance.fr/livemeta/pull/${stationid}',
-	fmclassiqueeasy => 'https://api.radiofrance.fr/livemeta/live/${stationid}/inter_player',
-	fmclassiqueeasy_alt => $type3prefix1fip.'${stationid}'.$type3prefix2fip.$type3suffixfip,
+# finished July 2023 - fmclassiqueeasy => 'https://api.radiofrance.fr/livemeta/live/${stationid}/inter_player',
+	fmclassiqueeasy => $type4prefix.'${fetchid}'.$type4suffix,
+	# fmclassiqueeasy_alt => $type3prefix1fip.'${stationid}'.$type3prefix2fip.$type3suffixfip,
 # finished December 2020 - fmbaroque => 'https://api.radiofrance.fr/livemeta/pull/${stationid}',
-	fmbaroque => 'https://api.radiofrance.fr/livemeta/live/${stationid}/inter_player',
-	fmbaroque_alt => $type3prefix1fip.'${stationid}'.$type3prefix2fip.$type3suffixfip,
+# finished July 2023 - fmbaroque => 'https://api.radiofrance.fr/livemeta/live/${stationid}/inter_player',
+	fmbaroque => $type4prefix.'${fetchid}'.$type4suffix,
+	#fmbaroque_alt => $type3prefix1fip.'${stationid}'.$type3prefix2fip.$type3suffixfip,
 # finished December 2020 - fmclassiqueplus => 'https://api.radiofrance.fr/livemeta/pull/${stationid}',
-	fmclassiqueplus => 'https://api.radiofrance.fr/livemeta/live/${stationid}/inter_player',
-	fmclassiqueplus_alt => $type3prefix1fip.'${stationid}'.$type3prefix2fip.$type3suffixfip,
+# finished July 2023 - fmclassiqueplus => 'https://api.radiofrance.fr/livemeta/live/${stationid}/inter_player',
+	fmclassiqueplus => $type4prefix.'${fetchid}'.$type4suffix,
+	#fmclassiqueplus_alt => $type3prefix1fip.'${stationid}'.$type3prefix2fip.$type3suffixfip,
 # finished December 2020 - fmconcertsradiofrance => 'https://api.radiofrance.fr/livemeta/pull/${stationid}',
-	fmconcertsradiofrance => 'https://api.radiofrance.fr/livemeta/live/${stationid}/inter_player',
-	fmconcertsradiofrance_alt => $type3prefix1fip.'${stationid}'.$type3prefix2fip.$type3suffixfip,
+# finished July 2023 - fmconcertsradiofrance => 'https://api.radiofrance.fr/livemeta/live/${stationid}/inter_player',
+	fmconcertsradiofrance => $type4prefix.'${fetchid}'.$type4suffix,
+	#fmconcertsradiofrance_alt => $type3prefix1fip.'${stationid}'.$type3prefix2fip.$type3suffixfip,
 # finished December 2020 - fmlajazz => 'https://api.radiofrance.fr/livemeta/pull/${stationid}',
-	fmlajazz => 'https://api.radiofrance.fr/livemeta/live/${stationid}/inter_player',
-	fmlajazz_alt => $type3prefix1fip.'${stationid}'.$type3prefix2fip.$type3suffixfip,
+# finished July 2023 - fmlajazz => 'https://api.radiofrance.fr/livemeta/live/${stationid}/inter_player',
+	fmlajazz => $type4prefix.'${fetchid}'.$type4suffix,
+	#fmlajazz_alt => $type3prefix1fip.'${stationid}'.$type3prefix2fip.$type3suffixfip,
 # finished December 2020 - fmlacontemporaine => 'https://api.radiofrance.fr/livemeta/pull/${stationid}',
-	fmlacontemporaine => 'https://api.radiofrance.fr/livemeta/live/${stationid}/inter_player',
-	fmlacontemporaine_alt => $type3prefix1fip.'${stationid}'.$type3prefix2fip.$type3suffixfip,
+# finished July 2023 - fmlacontemporaine => 'https://api.radiofrance.fr/livemeta/live/${stationid}/inter_player',
+	fmlacontemporaine => $type4prefix.'${fetchid}'.$type4suffix,
+	#fmlacontemporaine_alt => $type3prefix1fip.'${stationid}'.$type3prefix2fip.$type3suffixfip,
 # finished December 2020 - fmocoramonde => 'https://api.radiofrance.fr/livemeta/pull/${stationid}',
-	fmocoramonde => 'https://api.radiofrance.fr/livemeta/live/${stationid}/inter_player',
-	fmocoramonde_alt => $type3prefix1fip.'${stationid}'.$type3prefix2fip.$type3suffixfip,
+# finished July 2023 - fmocoramonde => 'https://api.radiofrance.fr/livemeta/live/${stationid}/inter_player',
+	fmocoramonde => $type4prefix.'${fetchid}'.$type4suffix,
+	#fmocoramonde_alt => $type3prefix1fip.'${stationid}'.$type3prefix2fip.$type3suffixfip,
 	#fmevenementielle => 'https://api.radiofrance.fr/livemeta/pull/${stationid}',
 # finished December 2020 - fmlabo => 'https://api.radiofrance.fr/livemeta/pull/${stationid}',
-	fmlabo => 'https://api.radiofrance.fr/livemeta/live/${stationid}/inter_player',
-	fmlabo_alt => $type3prefix1fip.'${stationid}'.$type3prefix2fip.$type3suffixfip,
+# finished July 2023 - fmlabo => 'https://api.radiofrance.fr/livemeta/live/${stationid}/inter_player',
+	fmlabo => $type4prefix.'${fetchid}'.$type4suffix,
+	# fmlabo_alt => $type3prefix1fip.'${stationid}'.$type3prefix2fip.$type3suffixfip,
 # finished December 2020 - fmopera => 'https://api.radiofrance.fr/livemeta/pull/${stationid}',
-	fmopera => 'https://api.radiofrance.fr/livemeta/live/${stationid}/inter_player',
-	fmopera_alt => $type3prefix1fip.'${stationid}'.$type3prefix2fip.$type3suffixfip,
+# finished July 2023 - fmopera => 'https://api.radiofrance.fr/livemeta/live/${stationid}/inter_player',
+	fmopera => $type4prefix.'${fetchid}'.$type4suffix,
+	# fmopera_alt => $type3prefix1fip.'${stationid}'.$type3prefix2fip.$type3suffixfip,
 	
 # finished December 2020 - mouv => 'https://api.radiofrance.fr/livemeta/pull/${stationid}',
-	mouv => 'https://api.radiofrance.fr/livemeta/live/${stationid}/inter_player',
-	mouv_alt => $type3prefix1fip.'${stationid}'.$type3prefix2fip.$type3suffixfip,
+# finished July 2023 - 	mouv => 'https://api.radiofrance.fr/livemeta/live/${stationid}/inter_player',
+	mouv => $type4prefix.'${fetchid}'.$type4suffix,
+	# mouv_alt => $type3prefix1fip.'${stationid}'.$type3prefix2fip.$type3suffixfip,
 # finished December 2020 - mouvxtra => 'https://api.radiofrance.fr/livemeta/pull/${stationid}',
-	mouvxtra => 'https://api.radiofrance.fr/livemeta/live/${stationid}/inter_player',
-	mouvxtra_alt => $type3prefix1fip.'${stationid}'.$type3prefix2fip.$type3suffixfip,
-	mouvclassics => 'https://www.mouv.fr/latest/api/graphql?operationName=NowWebradio&variables=%7B%22stationId%22%3A601%7D&'.$type3suffix,
-	mouvclassics_alt => $type3prefix1fip.'${stationid}'.$type3prefix2fip.$type3suffixfip,
-	mouvdancehall => 'https://www.mouv.fr/latest/api/graphql?operationName=NowWebradio&variables=%7B%22stationId%22%3A602%7D&'.$type3suffix,
-	mouvdancehall_alt => $type3prefix1fip.'${stationid}'.$type3prefix2fip.$type3suffixfip,
-	mouvrnb => 'https://www.mouv.fr/latest/api/graphql?operationName=NowWebradio&variables=%7B%22stationId%22%3A603%7D&'.$type3suffix,
-	mouvrnb_alt => $type3prefix1fip.'${stationid}'.$type3prefix2fip.$type3suffixfip,
-	mouvrapus => 'https://www.mouv.fr/latest/api/graphql?operationName=NowWebradio&variables=%7B%22stationId%22%3A604%7D&'.$type3suffix,
-	mouvrapus_alt => $type3prefix1fip.'${stationid}'.$type3prefix2fip.$type3suffixfip,
-	mouvrapfr => 'https://www.mouv.fr/latest/api/graphql?operationName=NowWebradio&variables=%7B%22stationId%22%3A605%7D&'.$type3suffix,
-	mouvrapfr_alt => $type3prefix1fip.'${stationid}'.$type3prefix2fip.$type3suffixfip,
-	mouv100mix => 'https://www.mouv.fr/latest/api/graphql?operationName=NowWebradio&variables=%7B%22stationId%22%3A75%7D&'.$type3suffix,
-	mouv100mix_alt => $type3prefix1fip.'${stationid}'.$type3prefix2fip.$type3suffixfip,
+# finished July 2023 - 	mouvxtra => 'https://api.radiofrance.fr/livemeta/live/${stationid}/inter_player',
+	mouvxtra => $type4prefix.'${fetchid}'.$type4suffix,
+	#mouvxtra_alt => $type3prefix1fip.'${stationid}'.$type3prefix2fip.$type3suffixfip,
+# finished July 2023 - 	mouvclassics => 'https://www.mouv.fr/latest/api/graphql?operationName=NowWebradio&variables=%7B%22stationId%22%3A601%7D&'.$type3suffix,
+	mouvclassics => $type4prefix.'${fetchid}'.$type4suffix,
+	#mouvclassics_alt => $type3prefix1fip.'${stationid}'.$type3prefix2fip.$type3suffixfip,
+# finished July 2023 - 	mouvdancehall => 'https://www.mouv.fr/latest/api/graphql?operationName=NowWebradio&variables=%7B%22stationId%22%3A602%7D&'.$type3suffix,
+	mouvdancehall => $type4prefix.'${fetchid}'.$type4suffix,
+	#mouvdancehall_alt => $type3prefix1fip.'${stationid}'.$type3prefix2fip.$type3suffixfip,
+# finished July 2023 - 	mouvrnb => 'https://www.mouv.fr/latest/api/graphql?operationName=NowWebradio&variables=%7B%22stationId%22%3A603%7D&'.$type3suffix,
+	mouvrnb => $type4prefix.'${fetchid}'.$type4suffix,
+	#mouvrnb_alt => $type3prefix1fip.'${stationid}'.$type3prefix2fip.$type3suffixfip,
+# finished July 2023 - 	mouvrapus => 'https://www.mouv.fr/latest/api/graphql?operationName=NowWebradio&variables=%7B%22stationId%22%3A604%7D&'.$type3suffix,
+	mouvrapus => $type4prefix.'${fetchid}'.$type4suffix,
+	#mouvrapus_alt => $type3prefix1fip.'${stationid}'.$type3prefix2fip.$type3suffixfip,
+# finished July 2023 - 	mouvrapfr => 'https://www.mouv.fr/latest/api/graphql?operationName=NowWebradio&variables=%7B%22stationId%22%3A605%7D&'.$type3suffix,
+	mouvrapfr => $type4prefix.'${fetchid}'.$type4suffix,
+	#mouvrapfr_alt => $type3prefix1fip.'${stationid}'.$type3prefix2fip.$type3suffixfip,
+	mouvkidsnfamily => $type4prefix.'${fetchid}'.$type4suffix,
+# finished July 2023 - 	mouv100mix => 'https://www.mouv.fr/latest/api/graphql?operationName=NowWebradio&variables=%7B%22stationId%22%3A75%7D&'.$type3suffix,
+	mouv100mix => $type4prefix.'${fetchid}'.$type4suffix,
+	#mouv100mix_alt => $type3prefix1fip.'${stationid}'.$type3prefix2fip.$type3suffixfip,
 	
 # finished December 2020 - franceinter => 'https://api.radiofrance.fr/livemeta/pull/${stationid}',
 	franceinter => 'https://api.radiofrance.fr/livemeta/live/${stationid}/inter_player',
@@ -332,10 +356,12 @@ my $urls = {
 	franceinfo => 'https://api.radiofrance.fr/livemeta/live/${stationid}/inter_player',
 	#franceinfo_alt => $type3prefix1fip.'${stationid}'.$type3prefix2fip.$type3suffixfip,
 # finished December 2020 - francemusique => 'https://api.radiofrance.fr/livemeta/pull/${stationid}',
-	francemusique => 'https://api.radiofrance.fr/livemeta/live/${stationid}/inter_player',
+# finished July 2023 - 	francemusique => 'https://api.radiofrance.fr/livemeta/live/${stationid}/inter_player',
+	francemusique => $type4prefix.'${fetchid}'.$type4suffix,
 	#francemusique_alt => $type3prefix1fip.'${stationid}'.$type3prefix2fip.$type3suffixfip,
 # finished December 2020 - franceculture => 'https://api.radiofrance.fr/livemeta/pull/${stationid}',
-	franceculture => 'https://api.radiofrance.fr/livemeta/live/${stationid}/inter_player',
+# Removed July 2023 - franceculture => 'https://api.radiofrance.fr/livemeta/live/${stationid}/inter_player',
+	franceculture => 'https://www.radiofrance.fr/api/v2.1/stations/franceculture/live',
 	#franceculture_alt => $type3prefix1fip.'${stationid}'.$type3prefix2fip.$type3suffixfip,
 	
 	# Limited song data from France Bleu stations
@@ -459,6 +485,7 @@ my $icons = {
 	fipmetal => 'https://www.radiofrance.fr/s3/cruiser-production/2022/07/160994f8-296b-4cd8-97a0-34c9111cdd9d/300x300_fip-metal-20222x_2.jpg',
 	fippop => 'https://cdn.radiofrance.fr/s3/cruiser-production/2020/06/14f16d25-960c-4cf4-8e39-682268b1a0c1/300x300_fip-pop_ok.jpg',
 	fiphiphop => 'https://www.radiofrance.fr/s3/cruiser-production/2022/07/af67eb80-feac-441e-aea6-ba7c653e220d/300x300_fip-hip-hop-2022-v12x-1.jpg',
+	fipsacre => 'https://www.radiofrance.fr/s3/cruiser-production/2023/07/562152b5-9c46-46c1-a166-683448aa1fbe/250x250_sc_sacre-franaais.jpg',
 	
 	fmclassiqueeasy => 'https://cdn.radiofrance.fr/s3/cruiser-production/2022/02/36c9fa83-a2c6-4432-9234-36f22ddabc24/300x300_webradios_fm_classique-easy.jpg',
 	fmbaroque => 'https://cdn.radiofrance.fr/s3/cruiser-production/2022/02/544d1b3c-fc0f-462d-bc6e-f96bb199c672/300x300_webradios_fm_la-baroque.jpg',
@@ -468,7 +495,7 @@ my $icons = {
 	fmlacontemporaine => 'https://cdn.radiofrance.fr/s3/cruiser-production/2022/02/b365b09f-8ca2-4ae3-beda-d45711df7a49/300x300_webradios_fm_la-contemporaine.jpg',
 	fmocoramonde => 'https://cdn.radiofrance.fr/s3/cruiser-production/2022/02/75db3a09-1545-487b-ab11-81db3642a5cd/300x300_webradios_fm_musiques-du-monde-ocora.jpg',
 	#fmevenementielle => 'https://cdn.radiofrance.fr/s3/cruiser-production/2017/06/d2ac7a26-843d-4f0c-a497-8ddf6f3b2f0f/200x200_fmwebbotout.jpg',
-	fmlabo => 'https://cdn.radiofrance.fr/s3/cruiser-production/2022/02/1bf719f5-ade8-4de4-9e8a-6cc035fb461f/300x300_webradios_fm_bomusiquesfilms.jpg',
+	fmlabo => 'https://www.radiofrance.fr/s3/cruiser-production/2023/05/4f0b91f5-d507-4924-b3c2-518a9c087aec/300x300_sc_musique-de-films.jpg',
 	fmopera => 'https://cdn.radiofrance.fr/s3/cruiser-production/2020/10/c1fb2b03-5c04-42c9-b415-d56e4c61dcd9/fm-opera-webradio2x.png',
 	
 	#mouv => 'https://www.radiofrance.fr/sites/default/files/styles/format_16_9/public/2019-08/logo_mouv_bloc_c.png.jpeg',
@@ -549,28 +576,29 @@ foreach my $metakey (keys(%$stationSet)){
 
 
 my $iconsIgnoreRegex = {
-	fipradio => '(a0773022-c452-4206-9b16-76fe7147fec9|fond_titres_diffuses_degrade.png|direct_default_cover_medium.png)',
-	fipbordeaux => '(a0773022-c452-4206-9b16-76fe7147fec9|fond_titres_diffuses_degrade.png|direct_default_cover_medium.png)',
-	fipnantes => '(a0773022-c452-4206-9b16-76fe7147fec9|fond_titres_diffuses_degrade.png|direct_default_cover_medium.png)',
-	fipstrasbourg => '(a0773022-c452-4206-9b16-76fe7147fec9|fond_titres_diffuses_degrade.png|direct_default_cover_medium.png)',
-	fiprock => '(a0773022-c452-4206-9b16-76fe7147fec9|fond_titres_diffuses_degrade.png|direct_default_cover_medium.png)',
-	fipjazz => '(a0773022-c452-4206-9b16-76fe7147fec9|fond_titres_diffuses_degrade.png|direct_default_cover_medium.png)',
-	fipgroove => '(a0773022-c452-4206-9b16-76fe7147fec9|fond_titres_diffuses_degrade.png|direct_default_cover_medium.png)',
-	fipmonde => '(a0773022-c452-4206-9b16-76fe7147fec9|fond_titres_diffuses_degrade.png|direct_default_cover_medium.png)',
-	fipnouveau => '(a0773022-c452-4206-9b16-76fe7147fec9|fond_titres_diffuses_degrade.png|direct_default_cover_medium.png)',
-	fipreggae => '(a0773022-c452-4206-9b16-76fe7147fec9|fond_titres_diffuses_degrade.png|direct_default_cover_medium.png)',
-	fipelectro => '(a0773022-c452-4206-9b16-76fe7147fec9|fond_titres_diffuses_degrade.png|direct_default_cover_medium.png)',
-	fipmetal => '(a0773022-c452-4206-9b16-76fe7147fec9|fond_titres_diffuses_degrade.png|direct_default_cover_medium.png)',
-	fippop => '(a0773022-c452-4206-9b16-76fe7147fec9|fond_titres_diffuses_degrade.png|direct_default_cover_medium.png)',
-	fiphiphop => '(a0773022-c452-4206-9b16-76fe7147fec9|fond_titres_diffuses_degrade.png|direct_default_cover_medium.png)',
-	mouv => '(a0773022-c452-4206-9b16-76fe7147fec9|image_default_player.jpg)',
-	mouvxtra => '(a0773022-c452-4206-9b16-76fe7147fec9|image_default_player.jpg)',
-	mouvclassics => '(a0773022-c452-4206-9b16-76fe7147fec9|image_default_player.jpg)',
-	mouvdancehall => '(a0773022-c452-4206-9b16-76fe7147fec9|image_default_player.jpg)',
-	mouvrnb => '(a0773022-c452-4206-9b16-76fe7147fec9|image_default_player.jpg)',
-	mouvrapus => '(a0773022-c452-4206-9b16-76fe7147fec9|image_default_player.jpg)',
-	mouvrapfr => '(a0773022-c452-4206-9b16-76fe7147fec9|image_default_player.jpg)',
-	mouv100mix => '(a0773022-c452-4206-9b16-76fe7147fec9|image_default_player.jpg)',
+	fipradio => '(31d1838e-da34-4579-878b-0fb1027378b1|a0773022-c452-4206-9b16-76fe7147fec9|fond_titres_diffuses_degrade.png|direct_default_cover_medium.png|_visual-fip.jpg)',
+	fipbordeaux => '(31d1838e-da34-4579-878b-0fb1027378b1|a0773022-c452-4206-9b16-76fe7147fec9|fond_titres_diffuses_degrade.png|direct_default_cover_medium.png|_visual-fip.jpg)',
+	fipnantes => '(31d1838e-da34-4579-878b-0fb1027378b1|a0773022-c452-4206-9b16-76fe7147fec9|fond_titres_diffuses_degrade.png|direct_default_cover_medium.png|_visual-fip.jpg)',
+	fipstrasbourg => '(31d1838e-da34-4579-878b-0fb1027378b1|a0773022-c452-4206-9b16-76fe7147fec9|fond_titres_diffuses_degrade.png|direct_default_cover_medium.png|_visual-fip.jpg)',
+	fiprock => '(31d1838e-da34-4579-878b-0fb1027378b1|a0773022-c452-4206-9b16-76fe7147fec9|fond_titres_diffuses_degrade.png|direct_default_cover_medium.png|_visual-fip.jpg)',
+	fipjazz => '(31d1838e-da34-4579-878b-0fb1027378b1|a0773022-c452-4206-9b16-76fe7147fec9|fond_titres_diffuses_degrade.png|direct_default_cover_medium.png|_visual-fip.jpg)',
+	fipgroove => '(31d1838e-da34-4579-878b-0fb1027378b1|a0773022-c452-4206-9b16-76fe7147fec9|fond_titres_diffuses_degrade.png|direct_default_cover_medium.png|_visual-fip.jpg)',
+	fipmonde => '(31d1838e-da34-4579-878b-0fb1027378b1|a0773022-c452-4206-9b16-76fe7147fec9|fond_titres_diffuses_degrade.png|direct_default_cover_medium.png|_visual-fip.jpg)',
+	fipnouveau => '(31d1838e-da34-4579-878b-0fb1027378b1|a0773022-c452-4206-9b16-76fe7147fec9|fond_titres_diffuses_degrade.png|direct_default_cover_medium.png|_visual-fip.jpg)',
+	fipreggae => '(31d1838e-da34-4579-878b-0fb1027378b1|a0773022-c452-4206-9b16-76fe7147fec9|fond_titres_diffuses_degrade.png|direct_default_cover_medium.png|_visual-fip.jpg)',
+	fipelectro => '(31d1838e-da34-4579-878b-0fb1027378b1|a0773022-c452-4206-9b16-76fe7147fec9|fond_titres_diffuses_degrade.png|direct_default_cover_medium.png|_visual-fip.jpg)',
+	fipmetal => '(31d1838e-da34-4579-878b-0fb1027378b1|a0773022-c452-4206-9b16-76fe7147fec9|fond_titres_diffuses_degrade.png|direct_default_cover_medium.png|_visual-fip.jpg)',
+	fippop => '(31d1838e-da34-4579-878b-0fb1027378b1|a0773022-c452-4206-9b16-76fe7147fec9|fond_titres_diffuses_degrade.png|direct_default_cover_medium.png|_visual-fip.jpg)',
+	fiphiphop => '(31d1838e-da34-4579-878b-0fb1027378b1|a0773022-c452-4206-9b16-76fe7147fec9|fond_titres_diffuses_degrade.png|direct_default_cover_medium.png|_visual-fip.jpg)',
+	fipsacre => '(31d1838e-da34-4579-878b-0fb1027378b1|a0773022-c452-4206-9b16-76fe7147fec9|fond_titres_diffuses_degrade.png|direct_default_cover_medium.png|_visual-fip.jpg)',
+	mouv => '(31d1838e-da34-4579-878b-0fb1027378b1|a0773022-c452-4206-9b16-76fe7147fec9|image_default_player.jpg)',
+	mouvxtra => '(31d1838e-da34-4579-878b-0fb1027378b1|a0773022-c452-4206-9b16-76fe7147fec9|image_default_player.jpg)',
+	mouvclassics => '(31d1838e-da34-4579-878b-0fb1027378b1|a0773022-c452-4206-9b16-76fe7147fec9|image_default_player.jpg)',
+	mouvdancehall => '(31d1838e-da34-4579-878b-0fb1027378b1|a0773022-c452-4206-9b16-76fe7147fec9|image_default_player.jpg)',
+	mouvrnb => '(31d1838e-da34-4579-878b-0fb1027378b1|a0773022-c452-4206-9b16-76fe7147fec9|image_default_player.jpg)',
+	mouvrapus => '(31d1838e-da34-4579-878b-0fb1027378b1|a0773022-c452-4206-9b16-76fe7147fec9|image_default_player.jpg)',
+	mouvrapfr => '(31d1838e-da34-4579-878b-0fb1027378b1|a0773022-c452-4206-9b16-76fe7147fec9|image_default_player.jpg)',
+	mouv100mix => '(31d1838e-da34-4579-878b-0fb1027378b1|a0773022-c452-4206-9b16-76fe7147fec9|image_default_player.jpg)',
 };
 
 foreach my $metakey (keys(%$stationSet)){
@@ -578,7 +606,7 @@ foreach my $metakey (keys(%$stationSet)){
 	# main::DEBUGLOG && $log->is_debug && $log->debug("Initialising iconsIgnoreRegex - $metakey");
 	if ( not exists $iconsIgnoreRegex->{$metakey} ){
 		# Customise this if necessary per plugin
-		$iconsIgnoreRegex->{$metakey} = '(a0773022-c452-4206-9b16-76fe7147fec9)';
+		$iconsIgnoreRegex->{$metakey} = '(a0773022-c452-4206-9b16-76fe7147fec9|31d1838e-da34-4579-878b-0fb1027378b1)';
 	}
 }
 
@@ -647,7 +675,8 @@ foreach my $metakey (keys(%$stationSet)){
 # [ { "name": "banner", "visual_uuid": "4256a1da-f202-4cfa-8c0b-db0fb846da66" },
 #   { "name": "concept_visual", "visual_uuid": "aeb5db31-ea32-4149-8106-bc66c3ab26b7" } ]
 
-my @coverFieldsArr = ( 'cover', 'visual', 'coverUuid', 'visualBanner', 'mainImage', '@name|square_banner|visual_uuid', '@name|banner|visual_uuid', '@name|concept_visual|visual_uuid', 'src' );
+my @coverFieldsArr = ( 'cover', 'visual', 'coverUuid', 'visualBanner', 'mainImage', '@name|square_banner|visual_uuid',
+					   '@name|banner|visual_uuid', '@name|concept_visual|visual_uuid', 'src', 'cardVisual|src', 'visuals|player|src' );
 
 
 # $myClientInfo holds data about the clients/devices using this plugin - used to schedule next poll
@@ -1022,8 +1051,8 @@ sub getcover {
 			}
 		} elsif ( !defined $field3 ) {
 			if ( ref($playinginfo) ne "ARRAY" && exists $playinginfo->{$field1} && defined($playinginfo->{$field1}) && $playinginfo->{$field1} ne '' && 
-			     exists $playinginfo->{$field2} && defined($playinginfo->{$field2}) && $playinginfo->{$field2} ne ''){
-				$thisartwork = $playinginfo->{$field2};
+			     exists $playinginfo->{$field1}->{$field2} && defined($playinginfo->{$field1}->{$field2}) && $playinginfo->{$field1}->{$field2} ne ''){
+				$thisartwork = $playinginfo->{$field1}->{$field2};
 				last;
 			}
 		} else {
@@ -1043,10 +1072,12 @@ sub getcover {
 					last;
 				}
 			} else {
-				if ( exists $playinginfo->{$field1} && defined($playinginfo->{$field1}) && $playinginfo->{$field1} ne '' && 
-				     $playinginfo->{$field1} eq $field2 &&
-				     exists $playinginfo->{$field3} && defined($playinginfo->{$field3}) && $playinginfo->{$field3} ne ''){
-					$thisartwork = $playinginfo->{$field3};
+				if ( ref($playinginfo) eq "HASH" && exists $playinginfo->{$field1} && 
+				     ref($playinginfo->{$field1}) eq "HASH" && defined($playinginfo->{$field1}) && $playinginfo->{$field1} ne '' &&
+				     # $playinginfo->{$field1} eq $field2 &&
+					 exists $playinginfo->{$field1}->{$field2} && defined($playinginfo->{$field1}->{$field2}) && $playinginfo->{$field1}->{$field2} ne '' &&
+				     exists $playinginfo->{$field1}->{$field2}->{$field3} && defined($playinginfo->{$field1}->{$field2}->{$field3}) && $playinginfo->{$field1}->{$field2}->{$field3} ne ''){
+					$thisartwork = $playinginfo->{$field1}->{$field2}->{$field3};
 					last;
 				}
 			}
@@ -1209,6 +1240,7 @@ sub getmeta {
 			if ( $sourceUrl =~ /\$\{.*\}/ ){
 				# Special string to be replaced
 				$sourceUrl =~ s/\$\{stationid\}/$stationSet->{$station}->{'stationid'}/g;
+				$sourceUrl =~ s/\$\{fetchid\}/$stationSet->{$station}->{'fetchid'}/g;
 				$sourceUrl =~ s/\$\{region\}/$stationSet->{$station}->{'region'}/g;
 				$sourceUrl =~ s/\$\{progid\}/$calculatedPlaying->{$station}->{'progid'}/g;
 				$sourceUrl =~ s/\$\{unixtime\}/$hiResTime/g;
@@ -1235,6 +1267,7 @@ sub getmeta {
 				if ( $sourceUrl =~ /\$\{.*\}/ ){
 					# Special string to be replaced
 					$sourceUrl =~ s/\$\{stationid\}/$stationSet->{$station}->{'stationid'}/g;
+					$sourceUrl =~ s/\$\{fetchid\}/$stationSet->{$station}->{'fetchid'}/g;
 					$sourceUrl =~ s/\$\{region\}/$stationSet->{$station}->{'region'}/g;
 					$sourceUrl =~ s/\$\{progid\}/$calculatedPlaying->{$station}->{'progid'}/g;
 					$sourceUrl =~ s/\$\{unixtime\}/$hiResTime/g;
@@ -1369,6 +1402,7 @@ sub getindividualprogrammemeta {
 				if ( $sourceUrl =~ /\$\{.*\}/ ){
 					# Special string to be replaced
 					$sourceUrl =~ s/\$\{stationid\}/$stationSet->{$station}->{'stationid'}/g;
+					$sourceUrl =~ s/\$\{fetchid\}/$stationSet->{$station}->{'fetchid'}/g;
 					$sourceUrl =~ s/\$\{region\}/$stationSet->{$station}->{'region'}/g;
 					$sourceUrl =~ s/\$\{progid\}/$calculatedPlaying->{$station}->{'progid'}/g;
 					$sourceUrl =~ s/\$\{progstart\}/$calculatedPlaying->{$station}->{'progstart'}/g;
@@ -1462,6 +1496,7 @@ sub getprogrammemeta {
 			if ( $sourceUrl =~ /\$\{.*\}/ ){
 				# Special string to be replaced
 				$sourceUrl =~ s/\$\{stationid\}/$stationSet->{$station}->{'stationid'}/g;
+				$sourceUrl =~ s/\$\{fetchid\}/$stationSet->{$station}->{'fetchid'}/g;
 				$sourceUrl =~ s/\$\{region\}/$stationSet->{$station}->{'region'}/g;
 				$sourceUrl =~ s/\$\{progid\}/$calculatedPlaying->{$station}->{'progid'}/g;
 				$sourceUrl =~ s/\$\{unixtime\}/$hiResTime/g;
@@ -1493,6 +1528,7 @@ sub getprogrammemeta {
 				
 				if ( $sourceUrl =~ /\$\{.*\}/ ){
 					$sourceUrl =~ s/\$\{stationid\}/$stationSet->{$station}->{'stationid'}/g;
+					$sourceUrl =~ s/\$\{fetchid\}/$stationSet->{$station}->{'fetchid'}/g;
 					$sourceUrl =~ s/\$\{region\}/$stationSet->{$station}->{'region'}/g;
 					$sourceUrl =~ s/\$\{progid\}/$calculatedPlaying->{$station}->{'progid'}/g;
 					$sourceUrl =~ s/\$\{unixtime\}/$hiResTime/g;
@@ -1560,6 +1596,7 @@ sub getbroadcastermeta {
 			if ( $sourceUrl =~ /\$\{.*\}/ ){
 				# Special string to be replaced
 				$sourceUrl =~ s/\$\{stationid\}/$stationSet->{$station}->{'stationid'}/g;
+				$sourceUrl =~ s/\$\{fetchid\}/$stationSet->{$station}->{'fetchid'}/g;
 				$sourceUrl =~ s/\$\{region\}/$stationSet->{$station}->{'region'}/g;
 				$sourceUrl =~ s/\$\{progid\}/$calculatedPlaying->{$station}->{'progid'}/g;
 			}
@@ -1585,6 +1622,7 @@ sub getbroadcastermeta {
 				if ( $sourceUrl =~ /\$\{.*\}/ ){
 					# Special string to be replaced
 					$sourceUrl =~ s/\$\{stationid\}/$stationSet->{$station}->{'stationid'}/g;
+					$sourceUrl =~ s/\$\{fetchid\}/$stationSet->{$station}->{'fetchid'}/g;
 					$sourceUrl =~ s/\$\{region\}/$stationSet->{$station}->{'region'}/g;
 					$sourceUrl =~ s/\$\{progid\}/$calculatedPlaying->{$station}->{'progid'}/g;
 				}
@@ -2616,7 +2654,7 @@ sub parseContent {
 			#$dumped =~ s/\n {44}/\n/g;   
 			#main::DEBUGLOG && $log->is_debug && $log->debug("Type $dataType:$dumped");
 		
-		} elsif ( ref($perl_data) ne "ARRAY" && ( exists $perl_data->{'prev'} && exists $perl_data->{'now'}) ) {
+		} elsif ( ref($perl_data) ne "ARRAY" && ( exists $perl_data->{'next'} && exists $perl_data->{'now'}) ) {
 			
 			# {
 				# "prev": [
@@ -2666,7 +2704,16 @@ sub parseContent {
 			my $thisItem;
 			my $songItem;
 			
-			# Only has programme info
+			# Used to have only programme info - but appears to have been updated in  mid-2023 to include song info
+			# "song": {
+				# "id": "fed69b27-7ab3-4145-8084-44fde15166b4",
+				# "year": 2019,
+				# "release": {
+					# "title": "Night sketches",
+					# "label": "HALF AWAKE RECORDS"
+				# }
+			# }
+			
 			$thisItem = $perl_data->{'now'};
 			
 			#$dumped =  Dumper $thisItem;
@@ -2678,74 +2725,167 @@ sub parseContent {
 				( $thisItem->{'endTime'} >= $hiResTime || $thisItem->{'endTime'} == 0 )) {
 				# This is in range (special case with 0 end_time)
 				# main::DEBUGLOG && $log->is_debug && $log->debug("Current playing $thisItem");
+
+				if ( exists $thisItem->{'song'} && $thisItem->{'song'} ){
+					$nowplaying = $thisItem;
+					$songItem = $thisItem->{'song'};
+					$info->{isSong} = true;
+				}
 				
 				$calculatedPlaying->{$station}->{'progtitle'} = '';
 				$calculatedPlaying->{$station}->{'progsubtitle'} = '';
 				$calculatedPlaying->{$station}->{'progsynopsis'} = '';
 				
-				if ( ( exists $thisItem->{'firstLine'} && defined($thisItem->{'firstLine'}) && $thisItem->{'firstLine'} ne '') || 
-				     ( exists $thisItem->{'secondLine'} && defined($thisItem->{'secondLine'}) && $thisItem->{'secondLine'} ne '' ) ) {
-					# firstLine (title) and/or secondLine (subtitle)
-				
-					main::DEBUGLOG && $log->is_debug && $log->debug("$station Found programme: ".$thisItem->{'firstLine'});
+				if ( !$info->{isSong} ){
+					if ( ( exists $thisItem->{'firstLine'} && defined($thisItem->{'firstLine'}) && $thisItem->{'firstLine'} ne '') || 
+						 ( exists $thisItem->{'secondLine'} && defined($thisItem->{'secondLine'}) && $thisItem->{'secondLine'} ne '' ) ) {
+						# firstLine (title) and/or secondLine (subtitle)
 					
-					if ( exists $thisItem->{'firstLine'} && defined($thisItem->{'firstLine'}) && $thisItem->{'firstLine'} ne '' ){
-						$calculatedPlaying->{$station}->{'progtitle'} = _trim( $thisItem->{'firstLine'} );
-					} 
-
-					if ( exists $thisItem->{'secondLine'} && defined($thisItem->{'secondLine'}) && $thisItem->{'secondLine'} ne '' &&
-					     _trim($thisItem->{'secondLine'}) ne $calculatedPlaying->{$station}->{'progtitle'} ) {
-						$calculatedPlaying->{$station}->{'progsubtitle'} = _trim( $thisItem->{'secondLine'} );
-					}
-
-					if (exists $thisItem->{'startTime'}){ $calculatedPlaying->{$station}->{'progstart'} = $thisItem->{'startTime'}};
-					if (exists $thisItem->{'endTime'}){ $calculatedPlaying->{$station}->{'progend'} = $thisItem->{'endTime'}};
-
-					if ( exists $thisItem->{'endTime'} && exists $thisItem->{'startTime'} ){
-						# Work out programme duration and return if plausible
-						$progDuration = $thisItem->{'endTime'} - $thisItem->{'startTime'};
+						main::DEBUGLOG && $log->is_debug && $log->debug("$station Found programme: ".$thisItem->{'firstLine'});
 						
-						# main::DEBUGLOG && $log->is_debug && $log->debug("$station - Show Duration $progDuration");
+						if ( exists $thisItem->{'firstLine'} && defined($thisItem->{'firstLine'}) && ref($thisItem->{'firstLine'}) eq 'HASH' && 
+							 exists $thisItem->{'firstLine'}->{'title'} && defined($thisItem->{'firstLine'}->{'title'}) && $thisItem->{'firstLine'}->{'title'} ne '' ){
+							$calculatedPlaying->{$station}->{'progtitle'} = _trim( $thisItem->{'firstLine'}->{'title'} );
+						} elsif ( exists $thisItem->{'firstLine'} && defined($thisItem->{'firstLine'}) && $thisItem->{'firstLine'} ne '' ){
+							$calculatedPlaying->{$station}->{'progtitle'} = _trim( $thisItem->{'firstLine'} );
+						} 
+
+						if ( exists $thisItem->{'secondLine'} && defined($thisItem->{'secondLine'}) && ref($thisItem->{'secondLine'}) eq 'HASH' && 
+						     exists $thisItem->{'secondLine'}->{'title'} && defined($thisItem->{'secondLine'}->{'title'}) && $thisItem->{'secondLine'}->{'title'} ne '' &&
+							 _trim($thisItem->{'secondLine'}->{'title'}) ne $calculatedPlaying->{$station}->{'progtitle'} ) {
+							$calculatedPlaying->{$station}->{'progsubtitle'} = _trim( $thisItem->{'secondLine'}->{'title'} );
+						} elsif ( exists $thisItem->{'secondLine'} && defined($thisItem->{'secondLine'}) && $thisItem->{'secondLine'} ne '' &&
+							 _trim($thisItem->{'secondLine'}) ne $calculatedPlaying->{$station}->{'progtitle'} ) {
+							$calculatedPlaying->{$station}->{'progsubtitle'} = _trim( $thisItem->{'secondLine'} );
+						}
 						
-						if ($progDuration > 0) {$calculatedPlaying->{$station}->{'proglth'} = $progDuration};
-					}
+						if (exists $thisItem->{'intro'}){ $calculatedPlaying->{$station}->{'progsynopsis'} = _trim( $thisItem->{'intro'} )};
 
-					my $programmePath = '';
-					if ( exists $thisItem->{'secondLinePath'} && defined($thisItem->{'secondLinePath'}) && $thisItem->{'secondLinePath'} ne '' ){
-						$programmePath = $thisItem->{'secondLinePath'};
-					}
+						if (exists $thisItem->{'startTime'}){ $calculatedPlaying->{$station}->{'progstart'} = $thisItem->{'startTime'}};
+						if (exists $thisItem->{'endTime'}){ $calculatedPlaying->{$station}->{'progend'} = $thisItem->{'endTime'}};
 
-					# Seen example where secondLinePath points to the set of shows rather than the specific
-					# but the array secondLinePaths had the real one ... but which ... try the longest
-					# Example:
-					# "secondLinePath": "francemusique/podcasts/disques-de-legende",
-					# "secondLinePaths": [
-						# "francemusique/podcasts/disques-de-legende",
-						# "francemusique/podcasts/disques-de-legende/disques-de-legende-du-mercredi-29-juin-2022-3753240"
-					# ],
-					if ( exists $thisItem->{'secondLinePaths'} && ref( $thisItem->{'secondLinePaths'} ) eq "ARRAY" ){
-						foreach my $tryPath ( @{$thisItem->{'secondLinePaths'}} ){
-							if ( length $tryPath > length $programmePath ){
-								$programmePath = $tryPath;
+						if ( exists $thisItem->{'endTime'} && exists $thisItem->{'startTime'} ){
+							# Work out programme duration and return if plausible
+							$progDuration = $thisItem->{'endTime'} - $thisItem->{'startTime'};
+							
+							# main::DEBUGLOG && $log->is_debug && $log->debug("$station - Show Duration $progDuration");
+							
+							if ($progDuration > 0) {$calculatedPlaying->{$station}->{'proglth'} = $progDuration};
+						}
+
+						my $programmePath = '';
+						if ( exists $thisItem->{'secondLinePath'} && defined($thisItem->{'secondLinePath'}) && $thisItem->{'secondLinePath'} ne '' ){
+							$programmePath = $thisItem->{'secondLinePath'};
+						}
+
+						# Seen example where secondLinePath points to the set of shows rather than the specific
+						# but the array secondLinePaths had the real one ... but which ... try the longest
+						# Example:
+						# "secondLinePath": "francemusique/podcasts/disques-de-legende",
+						# "secondLinePaths": [
+							# "francemusique/podcasts/disques-de-legende",
+							# "francemusique/podcasts/disques-de-legende/disques-de-legende-du-mercredi-29-juin-2022-3753240"
+						# ],
+						if ( exists $thisItem->{'secondLinePaths'} && ref( $thisItem->{'secondLinePaths'} ) eq "ARRAY" ){
+							foreach my $tryPath ( @{$thisItem->{'secondLinePaths'}} ){
+								if ( length $tryPath > length $programmePath ){
+									$programmePath = $tryPath;
+								}
 							}
 						}
+						
+						if ( $programmePath ne '' ){
+							# Path exists ... which might mean that song data is available
+							&getindividualprogrammemeta( $client, $url, $programmePath );
+						}
+						# Artwork - only include if not one of the defaults - to give chance for something else to add it
+						# Regex check to see if present using $iconsIgnoreRegex
+
+						my $thisartwork = '';
+
+						$thisartwork = getcover($thisItem, $station, $info);
+
+						$calculatedPlaying->{$station}->{'proglogo'} = $thisartwork;
+
+						#main::DEBUGLOG && $log->is_debug && $log->debug("Found show name in Type $dataType: $calculatedPlaying->{$station}->{'progtitle'}");
 					}
+				}
+				
+				if ( $info->{isSong} ) {
+			
+					# $dumped =  Dumper $nowplaying;
+					# $dumped =~ s/\n {44}/\n/g;   
+					# main::DEBUGLOG && $log->is_debug && $log->debug($dumped);
+
+					# main::DEBUGLOG && $log->is_debug && $log->debug("Time: ".time." Ends: ".$nowplaying->{'end_time'});
+					# main::DEBUGLOG && $log->is_debug && $log->debug("Current artist: ".$nowplaying->{'title'}." song: ".$nowplaying->{'subtitle'});
+					# main::DEBUGLOG && $log->is_debug && $log->debug("Image: ".$nowplaying->{'cover'});
 					
-					if ( $programmePath ne '' ){
-						# Path exists ... which might mean that song data is available
-						&getindividualprogrammemeta( $client, $url, $programmePath );
+					if (exists $nowplaying->{'startTime'}){ $calculatedPlaying->{$station}->{'songstart'} = $nowplaying->{'startTime'}};
+					
+					my $expectedEndTime = $hiResTime;
+					
+					if ( exists $nowplaying->{'endTime'} && $nowplaying->{'endTime'} > 0 ){ $expectedEndTime = $nowplaying->{'endTime'}};
+					
+					if ( $expectedEndTime > $hiResTime-30 ){
+						# If looks like this should not have already finished (allowing for some leniency for clock drift and other delays) then get the details
+						# This requires that the time on the machine running LMS should be accurate - and timezone set correctly
+
+						if (exists $nowplaying->{'secondLine'} && defined($nowplaying->{'secondLine'}) && $nowplaying->{'secondLine'} ne '') {
+							$calculatedPlaying->{$station}->{'songartist'} = _lowercase($nowplaying->{'secondLine'});
+						}
+
+						if (exists $nowplaying->{'firstLine'} && defined($nowplaying->{'firstLine'}) && $nowplaying->{'firstLine'} ne '') {
+							$calculatedPlaying->{$station}->{'songtitle'} = _lowercase($nowplaying->{'firstLine'});
+						}
+
+						$calculatedPlaying->{$station}->{'songyear'} = '';
+						if (exists $nowplaying->{'year'} && defined($nowplaying->{'year'}) ) {
+							$calculatedPlaying->{$station}->{'songyear'} = $nowplaying->{'year'};
+						}
+
+						# Note - Label and Album are not available in the "playing_item" but are in "song"
+						# Take year if it is present and have seen times when not present above
+						if ( exists $songItem->{'year'} && defined($songItem->{'year'}) ) {$calculatedPlaying->{$station}->{'songyear'} = $songItem->{'year'}};
+						
+						$calculatedPlaying->{$station}->{'songlabel'} = '';
+						if ( exists $songItem->{'release'} && exists $songItem->{'release'}->{'label'} && defined( $songItem->{'release'}->{'label'} ) && $songItem->{'release'}->{'label'} ne '' ) {$calculatedPlaying->{$station}->{'songlabel'} = _lowercase($songItem->{'release'}->{'label'})};
+						
+						$calculatedPlaying->{$station}->{'songalbum'} = '';
+						if (exists $songItem->{'release'} && exists $songItem->{'release'}->{'title'} && defined( $songItem->{'release'}->{'title'} ) && $songItem->{'release'}->{'title'} ne '' ) {$calculatedPlaying->{$station}->{'songalbum'} = _lowercase($songItem->{'release'}->{'title'})};
+						
+						# Artwork - only include if not one of the defaults - to give chance for something else to add it
+						# Regex check to see if present using $iconsIgnoreRegex
+						my $thisartwork = '';
+						
+						$thisartwork = getcover($nowplaying, $station, $info);
+						
+						if ($thisartwork eq ''){
+							# Try to get it from the songItem instead
+							$thisartwork = getcover($songItem, $station, $info);
+						}
+
+						if ($thisartwork ne ''){
+							$calculatedPlaying->{$station}->{'songcover'} = $thisartwork;
+						}
+						
+						if ( exists $nowplaying->{'endTime'} && exists $nowplaying->{'startTime'} ){
+							# Work out song duration and return if plausible
+							$songDuration = $nowplaying->{'endTime'} - $nowplaying->{'startTime'};
+							
+							# main::DEBUGLOG && $log->is_debug && $log->debug("$station - Duration $songDuration");
+							
+							if ($songDuration > 0) {$calculatedPlaying->{$station}->{'songlth'} = $songDuration};
+						}
+						
+						# Try to update the predicted end time to give better chance for timely display of next song
+						$calculatedPlaying->{$station}->{'songend'} = $expectedEndTime;
+						
+					} else {
+						# This song that is playing should have already finished so returning largely blank data should reset what is displayed
+						main::DEBUGLOG && $log->is_debug && $log->debug("$station - Song already finished - expected end $expectedEndTime and now $hiResTime");
 					}
-					# Artwork - only include if not one of the defaults - to give chance for something else to add it
-					# Regex check to see if present using $iconsIgnoreRegex
-
-					my $thisartwork = '';
-
-					$thisartwork = getcover($thisItem, $station, $info);
-
-					$calculatedPlaying->{$station}->{'proglogo'} = $thisartwork;
-
-					#main::DEBUGLOG && $log->is_debug && $log->debug("Found show name in Type $dataType: $calculatedPlaying->{$station}->{'progtitle'}");
-				} 
+				}
 			}			
 		} elsif ( ref($perl_data) ne "ARRAY" && 
 			  ( exists $perl_data->{'content'} && exists $perl_data->{'content'}->{'songs'} && ref($perl_data->{'content'}->{'songs'}) eq "ARRAY" ) ||
@@ -5016,6 +5156,30 @@ sub toplevel {
 								on_select	=> 'play'
 							},
 						]
+					},{
+						name	=> 'Sacré français !',
+						image	=> $icons->{fipsacre},
+						items	=> [
+							{
+								name	=> 'FIP Sacré français ! (HLS)',
+								type	=> 'audio',
+								icon	=> $icons->{fipsacre},
+								url	=> 'https://stream.radiofrance.fr/fipsacrefrancais/fipsacrefrancais.m3u8',
+								on_select	=> 'play'
+							},{
+								name	=> 'FIP Sacré français ! (AAC)',
+								type	=> 'audio',
+								icon	=> $icons->{fipsacre},
+								url	=> 'http://icecast.radiofrance.fr/fipsacrefrancais-hifi.aac',
+								on_select	=> 'play'
+							},{
+								name	=> 'FIP Sacré français ! (MP3)',
+								type	=> 'audio',
+								icon	=> $icons->{fipsacre},
+								url	=> 'http://icecast.radiofrance.fr/fipsacrefrancais-midfi.mp3',
+								on_select	=> 'play'
+							},
+						]
 					}
 				]
 			},{
@@ -5239,23 +5403,23 @@ sub toplevel {
 							},
 						]
 					},{
-						name	=> 'La B.O. Musiques de Films',
+						name	=> 'Films',
 						image	=> $icons->{fmlabo},
 						items	=> [
 							{
-								name	=> 'France Musique La B.O. Musiques de Films (HLS)',
+								name	=> 'France Musique Films (HLS)',
 								type	=> 'audio',
 								icon	=> $icons->{fmlabo},
 								url	=> 'https://stream.radiofrance.fr/francemusiquelabo/francemusiquelabo.m3u8',
 								on_select	=> 'play'
 							},{
-								name	=> 'France Musique La B.O. Musiques de Films (AAC)',
+								name	=> 'France Musique Films (AAC)',
 								type	=> 'audio',
 								icon	=> $icons->{fmlabo},
 								url	=> 'http://icecast.radiofrance.fr/francemusiquelabo-hifi.aac',
 								on_select	=> 'play'
 							},{
-								name	=> 'France Musique La B.O. Musiques de Films (MP3)',
+								name	=> 'France Musique Films (MP3)',
 								type	=> 'audio',
 								icon	=> $icons->{fmlabo},
 								url	=> 'http://icecast.radiofrance.fr/francemusiquelabo-midfi.mp3',
