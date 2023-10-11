@@ -39,7 +39,7 @@ If the plugin is working then you should see artist details appear around the ti
 You can also access the list of stations and schedules from the "My Apps" or "Radio" menu item in LMS (you can configure which one it appears under).
 
 **FIP stations supported:**
-FIP (including regional variants while they last), FIP ... Rock, Jazz, Groove, Monde, Electro, Reggae, Tout Nouveau, Pop, Metal, Hip-Hop --
+FIP (including regional variants while they last), FIP ... Rock, Jazz, Groove, Monde, Electro, Reggae, Tout Nouveau, Pop, Metal, Hip-Hop, Sacré français ! --
 
 **France Musique stations supported:**
 France Musique
@@ -51,7 +51,7 @@ Concerts Radio France
 La Jazz
 La Contemporaine
 Ocora Monde
-Evenementielle / Classique Kids / B.O.
+Evenementielle / Classique Kids / B.O. (Films)
 
 **Mouv' stations supported:**
 Mouv'
