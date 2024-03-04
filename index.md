@@ -51,6 +51,7 @@ Concerts Radio France
 La Jazz
 La Contemporaine
 Ocora Monde
+Piano Zen
 Evenementielle / Classique Kids / B.O. (Films)
 
 **Mouv' stations supported:**
