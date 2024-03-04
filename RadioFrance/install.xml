@@ -5,7 +5,7 @@
   <defaultState>enabled</defaultState>
   <description>PLUGIN_RADIOFRANCE_DESC</description>
   <email></email>
-  <homepageURL>https://dabdig.blogspot.com</homepageURL>
+  <homepageURL>https://forums.slimdevices.com/forum/user-forums/3rd-party-software/103516-announce-song-info-plugin-for-fip-radio?p=1286774#post1286774</homepageURL>
   <module>Plugins::RadioFrance::Plugin</module>
   <optionsURL>plugins/RadioFrance/settings/basic.html</optionsURL>
   <icon>plugins/RadioFrance/html/images/radiofrance_svg.png</icon>
@@ -15,5 +15,5 @@
     <minVersion>7.5</minVersion>
   </targetApplication>
   <type>2</type>
-  <version>0.4.8</version>
+  <version>0.4.9</version>
 </extension>

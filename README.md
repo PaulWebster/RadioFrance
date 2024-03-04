@@ -51,6 +51,7 @@ Concerts Radio France
 La Jazz
 La Contemporaine
 Ocora Monde
+Piano Zen
 Evenementielle / Classique Kids / B.O. (Films)
 
 **Mouv' stations supported:**
@@ -70,6 +71,9 @@ Note: Radio France does not always provide track information in a timely manner 
 - If things are not working then enable Debug logging for this plugin via LMS/Settings/Advanced/Logging interface, repeat the problem and then check the LMS logs.  
 
 ## Version History
+
+**0.4.9 01-Mar-2024**
+- Add France Musique Piano Zen
 
 **0.4.8 11-Oct-2023**
 - Add FIP Sacre francais !

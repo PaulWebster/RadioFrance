@@ -97,6 +97,9 @@ my $type3suffixfip = '&extensions=%7B%22persistedQuery%22%3A%7B%22version%22%3A1
 my $type4prefix = 'https://www.radiofrance.fr/fip/api/live/webradios/';
 my $type4suffix = '';
 
+my $type5prefix = 'https://www.radiofrance.fr/francemusique/';
+my $type5suffix = '/api/webradio';
+
 my $radiofrancescheuleurl = 'https://api.radiofrance.fr/v1/stations/${stationid}/steps?filter[depth]=1&filter[start-time]=${datestring}T00:00&filter[end-time]=${datestring}T23:59&fields[shows]=title,visuals,stationId,mainImage&fields[diffusions]=title,startTime,endTime,mainImage,visuals,stationId&include=diffusion&include=show&include=diffusion.manifestations&include=diffusion.station&include=children-steps&include=children-steps.show&include=children-steps.diffusion&include=children-steps.diffusion.manifestations';
 my %radiofranceapiondemandheaderset = ( 'x-token' => '0cbe991e-18ac-4635-ad7f-773257c63797' );	# token as used by Radio France web interface
 
@@ -139,6 +142,7 @@ my $stationSet = { # Take extra care if pasting in from external spreadsheet ...
 	#fmevenementielle => { fullname => 'France Musique Evenementielle', stationid => '407', fetchid => 'francemusique_evenementielle', region => '', tuneinid => 's285660&|id=s306575', notexcludable => true, match1 => 'francemusiquelevenementielle', match2 => '' }, # Special case ... 2 TuneIn Id
 	fmlabo => { fullname => 'France Musique Films', stationid => '407', fetchid => 'francemusique_evenementielle', region => '', tuneinid => 's306575', notexcludable => true, match1 => 'francemusiquelabo', match2 => '' }, 
 	fmopera => { fullname => 'France Musique Opéra', stationid => '409', fetchid => 'francemusique_opera', region => '', tuneinid => '', notexcludable => true, match1 => 'francemusiqueopera', match2 => '' },
+	fmpianozen => { fullname => 'France Musique Piano Zen', stationid => '410', fetchid => 'radio-piano-zen', region => '', tuneinid => '', notexcludable => true, match1 => 'francemusiquepianozen', match2 => '' },
 
 	mouv => { fullname => 'Mouv\'', stationid => '6', fetchid => 'mouv', region => '', tuneinid => 's6597', notexcludable => true, match1 => 'mouv', match2 => '', ondemandurl => $radiofrancescheuleurl, ondemandheaders => \%radiofranceapiondemandheaderset, artfromuid => true },
 	mouvxtra => { fullname => 'Mouv\' Xtra', stationid => '75', fetchid => '', region => '', tuneinid => '', notexcludable => true, match1 => 'mouvxtra', match2 => '' },
@@ -320,6 +324,7 @@ my $urls = {
 # finished July 2023 - fmopera => 'https://api.radiofrance.fr/livemeta/live/${stationid}/inter_player',
 	fmopera => $type4prefix.'${fetchid}'.$type4suffix,
 	# fmopera_alt => $type3prefix1fip.'${stationid}'.$type3prefix2fip.$type3suffixfip,
+	fmpianozen => $type5prefix.'${fetchid}'.$type5suffix,
 	
 # finished December 2020 - mouv => 'https://api.radiofrance.fr/livemeta/pull/${stationid}',
 # finished July 2023 - 	mouv => 'https://api.radiofrance.fr/livemeta/live/${stationid}/inter_player',
@@ -497,6 +502,7 @@ my $icons = {
 	#fmevenementielle => 'https://cdn.radiofrance.fr/s3/cruiser-production/2017/06/d2ac7a26-843d-4f0c-a497-8ddf6f3b2f0f/200x200_fmwebbotout.jpg',
 	fmlabo => 'https://www.radiofrance.fr/s3/cruiser-production/2023/05/4f0b91f5-d507-4924-b3c2-518a9c087aec/300x300_sc_musique-de-films.jpg',
 	fmopera => 'https://cdn.radiofrance.fr/s3/cruiser-production/2020/10/c1fb2b03-5c04-42c9-b415-d56e4c61dcd9/fm-opera-webradio2x.png',
+	fmpianozen => 'https://www.radiofrance.fr/s3/cruiser-production-eu3/2024/02/2ed60106-b535-4949-8a40-5636bb0d9979/300x300_sc_fm_webradios_pianozen_1400x1400.jpg',
 	
 	#mouv => 'https://www.radiofrance.fr/sites/default/files/styles/format_16_9/public/2019-08/logo_mouv_bloc_c.png.jpeg',
 	mouv => 'http://oblique.radiofrance.fr/files/charte/logos/png600/Mouv.png',
@@ -675,7 +681,7 @@ foreach my $metakey (keys(%$stationSet)){
 # [ { "name": "banner", "visual_uuid": "4256a1da-f202-4cfa-8c0b-db0fb846da66" },
 #   { "name": "concept_visual", "visual_uuid": "aeb5db31-ea32-4149-8106-bc66c3ab26b7" } ]
 
-my @coverFieldsArr = ( 'cover', 'visual', 'coverUuid', 'visualBanner', 'mainImage', '@name|square_banner|visual_uuid',
+my @coverFieldsArr = ( 'cover|src', 'cover', 'visual', 'coverUuid', 'visualBanner', 'mainImage', '@name|square_banner|visual_uuid',
 					   '@name|banner|visual_uuid', '@name|concept_visual|visual_uuid', 'src', 'cardVisual|src', 'visuals|player|src' );
 
 
@@ -1051,7 +1057,8 @@ sub getcover {
 			}
 		} elsif ( !defined $field3 ) {
 			if ( ref($playinginfo) ne "ARRAY" && exists $playinginfo->{$field1} && defined($playinginfo->{$field1}) && $playinginfo->{$field1} ne '' && 
-			     exists $playinginfo->{$field1}->{$field2} && defined($playinginfo->{$field1}->{$field2}) && $playinginfo->{$field1}->{$field2} ne ''){
+			     ref($playinginfo->{$field1}) eq 'HASH' && exists $playinginfo->{$field1}->{$field2} && defined($playinginfo->{$field1}->{$field2}) && ref($playinginfo->{$field1}->{$field2}) ne 'HASH' && 
+				 $playinginfo->{$field1}->{$field2} ne ''){
 				$thisartwork = $playinginfo->{$field1}->{$field2};
 				last;
 			}
@@ -1075,8 +1082,10 @@ sub getcover {
 				if ( ref($playinginfo) eq "HASH" && exists $playinginfo->{$field1} && 
 				     ref($playinginfo->{$field1}) eq "HASH" && defined($playinginfo->{$field1}) && $playinginfo->{$field1} ne '' &&
 				     # $playinginfo->{$field1} eq $field2 &&
-					 exists $playinginfo->{$field1}->{$field2} && defined($playinginfo->{$field1}->{$field2}) && $playinginfo->{$field1}->{$field2} ne '' &&
-				     exists $playinginfo->{$field1}->{$field2}->{$field3} && defined($playinginfo->{$field1}->{$field2}->{$field3}) && $playinginfo->{$field1}->{$field2}->{$field3} ne ''){
+					 exists $playinginfo->{$field1}->{$field2} && defined($playinginfo->{$field1}->{$field2}) && 
+					 ref($playinginfo->{$field1}->{$field2}) eq 'HASH' && $playinginfo->{$field1}->{$field2} ne '' &&
+				     exists $playinginfo->{$field1}->{$field2}->{$field3} && defined($playinginfo->{$field1}->{$field2}->{$field3}) && 
+					 ref($playinginfo->{$field1}->{$field2}->{$field3}) ne 'HASH' && $playinginfo->{$field1}->{$field2}->{$field3} ne ''){
 					$thisartwork = $playinginfo->{$field1}->{$field2}->{$field3};
 					last;
 				}
@@ -3475,7 +3484,7 @@ sub parseContent {
 							# "bitrate": 0
 						# },
 						# {
-							# "url": "https://icecast.radiofrance.fr/fiphiphop-hifi.aac?id=radiofrance",
+							# "url": "http://icecast.radiofrance.fr/fiphiphop-hifi.aac?id=radiofrance",
 							# "broadcastType": "live",
 							# "format": "aac",
 							# "bitrate": 192
@@ -5375,6 +5384,30 @@ sub toplevel {
 								type	=> 'audio',
 								icon	=> $icons->{fmlacontemporaine},
 								url	=> 'http://icecast.radiofrance.fr/francemusiquelacontemporaine-midfi.mp3',
+								on_select	=> 'play'
+							},
+						]
+					},{
+						name	=> 'Piano Zen',
+						image	=> $icons->{fmpianozen},
+						items	=> [
+							{
+								name	=> 'France Musique Piano Zen (HLS)',
+								type	=> 'audio',
+								icon	=> $icons->{fmpianozen},
+								url	=> 'https://stream.radiofrance.fr/francemusiquepianozen/francemusiquepianozen.m3u8',
+								on_select	=> 'play'
+							},{
+								name	=> 'France Musique Piano Zen (AAC)',
+								type	=> 'audio',
+								icon	=> $icons->{fmpianozen},
+								url => 'http://icecast.radiofrance.fr/francemusiquepianozen-hifi.aac',
+								on_select	=> 'play'
+							},{
+								name	=> 'France Musique Piano Zen (MP3)',
+								type	=> 'audio',
+								icon	=> $icons->{fmpianozen},
+								url	=> 'http://icecast.radiofrance.fr/francemusiquepianozen-midfi.mp3',
 								on_select	=> 'play'
 							},
 						]
