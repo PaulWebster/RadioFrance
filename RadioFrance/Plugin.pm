@@ -157,7 +157,7 @@ my $stationSet = { # Take extra care if pasting in from external spreadsheet ...
 	franceinter => { fullname => 'France Inter', stationid => '1', fetchid => '', region => '', tuneinid => 's24875', notexcludable => false, match1 => 'franceinter', match2 => '', ondemandurl => $radiofrancescheuleurl, ondemandheaders => \%radiofranceapiondemandheaderset },
 	franceinfo => { fullname => 'France Info', stationid => '2', fetchid => '', region => '', tuneinid => 's9948', notexcludable => false, match1 => 'franceinfo', match2 => '', ondemandurl => $radiofrancescheuleurl, ondemandheaders => \%radiofranceapiondemandheaderset, artfromuid => true },
 	francemusique => { fullname => 'France Musique', stationid => '4', fetchid => 'francemusique', region => '', tuneinid => 's15198', notexcludable => false, match1 => 'francemusique', match2 => '', ondemandurl => $radiofrancescheuleurl, ondemandheaders => \%radiofranceapiondemandheaderset, individualprogurl => ['https://www.radiofrance.fr/api/v1.7/path?value=${progpath}', 'https://www.radiofrance.fr/api/v1.7/stations/francemusique/songs?pageCursor=Mg%3D%3D&startDate=${progstart}&endDate=${progend}&isPad=false'] },
-	franceculture => { fullname => 'France Culture', stationid => '5', fetchid => '', region => '', tuneinid => 's2442', notexcludable => false, match1 => 'franceculture', match2 => '', ondemandurl => $radiofrancescheuleurl, ondemandheaders => \%radiofranceapiondemandheaderset, artfromuid => true },
+	franceculture => { fullname => 'France Culture', stationid => '5', fetchid => 'franceculture', region => '', tuneinid => 's2442', notexcludable => false, match1 => 'franceculture', match2 => '', ondemandurl => $radiofrancescheuleurl, ondemandheaders => \%radiofranceapiondemandheaderset, artfromuid => true },
 
 	fbalsace => { fullname => 'France Bleu Alsace', stationid => '12', fetchid => '', region => '', tuneinid => 's2992', notexcludable => false, match1 => 'fbalsace', match2 => '', scheduleurl => '', artfromuid => true },
 	fbarmorique => { fullname => 'France Bleu Armorique', stationid => '13', fetchid => '', region => '', tuneinid => 's25492', notexcludable => false, match1 => 'fbarmorique', match2 => '', scheduleurl => '', artfromuid => true },
@@ -366,7 +366,8 @@ my $urls = {
 	#francemusique_alt => $type3prefix1fip.'${stationid}'.$type3prefix2fip.$type3suffixfip,
 # finished December 2020 - franceculture => 'https://api.radiofrance.fr/livemeta/pull/${stationid}',
 # Removed July 2023 - franceculture => 'https://api.radiofrance.fr/livemeta/live/${stationid}/inter_player',
-	franceculture => 'https://www.radiofrance.fr/api/v2.1/stations/franceculture/live',
+# retired Mar-2024 - franceculture => 'https://www.radiofrance.fr/api/v2.1/stations/franceculture/live',
+	franceculture => $type4prefix.'${fetchid}'.$type4suffix,
 	#franceculture_alt => $type3prefix1fip.'${stationid}'.$type3prefix2fip.$type3suffixfip,
 	
 	# Limited song data from France Bleu stations

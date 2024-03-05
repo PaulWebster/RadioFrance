@@ -72,6 +72,9 @@ Note: Radio France does not always provide track information in a timely manner 
 
 ## Version History
 
+**0.4.10 04-Mar-2024**
+- For France Culture - metadata source changed
+
 **0.4.9 01-Mar-2024**
 - Add France Musique Piano Zen
 
