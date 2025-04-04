@@ -68,7 +68,7 @@ my $prefs = preferences('plugin.'.$pluginName);
 
 use constant cacheTTL => 20;
 use constant maxSongLth => 900;		# Assumed maximum song length in seconds - if appears longer then no duration shown
-use constant maxShowLth => 7200;	# Assumed maximum programme length in seconds - if appears longer then no duration shown
+use constant maxShowLth => 14400;	# Assumed maximum programme length in seconds - if appears longer then no duration shown
 					# because might be a problem with the data
 					# Having no duration should mean earlier call back to try again
 					
@@ -94,11 +94,33 @@ my $type3suffixfip = '&extensions=%7B%22persistedQuery%22%3A%7B%22version%22%3A1
 # Example https://www.radiofrance.fr/api/v1.9/stations/fip/webradios/fip_hiphop
 # my $type4prefix = 'https://www.radiofrance.fr/api/v1.9/stations/fip/webradios/';
 # until Oct-2023 - my $type4prefix = 'https://www.radiofrance.fr/api/v2.1/stations/fip/live/webradios/';
-my $type4prefix = 'https://www.radiofrance.fr/fip/api/live/webradios/';
+# until Nov-2024 - my $type4prefix = 'https://www.radiofrance.fr/fip/api/live/webradios/';
+my $type4prefix = 'https://www.radiofrance.fr/fip/api/live?webradio=';
 my $type4suffix = '';
 
 my $type5prefix = 'https://www.radiofrance.fr/francemusique/';
 my $type5suffix = '/api/webradio';
+
+# until Nov-2024 - my $type6prefix = 'https://www.radiofrance.fr/francebleu/';
+# until Nov-2024 - my $type6suffix = '/api/webradio';
+my $type6prefix = 'https://www.radiofrance.fr/francebleu/api/live?webradio=';
+my $type6suffix = '';
+
+my $type7prefix = 'https://www.radiofrance.fr/franceinter/api/live?webradio=';
+my $type7suffix = '';
+
+my $type8prefix = 'https://www.radiofrance.fr/fip/api/live?';
+my $type8suffix = '';
+
+my $type9prefix = 'https://www.radiofrance.fr/fip/api/live?webradio=';
+my $type9suffix = '';
+
+my $type10prefix = 'https://api.radiofrance.fr/livemeta/live/';
+my $type10suffix = '/inter_player';
+my $type10asuffix = '/new_apprf_bleu';	# special for Frabce Blue (ici)
+
+my $type11prefix = 'https://www.francebleu.fr/api/live-locale/';
+my $type11suffix = '';
 
 my $radiofrancescheuleurl = 'https://api.radiofrance.fr/v1/stations/${stationid}/steps?filter[depth]=1&filter[start-time]=${datestring}T00:00&filter[end-time]=${datestring}T23:59&fields[shows]=title,visuals,stationId,mainImage&fields[diffusions]=title,startTime,endTime,mainImage,visuals,stationId&include=diffusion&include=show&include=diffusion.manifestations&include=diffusion.station&include=children-steps&include=children-steps.show&include=children-steps.diffusion&include=children-steps.diffusion.manifestations';
 my %radiofranceapiondemandheaderset = ( 'x-token' => '0cbe991e-18ac-4635-ad7f-773257c63797' );	# token as used by Radio France web interface
@@ -115,8 +137,100 @@ my $progInfoSuffix = '';
 
 my $progDetailsURL = '';
 
+# note - not used much (if at all) in this plugin but imported from Radio Now Playing to aid re-use of routines
+my $globalSettings = {
+	coversearchurl => 'http://www.dabdig.co.uk/coversearch/coversearch.php?station=${stationname}&stationid=${externalstationid}&artist=${songartist}&track=${songtitle}&album=${songalbum}&label=${songlabel}&year=${songyear}&trackid=${trackid}&ver=${pluginname}-${pluginversion}',
+	coverignoreextension => false,
+	assumeutf => false,
+	timetextaltregex => '^(?<mth>[0-3][0-9])-(?<day>[0-9][0-9])-(?<year>[0-9][0-9][0-9][0-9]) (?<hour>[0-2][0-9]):(?<min>[0-5][0-9]):(?<sec>[0-5][0-9])',	# A US date/time format
+	songpost => 'none',
+	songpost_alt => 'none',
+	progpost => 'none',
+	progpost_alt => 'none',
+	songListPerStation => true,
+	songmatch => false,
+	songdataurl => '',
+	addcomposer => false,
+	coverencode => false,
+	mustsplit => false,
+	artistregexmandatory => false,
+	titleregexmandatory => false,
+	albumregexmandatory => false,
+	labelregexmandatory => false,
+	trackidregexmandatory => false,
+	durationregexmandatory => false,
+	progtitleregexmandatory => false,
+	progsubtitleregexmandatory => false,
+	coverpathabsolute => false,
+	progiconpathabsolute => false,
+	autoregister => false,		# do not risk setting to true because it could change all station matches
+	autoregisterwithoutwildcard => false,	# use this to change the behaviour of url registration for autoregister broadcasters - true stops .* which reduces false matches
+	stationautoreg => true,
+	stationmetaurl => '',
+	maxstringlth => {
+		songartist => 255,
+		songtitle => 255,
+		songcomposer => 255,
+		songalbum => 255,
+		songlabel => 127,
+		trackid => 32,
+		progtitle => 255,
+		progsubtitle => 255,
+		progsynopsis => 255,
+		stationdesc => 511
+	},
+	httpversion => 'HTTP/1.0',
+	ignoresongifsameasprog => false,	# usually ignore prog if same as song so this can be used to reverse it
+	titleseparator => ' ',
+	progtitleseparator => ' ',
+	progsubtitleseparator => ' ',
+	datetimeseparator => ' ',
+	imageproxyservice => true,
+	forceimageproxyforicon => false,
+	allowzeroduration => false,
+	defaultsonglth => 0,
+	forcecaps => false,
+	broadcasterfetchinthrs => 24,
+	accesstoken => '',
+	exactmatchurl => false,		# try to match full stream URL without regex
+	xmlspecialkeys => false,
+	removeonnosong => false,
+	progunsorted => false,		# provided programme list is known to be unsorted
+	songunsorted => false,		# provided song list is known to be unsorted
+	proglistperstation => true,
+	broadcasterpost => 'none',
+	e24notsimulcast => false, 	# special for KCRW Elecectic24 overnight simulcast
+	showsearchmenu => false,
+	songendtolerance => 30,
+	tracelevel => 0
+};
+
+my $provider = 'radiofrance';
+# broadcasterSet contains information about "brands" or subsets of stations
+# Generated from external json/xml file - left here as a documentation aid but external file is the master
+# novafr => {name => 'Nova France',
+		# icon => 'https://www.nova.fr/wp-content/uploads/sites/2/2020/10/NOVA_CARD_HD.png?w=450&quality=100',
+		# brands => [ { name => 'Nova France', 
+			      # icon => 'https://www.nova.fr/wp-content/uploads/sites/2/2020/10/NOVA_CARD_HD.png?w=450&quality=100',
+			      # id => 'novafr'
+			    # }
+			  # ],
+		# timezone => { area => 'Europe', location => 'Paris' },
+		# timezonereturn => {},
+		# },
+my $broadcasterSet = {
+	dummy => { name => 'dummy',	# No name means not a real broadcaster but needed something present for other code to work transparently
+		   timezonereturn => {}, },
+	radiofrance => {
+		name => 'Radio France',
+		artistsignoreregex => '(^| )(ici|France)(\W|$)',		# try to ignore "ici" stations guessed songs where it is really a sub-section of a programme
+		timezonereturn => {},
+	}
+};
+
+
 my $stationSet = { # Take extra care if pasting in from external spreadsheet ... station name with single quote, TuneIn ids, longer match1 for duplicate
-	fipradio => { fullname => 'FIP', stationid => '7', fetchid => 'fip', region => '', tuneinid => 's15200', notexcludable => true, match1 => '', match2 => 'fip', ondemandurl => $radiofrancescheuleurl, ondemandheaders => \%radiofranceapiondemandheaderset },
+	fipradio => { fullname => 'FIP', stationid => '7', fetchid => 'fip', region => '', tuneinid => 's15200', notexcludable => true, match1 => '', match2 => 'fip', ondemandurl => $radiofrancescheuleurl, ondemandheaders => \%radiofranceapiondemandheaderset, guesssong => true },
 	fipbordeaux => { fullname => 'FIP Bordeaux', stationid => '7', fetchid => 'fip', region => '', tuneinid => 's50706', notexcludable => true, match1 => 'fipbordeaux', match2 => '' },
 	fipnantes => { fullname => 'FIP Nantes', stationid => '7', fetchid => 'fip', region => '', tuneinid => 's50770', notexcludable => true, match1 => 'fipnantes', match2 => '' },
 	fipstrasbourg => { fullname => 'FIP Strasbourg', stationid => '7', fetchid => 'fip', region => '', tuneinid => 's111944', notexcludable => true, match1 => 'fipstrasbourg', match2 => '' },
@@ -142,7 +256,7 @@ my $stationSet = { # Take extra care if pasting in from external spreadsheet ...
 	#fmevenementielle => { fullname => 'France Musique Evenementielle', stationid => '407', fetchid => 'francemusique_evenementielle', region => '', tuneinid => 's285660&|id=s306575', notexcludable => true, match1 => 'francemusiquelevenementielle', match2 => '' }, # Special case ... 2 TuneIn Id
 	fmlabo => { fullname => 'France Musique Films', stationid => '407', fetchid => 'francemusique_evenementielle', region => '', tuneinid => 's306575', notexcludable => true, match1 => 'francemusiquelabo', match2 => '' }, 
 	fmopera => { fullname => 'France Musique Opéra', stationid => '409', fetchid => 'francemusique_opera', region => '', tuneinid => '', notexcludable => true, match1 => 'francemusiqueopera', match2 => '' },
-	fmpianozen => { fullname => 'France Musique Piano Zen', stationid => '410', fetchid => 'radio-piano-zen', region => '', tuneinid => '', notexcludable => true, match1 => 'francemusiquepianozen', match2 => '' },
+	fmpianozen => { fullname => 'France Musique Piano Zen', stationid => '410', fetchid => 'francemusique_piano_zen', region => '', tuneinid => '', notexcludable => true, match1 => 'francemusiquepianozen', match2 => '' },
 
 	mouv => { fullname => 'Mouv\'', stationid => '6', fetchid => 'mouv', region => '', tuneinid => 's6597', notexcludable => true, match1 => 'mouv', match2 => '', ondemandurl => $radiofrancescheuleurl, ondemandheaders => \%radiofranceapiondemandheaderset, artfromuid => true },
 	mouvxtra => { fullname => 'Mouv\' Xtra', stationid => '75', fetchid => '', region => '', tuneinid => '', notexcludable => true, match1 => 'mouvxtra', match2 => '' },
@@ -153,57 +267,62 @@ my $stationSet = { # Take extra care if pasting in from external spreadsheet ...
 	mouvrapfr => { fullname => 'Mouv\' RAP Français', stationid => '605', fetchid => 'mouv_rapfr', region => '', tuneinid => 's307693', notexcludable => true, match1 => 'mouvrapfr', match2 => '' },
 	mouvkidsnfamily => { fullname => 'Mouv\' Kids\'n Family', stationid => '606', fetchid => 'mouv_kids_n_family', region => '', tuneinid => '', notexcludable => true, match1 => 'mouvkidsnfamily', match2 => '' },
 	mouv100mix => { fullname => 'Mouv\' 100\% Mix', stationid => '75', fetchid => 'mouv_100mix', region => '', tuneinid => 's244069', notexcludable => true, match1 => 'mouv100p100mix', match2 => '' },
+	mouvsansblabla => { fullname => 'Mouv\' Sans Blabla', stationid => 'mouvsansblabla', fetchid => 'mouv_sans_blabla', region => '', tuneinid => '', notexcludable => true, match1 => 'mouvsansblabla', match2 => '' },
 
 	franceinter => { fullname => 'France Inter', stationid => '1', fetchid => '', region => '', tuneinid => 's24875', notexcludable => false, match1 => 'franceinter', match2 => '', ondemandurl => $radiofrancescheuleurl, ondemandheaders => \%radiofranceapiondemandheaderset },
+	franceinterlamusiqueinter => { fullname => 'La Musique d\'Inter', stationid => 'la-musique-inter', fetchid => 'franceinter_la_musique_inter', region => '', tuneinid => '', notexcludable => false, match1 => 'franceinterlamusiqueinter', match2 => '', scheduleurl => '', artfromuid => true },
+
 	franceinfo => { fullname => 'France Info', stationid => '2', fetchid => '', region => '', tuneinid => 's9948', notexcludable => false, match1 => 'franceinfo', match2 => '', ondemandurl => $radiofrancescheuleurl, ondemandheaders => \%radiofranceapiondemandheaderset, artfromuid => true },
 	francemusique => { fullname => 'France Musique', stationid => '4', fetchid => 'francemusique', region => '', tuneinid => 's15198', notexcludable => false, match1 => 'francemusique', match2 => '', ondemandurl => $radiofrancescheuleurl, ondemandheaders => \%radiofranceapiondemandheaderset, individualprogurl => ['https://www.radiofrance.fr/api/v1.7/path?value=${progpath}', 'https://www.radiofrance.fr/api/v1.7/stations/francemusique/songs?pageCursor=Mg%3D%3D&startDate=${progstart}&endDate=${progend}&isPad=false'] },
 	franceculture => { fullname => 'France Culture', stationid => '5', fetchid => 'franceculture', region => '', tuneinid => 's2442', notexcludable => false, match1 => 'franceculture', match2 => '', ondemandurl => $radiofrancescheuleurl, ondemandheaders => \%radiofranceapiondemandheaderset, artfromuid => true },
 
-	fbalsace => { fullname => 'France Bleu Alsace', stationid => '12', fetchid => '', region => '', tuneinid => 's2992', notexcludable => false, match1 => 'fbalsace', match2 => '', scheduleurl => '', artfromuid => true },
-	fbarmorique => { fullname => 'France Bleu Armorique', stationid => '13', fetchid => '', region => '', tuneinid => 's25492', notexcludable => false, match1 => 'fbarmorique', match2 => '', scheduleurl => '', artfromuid => true },
-	fbauxerre => { fullname => 'France Bleu Auxerre', stationid => '14', fetchid => '', region => '', tuneinid => 's47473', notexcludable => false, match1 => 'fbauxerre', match2 => '', scheduleurl => '', artfromuid => true },
-	fbazur => { fullname => 'France Bleu Azur', stationid => '49', fetchid => '', region => '', tuneinid => 's45035', notexcludable => false, match1 => 'fbazur', match2 => '', scheduleurl => '', artfromuid => true },
-	fbbearn => { fullname => 'France Bleu Béarn', stationid => '15', fetchid => '', region => '', tuneinid => 's48291', notexcludable => false, match1 => 'fbbearn', match2 => '', scheduleurl => '', artfromuid => true },
-	fbbelfort => { fullname => 'France Bleu Belfort-Montbéliard', stationid => '16', fetchid => '', region => '', tuneinid => 's25493', notexcludable => false, match1 => 'fbbelfort', match2 => '', scheduleurl => '', artfromuid => true },
-	fbberry => { fullname => 'France Bleu Berry', stationid => '17', fetchid => '', region => '', tuneinid => 's48650', notexcludable => false, match1 => 'fbberry', match2 => '', scheduleurl => '', artfromuid => true },
-	fbbesancon => { fullname => 'France Bleu Besançon', stationid => '18', fetchid => '', region => '', tuneinid => 's48652', notexcludable => false, match1 => 'fbbesancon', match2 => '', scheduleurl => '', artfromuid => true },
-	fbbourgogne => { fullname => 'France Bleu Bourgogne', stationid => '19', fetchid => '', region => '', tuneinid => 's36092', notexcludable => false, match1 => 'fbbourgogne', match2 => '', scheduleurl => '', artfromuid => true },
-	fbbreizhizel => { fullname => 'France Bleu Breizh Izel', stationid => '20', fetchid => '', region => '', tuneinid => 's25494', notexcludable => false, match1 => 'fbbreizizel', match2 => '', scheduleurl => '', artfromuid => true },
-	fbchampagne => { fullname => 'France Bleu Champagne-Ardenne', stationid => '21', fetchid => '', region => '', tuneinid => 's47472', notexcludable => false, match1 => 'fbchampagne', match2 => '', scheduleurl => '', artfromuid => true },
-	fbcotentin => { fullname => 'France Bleu Cotentin', stationid => '37', fetchid => '', region => '', tuneinid => 's36093', notexcludable => false, match1 => 'fbcotentin', match2 => '', scheduleurl => '', artfromuid => true },
-	fbcreuse => { fullname => 'France Bleu Creuse', stationid => '23', fetchid => '', region => '', tuneinid => 's2997', notexcludable => false, match1 => 'fbcreuse', match2 => '', scheduleurl => '', artfromuid => true },
-	fbdromeardeche => { fullname => 'France Bleu Drôme Ardèche', stationid => '24', fetchid => '', region => '', tuneinid => 's48657', notexcludable => false, match1 => 'fbdromeardeche', match2 => '', scheduleurl => '', artfromuid => true },
-	fbelsass => { fullname => 'France Bleu Elsass', stationid => '90', fetchid => '', region => '', tuneinid => 's74418', notexcludable => false, match1 => 'fbelsass', match2 => '', scheduleurl => '', artfromuid => true },
-	fbgardlozere => { fullname => 'France Bleu Gard Lozère', stationid => '25', fetchid => '', region => '', tuneinid => 's36094', notexcludable => false, match1 => 'fbgardlozere', match2 => '', scheduleurl => '', artfromuid => true },
-	fbgascogne => { fullname => 'France Bleu Gascogne', stationid => '26', fetchid => '', region => '', tuneinid => 's47470', notexcludable => false, match1 => 'fbgascogne', match2 => '', scheduleurl => '', artfromuid => true },
-	fbgironde => { fullname => 'France Bleu Gironde', stationid => '27', fetchid => '', region => '', tuneinid => 's48659', notexcludable => false, match1 => 'fbgironde', match2 => '', scheduleurl => '', artfromuid => true },
-	fbherault => { fullname => 'France Bleu Hérault', stationid => '28', fetchid => '', region => '', tuneinid => 's48665', notexcludable => false, match1 => 'fbherault', match2 => '', scheduleurl => '', artfromuid => true },
-	fbisere => { fullname => 'France Bleu Isère', stationid => '29', fetchid => '', region => '', tuneinid => 's20328', notexcludable => false, match1 => 'fbisere', match2 => '', scheduleurl => '', artfromuid => true },
-	fblarochelle => { fullname => 'France Bleu La Rochelle', stationid => '30', fetchid => '', region => '', tuneinid => 's48669', notexcludable => false, match1 => 'fblarochelle', match2 => '', ondemandurl => $radiofrancescheuleurl, ondemandheaders => \%radiofranceapiondemandheaderset, artfromuid => true },  #Possible alternate for schedule https://www.francebleu.fr/grid/la-rochelle/${unixtime}
-	fblimousin => { fullname => 'France Bleu Limousin', stationid => '31', fetchid => '', region => '', tuneinid => 's48670', notexcludable => false, match1 => 'fblimousin', match2 => '', scheduleurl => '', artfromuid => true },
-	fbloireocean => { fullname => 'France Bleu Loire Océan', stationid => '32', fetchid => '', region => '', tuneinid => 's36096', notexcludable => false, match1 => 'fbloireocean', match2 => '', scheduleurl => '', artfromuid => true },
-	fblorrainenord => { fullname => 'France Bleu Lorraine Nord', stationid => '50', fetchid => '', region => '', tuneinid => 's48672', notexcludable => false, match1 => 'fblorrainenord', match2 => '', scheduleurl => '', artfromuid => true },
-	fbmaine => { fullname => 'France Bleu Maine', stationid => '91', fetchid => '', region => '', tuneinid => 's127941', notexcludable => false, match1 => 'fbmaine', match2 => '', scheduleurl => '', artfromuid => true },
-	fbmayenne => { fullname => 'France Bleu Mayenne', stationid => '34', fetchid => '', region => '', tuneinid => 's48673', notexcludable => false, match1 => 'fbmayenne', match2 => '', scheduleurl => '', artfromuid => true },
-	fbnord => { fullname => 'France Bleu Nord', stationid => '36', fetchid => '', region => '', tuneinid => 's44237', notexcludable => false, match1 => 'fbnord', match2 => '', scheduleurl => '', artfromuid => true },
-	fbbassenormandie => { fullname => 'France Bleu Normandie (Calvados - Orne)', stationid => '22', fetchid => '', region => '', tuneinid => 's48290', notexcludable => false, match1 => 'fbbassenormandie', match2 => '', scheduleurl => '', artfromuid => true },
-	fbhautenormandie => { fullname => 'France Bleu Normandie (Seine-Maritime - Eure)', stationid => '38', fetchid => '', region => '', tuneinid => 's222667', notexcludable => false, match1 => 'fbhautenormandie', match2 => '', scheduleurl => '', artfromuid => true },
-	fbtoulouse => { fullname => 'France Bleu Occitanie', stationid => '92', fetchid => '', region => '', tuneinid => 's50669', notexcludable => false, match1 => 'fbtoulouse', match2 => '', scheduleurl => '', artfromuid => true },
-	fborleans => { fullname => 'France Bleu Orléans', stationid => '39', fetchid => '', region => '', tuneinid => 's1335', notexcludable => false, match1 => 'fborleans', match2 => '', scheduleurl => '', artfromuid => true },
-	fbparis => { fullname => 'France Bleu Paris', stationid => '68', fetchid => '', region => '', tuneinid => 's52972', notexcludable => false, match1 => 'fb1071', match2 => '', scheduleurl => '', artfromuid => true },
-	fbpaysbasque => { fullname => 'France Bleu Pays Basque', stationid => '41', fetchid => '', region => '', tuneinid => 's48682', notexcludable => false, match1 => 'fbpaysbasque', match2 => '', scheduleurl => '', artfromuid => true },
-	fbpaysdauvergne => { fullname => 'France Bleu Pays d&#039;Auvergne', stationid => '40', fetchid => '', region => '', tuneinid => 's48683', notexcludable => false, match1 => 'fbpaysdauvergne', match2 => '', scheduleurl => '', artfromuid => true },
-	fbpaysdesavoie => { fullname => 'France Bleu Pays de Savoie', stationid => '42', fetchid => '', region => '', tuneinid => 's45038', notexcludable => false, match1 => 'fbpaysdesavoie', match2 => '', scheduleurl => '', artfromuid => true },
-	fbperigord => { fullname => 'France Bleu Périgord', stationid => '43', fetchid => '', region => '', tuneinid => 's2481', notexcludable => false, match1 => 'fbperigord', match2 => '', scheduleurl => '', artfromuid => true },
-	fbpicardie => { fullname => 'France Bleu Picardie', stationid => '44', fetchid => '', region => '', tuneinid => 's25497', notexcludable => false, match1 => 'fbpicardie', match2 => '', scheduleurl => '', artfromuid => true },
-	fbpoitou => { fullname => 'France Bleu Poitou', stationid => '54', fetchid => '', region => '', tuneinid => 's47471', notexcludable => false, match1 => 'fbpoitou', match2 => '', scheduleurl => '', artfromuid => true },
-	fbprovence => { fullname => 'France Bleu Provence', stationid => '45', fetchid => '', region => '', tuneinid => 's1429', notexcludable => false, match1 => 'fbprovence', match2 => '', scheduleurl => '', artfromuid => true },
-	fbrcfm => { fullname => 'France Bleu RCFM', stationid => '11', fetchid => '', region => '', tuneinid => 's48656', notexcludable => false, match1 => 'fbfrequenzamora', match2 => '', scheduleurl => '', artfromuid => true },
-	fbroussillon => { fullname => 'France Bleu Roussillon', stationid => '46', fetchid => '', region => '', tuneinid => 's48689', notexcludable => false, match1 => 'fbroussillon', match2 => '', scheduleurl => '', artfromuid => true },
-	fbsaintetienneloire => { fullname => 'France Bleu Saint-Étienne Loire', stationid => '93', fetchid => '', region => '', tuneinid => 's212244', notexcludable => false, match1 => 'fbstetienne', match2 => '', scheduleurl => '', artfromuid => true },
-	fbsudlorraine => { fullname => 'France Bleu Sud Lorraine', stationid => '33', fetchid => '', region => '', tuneinid => 's45039', notexcludable => false, match1 => 'fbsudlorraine', match2 => '', scheduleurl => '', artfromuid => true },
-	fbtouraine => { fullname => 'France Bleu Touraine', stationid => '47', fetchid => '', region => '', tuneinid => 's48694', notexcludable => false, match1 => 'fbtouraine', match2 => '', scheduleurl => '', artfromuid => true },
-	fbvaucluse => { fullname => 'France Bleu Vaucluse', stationid => '48', fetchid => '', region => '', tuneinid => 's47474', notexcludable => false, match1 => 'fbvaucluse', match2 => '', scheduleurl => '', artfromuid => true },
+	# until Nov-2024 - fb100chanson => { fullname => 'France Bleu 100% Chanson Française', stationid => 'fbchansonfrancaise', fetchid => 'chanson-francaise', region => '', tuneinid => '', notexcludable => false, match1 => 'fbchansonfrancaise', match2 => '', scheduleurl => '', artfromuid => true },
+	fb100chanson => { fullname => 'ici 100% Chanson Française', stationid => 'fbchansonfrancaise', fetchid => 'francebleu_chanson_francaise', region => '', tuneinid => '', notexcludable => false, match1 => 'fbchansonfrancaise', match2 => '', scheduleurl => '', artfromuid => true },
+	fbalsace => { fullname => 'ici Alsace', stationid => '12', fetchid => 'alsace', region => '', tuneinid => 's2992', notexcludable => false, match1 => 'fbalsace', match2 => '', scheduleurl => '', artfromuid => true, guesssong => true },
+	fbarmorique => { fullname => 'ici Armorique', stationid => '13', fetchid => 'armorique', region => '', tuneinid => 's25492', notexcludable => false, match1 => 'fbarmorique', match2 => '', scheduleurl => '', artfromuid => true, guesssong => true },
+	fbauxerre => { fullname => 'ici Auxerre', stationid => '14', fetchid => 'auxerre', region => '', tuneinid => 's47473', notexcludable => false, match1 => 'fbauxerre', match2 => '', scheduleurl => '', artfromuid => true, guesssong => true },
+	fbazur => { fullname => 'ici Azur', stationid => '49', fetchid => 'azur', region => '', tuneinid => 's45035', notexcludable => false, match1 => 'fbazur', match2 => '', scheduleurl => '', artfromuid => true, guesssong => true },
+	fbbearn => { fullname => 'ici Béarn', stationid => '15', fetchid => 'bearn', region => '', tuneinid => 's48291', notexcludable => false, match1 => 'fbbearn', match2 => '', scheduleurl => '', artfromuid => true, guesssong => true },
+	fbbelfort => { fullname => 'ici Belfort-Montbéliard', stationid => '16', fetchid => 'belfort-montbeliard', region => '', tuneinid => 's25493', notexcludable => false, match1 => 'fbbelfort', match2 => '', scheduleurl => '', artfromuid => true, guesssong => true },
+	fbberry => { fullname => 'ici Berry', stationid => '17', fetchid => 'berry', region => '', tuneinid => 's48650', notexcludable => false, match1 => 'fbberry', match2 => '', scheduleurl => '', artfromuid => true, guesssong => true },
+	fbbesancon => { fullname => 'ici Besançon', stationid => '18', fetchid => 'besancon', region => '', tuneinid => 's48652', notexcludable => false, match1 => 'fbbesancon', match2 => '', scheduleurl => '', artfromuid => true, guesssong => true },
+	fbbourgogne => { fullname => 'ici Bourgogne', stationid => '19', fetchid => 'bourgogne', region => '', tuneinid => 's36092', notexcludable => false, match1 => 'fbbourgogne', match2 => '', scheduleurl => '', artfromuid => true, guesssong => true },
+	fbbreizhizel => { fullname => 'ici Breizh Izel', stationid => '20', fetchid => 'breizh-izel', region => '', tuneinid => 's25494', notexcludable => false, match1 => 'fbbreizizel', match2 => '', scheduleurl => '', artfromuid => true, guesssong => true },
+	fbchampagne => { fullname => 'ici Champagne-Ardenne', stationid => '21', fetchid => 'champagne-ardenne', region => '', tuneinid => 's47472', notexcludable => false, match1 => 'fbchampagne', match2 => '', scheduleurl => '', artfromuid => true, guesssong => true },
+	fbcotentin => { fullname => 'ici Cotentin', stationid => '37', fetchid => 'cotentin', region => '', tuneinid => 's36093', notexcludable => false, match1 => 'fbcotentin', match2 => '', scheduleurl => '', artfromuid => true, guesssong => true },
+	fbcreuse => { fullname => 'ici Creuse', stationid => '23', fetchid => 'creuse', region => '', tuneinid => 's2997', notexcludable => false, match1 => 'fbcreuse', match2 => '', scheduleurl => '', artfromuid => true, guesssong => true },
+	fbdromeardeche => { fullname => 'ici Drôme Ardèche', stationid => '24', fetchid => 'drome-ardeche', region => '', tuneinid => 's48657', notexcludable => false, match1 => 'fbdromeardeche', match2 => '', scheduleurl => '', artfromuid => true, guesssong => true },
+	fbelsass => { fullname => 'ici Elsass', stationid => '90', fetchid => 'elsass', region => '', tuneinid => 's74418', notexcludable => false, match1 => 'fbelsass', match2 => '', scheduleurl => '', artfromuid => true, guesssong => true },
+	fbgardlozere => { fullname => 'ici Gard Lozère', stationid => '25', fetchid => 'gard-lozere', region => '', tuneinid => 's36094', notexcludable => false, match1 => 'fbgardlozere', match2 => '', scheduleurl => '', artfromuid => true, guesssong => true },
+	fbgascogne => { fullname => 'ici Gascogne', stationid => '26', fetchid => 'gascogne', region => '', tuneinid => 's47470', notexcludable => false, match1 => 'fbgascogne', match2 => '', scheduleurl => '', artfromuid => true, guesssong => true },
+	fbgironde => { fullname => 'ici Gironde', stationid => '27', fetchid => 'gironde', region => '', tuneinid => 's48659', notexcludable => false, match1 => 'fbgironde', match2 => '', scheduleurl => '', artfromuid => true, guesssong => true },
+	fbherault => { fullname => 'ici Hérault', stationid => '28', fetchid => 'herault', region => '', tuneinid => 's48665', notexcludable => false, match1 => 'fbherault', match2 => '', scheduleurl => '', artfromuid => true, guesssong => true },
+	fbisere => { fullname => 'ici Isère', stationid => '29', fetchid => 'isere', region => '', tuneinid => 's20328', notexcludable => false, match1 => 'fbisere', match2 => '', scheduleurl => '', artfromuid => true, guesssong => true },
+	fblarochelle => { fullname => 'ici La Rochelle', stationid => '30', fetchid => 'la-rochelle', region => '', tuneinid => 's48669', notexcludable => false, match1 => 'fblarochelle', match2 => '', ondemandurl => $radiofrancescheuleurl, ondemandheaders => \%radiofranceapiondemandheaderset, artfromuid => true, guesssong => true },  #Possible alternate for schedule https://www.francebleu.fr/grid/la-rochelle/${unixtime}
+	fblimousin => { fullname => 'ici Limousin', stationid => '31', fetchid => 'limousin', region => '', tuneinid => 's48670', notexcludable => false, match1 => 'fblimousin', match2 => '', scheduleurl => '', artfromuid => true, guesssong => true },
+	fbloireocean => { fullname => 'ici Loire Océan', stationid => '32', fetchid => 'loire-ocean', region => '', tuneinid => 's36096', notexcludable => false, match1 => 'fbloireocean', match2 => '', scheduleurl => '', artfromuid => true, guesssong => true },
+	fblorrainenord => { fullname => 'ici Lorraine Nord', stationid => '50', fetchid => 'lorraine-nord', region => '', tuneinid => 's48672', notexcludable => false, match1 => 'fblorrainenord', match2 => '', scheduleurl => '', artfromuid => true, guesssong => true },
+	fbmaine => { fullname => 'ici Maine', stationid => '91', fetchid => 'maine', region => '', tuneinid => 's127941', notexcludable => false, match1 => 'fbmaine', match2 => '', scheduleurl => '', artfromuid => true, guesssong => true },
+	fbmayenne => { fullname => 'ici Mayenne', stationid => '34', fetchid => 'mayenne', region => '', tuneinid => 's48673', notexcludable => false, match1 => 'fbmayenne', match2 => '', scheduleurl => '', artfromuid => true, guesssong => true },
+	fbnord => { fullname => 'ici Nord', stationid => '36', fetchid => 'nord', region => '', tuneinid => 's44237', notexcludable => false, match1 => 'fbnord', match2 => '', scheduleurl => '', artfromuid => true, guesssong => true },
+	fbbassenormandie => { fullname => 'ici Normandie (Calvados - Orne)', stationid => '22', fetchid => 'normandie-caen', region => '', tuneinid => 's48290', notexcludable => false, match1 => 'fbbassenormandie', match2 => '', scheduleurl => '', artfromuid => true, guesssong => true },
+	fbhautenormandie => { fullname => 'ici Normandie (Seine-Maritime - Eure)', stationid => '38', fetchid => 'normandie-rouen', region => '', tuneinid => 's222667', notexcludable => false, match1 => 'fbhautenormandie', match2 => '', scheduleurl => '', artfromuid => true, guesssong => true },
+	fbtoulouse => { fullname => 'ici Occitanie', stationid => '92', fetchid => 'toulouse', region => '', tuneinid => 's50669', notexcludable => false, match1 => 'fbtoulouse', match2 => '', scheduleurl => '', artfromuid => true, guesssong => true },
+	fborleans => { fullname => 'ici Orléans', stationid => '39', fetchid => 'orleans', region => '', tuneinid => 's1335', notexcludable => false, match1 => 'fborleans', match2 => '', scheduleurl => '', artfromuid => true, guesssong => true },
+	fbparis => { fullname => 'ici Paris Île-de-France', stationid => '68', fetchid => 'paris', region => '', tuneinid => 's52972', notexcludable => false, match1 => 'fb1071', match2 => '', scheduleurl => '', artfromuid => true, guesssong => true },
+	fbpaysbasque => { fullname => 'ici Pays Basque', stationid => '41', fetchid => 'pays-basque', region => '', tuneinid => 's48682', notexcludable => false, match1 => 'fbpaysbasque', match2 => '', scheduleurl => '', artfromuid => true, guesssong => true },
+	fbpaysdauvergne => { fullname => 'ici Pays d&#039;Auvergne', stationid => '40', fetchid => 'pays-d-auvergne', region => '', tuneinid => 's48683', notexcludable => false, match1 => 'fbpaysdauvergne', match2 => '', scheduleurl => '', artfromuid => true, guesssong => true },
+	fbpaysdesavoie => { fullname => 'ici Pays de Savoie', stationid => '42', fetchid => 'pays-de-savoie', region => '', tuneinid => 's45038', notexcludable => false, match1 => 'fbpaysdesavoie', match2 => '', scheduleurl => '', artfromuid => true, guesssong => true },
+	fbperigord => { fullname => 'ici Périgord', stationid => '43', fetchid => 'perigord', region => '', tuneinid => 's2481', notexcludable => false, match1 => 'fbperigord', match2 => '', scheduleurl => '', artfromuid => true, guesssong => true },
+	fbpicardie => { fullname => 'ici Picardie', stationid => '44', fetchid => 'picardie', region => '', tuneinid => 's25497', notexcludable => false, match1 => 'fbpicardie', match2 => '', scheduleurl => '', artfromuid => true, guesssong => true },
+	fbpoitou => { fullname => 'ici Poitou', stationid => '54', fetchid => 'poitou', region => '', tuneinid => 's47471', notexcludable => false, match1 => 'fbpoitou', match2 => '', scheduleurl => '', artfromuid => true, guesssong => true },
+	fbprovence => { fullname => 'ici Provence', stationid => '45', fetchid => 'provence', region => '', tuneinid => 's1429', notexcludable => false, match1 => 'fbprovence', match2 => '', scheduleurl => '', artfromuid => true, guesssong => true },
+	fbrcfm => { fullname => 'ici RCFM', stationid => '11', fetchid => 'rcfm', region => '', tuneinid => 's48656', notexcludable => false, match1 => 'fbfrequenzamora', match2 => '', scheduleurl => '', artfromuid => true, guesssong => true },
+	fbroussillon => { fullname => 'ici Roussillon', stationid => '46', fetchid => 'roussillon', region => '', tuneinid => 's48689', notexcludable => false, match1 => 'fbroussillon', match2 => '', scheduleurl => '', artfromuid => true, guesssong => true },
+	fbsaintetienneloire => { fullname => 'ici Saint-Étienne Loire', stationid => '93', fetchid => 'saint-etienne-loire', region => '', tuneinid => 's212244', notexcludable => false, match1 => 'fbstetienne', match2 => '', scheduleurl => '', artfromuid => true, guesssong => true },
+	fbsudlorraine => { fullname => 'ici Sud Lorraine', stationid => '33', fetchid => 'sud-lorraine', region => '', tuneinid => 's45039', notexcludable => false, match1 => 'fbsudlorraine', match2 => '', scheduleurl => '', artfromuid => true, guesssong => true },
+	fbtouraine => { fullname => 'ici Touraine', stationid => '47', fetchid => 'touraine', region => '', tuneinid => 's48694', notexcludable => false, match1 => 'fbtouraine', match2 => '', scheduleurl => '', artfromuid => true, guesssong => true },
+	fbvaucluse => { fullname => 'ici Vaucluse', stationid => '48', fetchid => 'vaucluse', region => '', tuneinid => 's47474', notexcludable => false, match1 => 'fbvaucluse', match2 => '', scheduleurl => '', artfromuid => true, guesssong => true },
 };
 
 
@@ -238,8 +357,9 @@ my $urls = {
 # finished 1521553005 - 2018-03-20 13:36:45	fipradio_alt => 'http://www.fipradio.fr/sites/default/files/import_si/si_titre_antenne/FIP_player_current.json',
 # finished December 2020 - fipradio => 'https://api.radiofrance.fr/livemeta/pull/${stationid}',
 	# finished mid-2023 - fipradio => 'https://api.radiofrance.fr/livemeta/live/${stationid}/webrf_fip_player?preset=400x400',
-	fipradio => $type4prefix.'${fetchid}'.$type4suffix,
-	# fipradio_alt => $type3prefix1fip.'${stationid}'.$type3prefix2fip.$type3suffixfip,
+	# finished Nov-2024 - fipradio => $type4prefix.'${fetchid}'.$type4suffix,
+	fipradio => $type8prefix.'${fetchid}'.$type8suffix,
+	fipradio_alt => $type10prefix.'${stationid}'.$type10asuffix,
 # finished 1521553005 - 2018-03-20 13:36:45	fipbordeaux_alt => 'http://www.fipradio.fr/sites/default/files/import_si/si_titre_antenne/FIP_player_current.json',
 # finished December 2020 - fipbordeaux => 'https://api.radiofrance.fr/livemeta/pull/${stationid}',
 	fipbordeaux => $type4prefix.'${fetchid}'.$type4suffix,
@@ -254,7 +374,8 @@ my $urls = {
 	# fipstrasbourg_alt => $type3prefix1fip.'${stationid}'.$type3prefix2fip.$type3suffixfip,
 # finished 1507650288 - 2017-10-10 16:44:48	fiprock_alt => 'http://www.fipradio.fr/sites/default/files/import_si_webradio_1/si_titre_antenne/FIP_player_current.json',
 # finished December 2020 - fiprock => 'https://api.radiofrance.fr/livemeta/pull/${stationid}',
-	fiprock => $type4prefix.'${fetchid}'.$type4suffix,
+# finished November 2024 - fiprock => $type4prefix.'${fetchid}'.$type4suffix,
+	fiprock => $type9prefix.'${fetchid}'.$type9suffix,
 	# fiprock_alt => $type3prefix1fip.'${stationid}'.$type3prefix2fip.$type3suffixfip,
 # finished 1507650914 - 2017-10-10 16:55:14	fipjazz_alt => 'http://www.fipradio.fr/sites/default/files/import_si_webradio_2/si_titre_antenne/FIP_player_current.json',
 # finished December 2020 - fipjazz => 'https://api.radiofrance.fr/livemeta/pull/${stationid}',
@@ -324,7 +445,7 @@ my $urls = {
 # finished July 2023 - fmopera => 'https://api.radiofrance.fr/livemeta/live/${stationid}/inter_player',
 	fmopera => $type4prefix.'${fetchid}'.$type4suffix,
 	# fmopera_alt => $type3prefix1fip.'${stationid}'.$type3prefix2fip.$type3suffixfip,
-	fmpianozen => $type5prefix.'${fetchid}'.$type5suffix,
+	fmpianozen => $type4prefix.'${fetchid}'.$type4suffix,
 	
 # finished December 2020 - mouv => 'https://api.radiofrance.fr/livemeta/pull/${stationid}',
 # finished July 2023 - 	mouv => 'https://api.radiofrance.fr/livemeta/live/${stationid}/inter_player',
@@ -353,12 +474,15 @@ my $urls = {
 # finished July 2023 - 	mouv100mix => 'https://www.mouv.fr/latest/api/graphql?operationName=NowWebradio&variables=%7B%22stationId%22%3A75%7D&'.$type3suffix,
 	mouv100mix => $type4prefix.'${fetchid}'.$type4suffix,
 	#mouv100mix_alt => $type3prefix1fip.'${stationid}'.$type3prefix2fip.$type3suffixfip,
+	mouvsansblabla => $type4prefix.'${fetchid}'.$type4suffix,
+
 	
 # finished December 2020 - franceinter => 'https://api.radiofrance.fr/livemeta/pull/${stationid}',
-	franceinter => 'https://api.radiofrance.fr/livemeta/live/${stationid}/inter_player',
+	franceinter => $type10prefix.'${stationid}'.$type10suffix,
 	#franceinter_alt => $type3prefix1fip.'${stationid}'.$type3prefix2fip.$type3suffixfip,
+	franceinterlamusiqueinter => $type7prefix.'${fetchid}'.$type7suffix,
 # finished December 2020 - franceinfo => 'https://api.radiofrance.fr/livemeta/pull/${stationid}',
-	franceinfo => 'https://api.radiofrance.fr/livemeta/live/${stationid}/inter_player',
+	franceinfo => $type10prefix.'${stationid}'.$type10suffix,
 	#franceinfo_alt => $type3prefix1fip.'${stationid}'.$type3prefix2fip.$type3suffixfip,
 # finished December 2020 - francemusique => 'https://api.radiofrance.fr/livemeta/pull/${stationid}',
 # finished July 2023 - 	francemusique => 'https://api.radiofrance.fr/livemeta/live/${stationid}/inter_player',
@@ -370,99 +494,104 @@ my $urls = {
 	franceculture => $type4prefix.'${fetchid}'.$type4suffix,
 	#franceculture_alt => $type3prefix1fip.'${stationid}'.$type3prefix2fip.$type3suffixfip,
 	
-	# Limited song data from France Bleu stations
+	fb100chanson => $type6prefix.'${fetchid}'.$type6suffix,
+	# Limited song data from France Bleu local stations
 	# Possible alternative source for programme info ...
 	# https://www.francebleu.fr/grid/alsace/1641206097?xmlHttpRequest=1&ignoreGridHour=1
+	# Jan-2025 - for all fb (ici) stations changed from $type10prefix.'${stationid}'.$type10suffix to $type10prefix.'${stationid}'.$type10asuffix
+	# this brings more icons and also they seem to hide song info in line2 - but not parsing it along with cover art
+	# could use $type11prefix.'${fetchid}'.$type11suffix - but they seem not to put song info in and have fewer icons
+	# this alternative URL usually returns data including link to programmme icon
 #finished December 2020 - fbalsace => 'https://api.radiofrance.fr/livemeta/pull/${stationid}',
-	fbalsace => 'https://api.radiofrance.fr/livemeta/live/${stationid}/inter_player',
+	fbalsace => $type10prefix.'${stationid}'.$type10asuffix,
 #finished December 2020 - fbarmorique => 'https://api.radiofrance.fr/livemeta/pull/${stationid}',
-	fbarmorique => 'https://api.radiofrance.fr/livemeta/live/${stationid}/inter_player',
+	fbarmorique => $type10prefix.'${stationid}'.$type10asuffix,
 #finished December 2020 - fbauxerre => 'https://api.radiofrance.fr/livemeta/pull/${stationid}',
-	fbauxerre => 'https://api.radiofrance.fr/livemeta/live/${stationid}/inter_player',
+	fbauxerre => $type10prefix.'${stationid}'.$type10asuffix,
 #finished December 2020 - fbazur => 'https://api.radiofrance.fr/livemeta/pull/${stationid}',
-	fbazur => 'https://api.radiofrance.fr/livemeta/live/${stationid}/inter_player',
+	fbazur => $type10prefix.'${stationid}'.$type10asuffix,
 #finished December 2020 - fbbearn => 'https://api.radiofrance.fr/livemeta/pull/${stationid}',
-	fbbearn => 'https://api.radiofrance.fr/livemeta/live/${stationid}/inter_player',
+	fbbearn => $type10prefix.'${stationid}'.$type10asuffix,
 #finished December 2020 - fbbelfort => 'https://api.radiofrance.fr/livemeta/pull/${stationid}',
-	fbbelfort => 'https://api.radiofrance.fr/livemeta/live/${stationid}/inter_player',
+	fbbelfort => $type10prefix.'${stationid}'.$type10asuffix,
 #finished December 2020 - fbberry => 'https://api.radiofrance.fr/livemeta/pull/${stationid}',
-	fbberry => 'https://api.radiofrance.fr/livemeta/live/${stationid}/inter_player',
+	fbberry => $type10prefix.'${stationid}'.$type10asuffix,
 #finished December 2020 - fbbesancon => 'https://api.radiofrance.fr/livemeta/pull/${stationid}',
-	fbbesancon => 'https://api.radiofrance.fr/livemeta/live/${stationid}/inter_player',
+	fbbesancon => $type10prefix.'${stationid}'.$type10asuffix,
 #finished December 2020 - fbbourgogne => 'https://api.radiofrance.fr/livemeta/pull/${stationid}',
-	fbbourgogne => 'https://api.radiofrance.fr/livemeta/live/${stationid}/inter_player',
+	fbbourgogne => $type10prefix.'${stationid}'.$type10asuffix,
 #finished December 2020 - fbbreizhizel => 'https://api.radiofrance.fr/livemeta/pull/${stationid}',
-	fbbreizhizel => 'https://api.radiofrance.fr/livemeta/live/${stationid}/inter_player',
+	fbbreizhizel => $type10prefix.'${stationid}'.$type10asuffix,
 #finished December 2020 - fbchampagne => 'https://api.radiofrance.fr/livemeta/pull/${stationid}',
-	fbchampagne => 'https://api.radiofrance.fr/livemeta/live/${stationid}/inter_player',
+	fbchampagne => $type10prefix.'${stationid}'.$type10asuffix,
 #finished December 2020 - fbcotentin => 'https://api.radiofrance.fr/livemeta/pull/${stationid}',
-	fbcotentin => 'https://api.radiofrance.fr/livemeta/live/${stationid}/inter_player',
+	fbcotentin => $type10prefix.'${stationid}'.$type10asuffix,
 #finished December 2020 - fbcreuse => 'https://api.radiofrance.fr/livemeta/pull/${stationid}',
-	fbcreuse => 'https://api.radiofrance.fr/livemeta/live/${stationid}/inter_player',
+	fbcreuse => $type10prefix.'${stationid}'.$type10asuffix,
 #finished December 2020 - fbdromeardeche => 'https://api.radiofrance.fr/livemeta/pull/${stationid}',
-	fbdromeardeche => 'https://api.radiofrance.fr/livemeta/live/${stationid}/inter_player',
+	fbdromeardeche => $type10prefix.'${stationid}'.$type10asuffix,
 #finished December 2020 - fbelsass => 'https://api.radiofrance.fr/livemeta/pull/${stationid}',
-	fbelsass => 'https://api.radiofrance.fr/livemeta/live/${stationid}/inter_player',
+	fbelsass => $type10prefix.'${stationid}'.$type10asuffix,
 #finished December 2020 - fbgardlozere => 'https://api.radiofrance.fr/livemeta/pull/${stationid}',
-	fbgardlozere => 'https://api.radiofrance.fr/livemeta/live/${stationid}/inter_player',
+	fbgardlozere => $type10prefix.'${stationid}'.$type10asuffix,
 #finished December 2020 - fbgascogne => 'https://api.radiofrance.fr/livemeta/pull/${stationid}',
-	fbgascogne => 'https://api.radiofrance.fr/livemeta/live/${stationid}/inter_player',
+	fbgascogne => $type10prefix.'${stationid}'.$type10asuffix,
 #finished December 2020 - fbgironde => 'https://api.radiofrance.fr/livemeta/pull/${stationid}',
-	fbgironde => 'https://api.radiofrance.fr/livemeta/live/${stationid}/inter_player',
+	fbgironde => $type10prefix.'${stationid}'.$type10asuffix,
 #finished December 2020 - fbherault => 'https://api.radiofrance.fr/livemeta/pull/${stationid}',
-	fbherault => 'https://api.radiofrance.fr/livemeta/live/${stationid}/inter_player',
+	fbherault => $type10prefix.'${stationid}'.$type10asuffix,
 #finished December 2020 - fbisere => 'https://api.radiofrance.fr/livemeta/pull/${stationid}',
-	fbisere => 'https://api.radiofrance.fr/livemeta/live/${stationid}/inter_player',
+	fbisere => $type10prefix.'${stationid}'.$type10asuffix,
 #finished December 2020 - fblarochelle => 'https://api.radiofrance.fr/livemeta/pull/${stationid}',
-	fblarochelle => 'https://api.radiofrance.fr/livemeta/live/${stationid}/inter_player',
+	fblarochelle => $type10prefix.'${stationid}'.$type10asuffix,
 #finished December 2020 - fblimousin => 'https://api.radiofrance.fr/livemeta/pull/${stationid}',
-	fblimousin => 'https://api.radiofrance.fr/livemeta/live/${stationid}/inter_player',
+	fblimousin => $type10prefix.'${stationid}'.$type10asuffix,
 #finished December 2020 - fbloireocean => 'https://api.radiofrance.fr/livemeta/pull/${stationid}',
-	fbloireocean => 'https://api.radiofrance.fr/livemeta/live/${stationid}/inter_player',
+	fbloireocean => $type10prefix.'${stationid}'.$type10asuffix,
 #finished December 2020 - fblorrainenord => 'https://api.radiofrance.fr/livemeta/pull/${stationid}',
-	fblorrainenord => 'https://api.radiofrance.fr/livemeta/live/${stationid}/inter_player',
+	fblorrainenord => $type10prefix.'${stationid}'.$type10asuffix,
 #finished December 2020 - fbmaine => 'https://api.radiofrance.fr/livemeta/pull/${stationid}',
-	fbmaine => 'https://api.radiofrance.fr/livemeta/live/${stationid}/inter_player',
+	fbmaine => $type10prefix.'${stationid}'.$type10asuffix,
 #finished December 2020 - fbmayenne => 'https://api.radiofrance.fr/livemeta/pull/${stationid}',
-	fbmayenne => 'https://api.radiofrance.fr/livemeta/live/${stationid}/inter_player',
+	fbmayenne => $type10prefix.'${stationid}'.$type10asuffix,
 #finished December 2020 - fbnord => 'https://api.radiofrance.fr/livemeta/pull/${stationid}',
-	fbnord => 'https://api.radiofrance.fr/livemeta/live/${stationid}/inter_player',
+	fbnord => $type10prefix.'${stationid}'.$type10asuffix,
 #finished December 2020 - fbbassenormandie => 'https://api.radiofrance.fr/livemeta/pull/${stationid}',
-	fbbassenormandie => 'https://api.radiofrance.fr/livemeta/live/${stationid}/inter_player',
+	fbbassenormandie => $type10prefix.'${stationid}'.$type10asuffix,
 #finished December 2020 - fbhautenormandie => 'https://api.radiofrance.fr/livemeta/pull/${stationid}',
-	fbhautenormandie => 'https://api.radiofrance.fr/livemeta/live/${stationid}/inter_player',
+	fbhautenormandie => $type10prefix.'${stationid}'.$type10asuffix,
 #finished December 2020 - fbtoulouse => 'https://api.radiofrance.fr/livemeta/pull/${stationid}',
-	fbtoulouse => 'https://api.radiofrance.fr/livemeta/live/${stationid}/inter_player',
+	fbtoulouse => $type10prefix.'${stationid}'.$type10asuffix,
 #finished December 2020 - fborleans => 'https://api.radiofrance.fr/livemeta/pull/${stationid}',
-	fborleans => 'https://api.radiofrance.fr/livemeta/live/${stationid}/inter_player',
+	fborleans => $type10prefix.'${stationid}'.$type10asuffix,
 #finished December 2020 - fbparis => 'https://api.radiofrance.fr/livemeta/pull/${stationid}',
-	fbparis => 'https://api.radiofrance.fr/livemeta/live/${stationid}/inter_player',
+	fbparis => $type10prefix.'${stationid}'.$type10asuffix,
 #finished December 2020 - fbpaysbasque => 'https://api.radiofrance.fr/livemeta/pull/${stationid}',
-	fbpaysbasque => 'https://api.radiofrance.fr/livemeta/live/${stationid}/inter_player',
+	fbpaysbasque => $type10prefix.'${stationid}'.$type10asuffix,
 #finished December 2020 - fbpaysdauvergne => 'https://api.radiofrance.fr/livemeta/pull/${stationid}',
-	fbpaysdauvergne => 'https://api.radiofrance.fr/livemeta/live/${stationid}/inter_player',
+	fbpaysdauvergne => $type10prefix.'${stationid}'.$type10asuffix,
 #finished December 2020 - fbpaysdesavoie => 'https://api.radiofrance.fr/livemeta/pull/${stationid}',
-	fbpaysdesavoie => 'https://api.radiofrance.fr/livemeta/live/${stationid}/inter_player',
+	fbpaysdesavoie => $type10prefix.'${stationid}'.$type10asuffix,
 #finished December 2020 - fbperigord => 'https://api.radiofrance.fr/livemeta/pull/${stationid}',
-	fbperigord => 'https://api.radiofrance.fr/livemeta/live/${stationid}/inter_player',
+	fbperigord => $type10prefix.'${stationid}'.$type10asuffix,
 #finished December 2020 - fbpicardie => 'https://api.radiofrance.fr/livemeta/pull/${stationid}',
-	fbpicardie => 'https://api.radiofrance.fr/livemeta/live/${stationid}/inter_player',
+	fbpicardie => $type10prefix.'${stationid}'.$type10asuffix,
 #finished December 2020 - fbpoitou => 'https://api.radiofrance.fr/livemeta/pull/${stationid}',
-	fbpoitou => 'https://api.radiofrance.fr/livemeta/live/${stationid}/inter_player',
+	fbpoitou => $type10prefix.'${stationid}'.$type10asuffix,
 #finished December 2020 - fbprovence => 'https://api.radiofrance.fr/livemeta/pull/${stationid}',
-	fbprovence => 'https://api.radiofrance.fr/livemeta/live/${stationid}/inter_player',
+	fbprovence => $type10prefix.'${stationid}'.$type10asuffix,
 #finished December 2020 - fbrcfm => 'https://api.radiofrance.fr/livemeta/pull/${stationid}',
-	fbrcfm => 'https://api.radiofrance.fr/livemeta/live/${stationid}/inter_player',
+	fbrcfm => $type10prefix.'${stationid}'.$type10asuffix,
 #finished December 2020 - fbroussillon => 'https://api.radiofrance.fr/livemeta/pull/${stationid}',
-	fbroussillon => 'https://api.radiofrance.fr/livemeta/live/${stationid}/inter_player',
+	fbroussillon => $type10prefix.'${stationid}'.$type10asuffix,
 #finished December 2020 - fbsaintetienneloire => 'https://api.radiofrance.fr/livemeta/pull/${stationid}',
-	fbsaintetienneloire => 'https://api.radiofrance.fr/livemeta/live/${stationid}/inter_player',
+	fbsaintetienneloire => $type10prefix.'${stationid}'.$type10asuffix,
 #finished December 2020 - fbsudlorraine => 'https://api.radiofrance.fr/livemeta/pull/${stationid}',
-	fbsudlorraine => 'https://api.radiofrance.fr/livemeta/live/${stationid}/inter_player',
+	fbsudlorraine => $type10prefix.'${stationid}'.$type10asuffix,
 #finished December 2020 - fbtouraine => 'https://api.radiofrance.fr/livemeta/pull/${stationid}',
-	fbtouraine => 'https://api.radiofrance.fr/livemeta/live/${stationid}/inter_player',
+	fbtouraine => $type10prefix.'${stationid}'.$type10asuffix,
 #finished December 2020 - fbvaucluse => 'https://api.radiofrance.fr/livemeta/pull/${stationid}',
-	fbvaucluse => 'https://api.radiofrance.fr/livemeta/live/${stationid}/inter_player',
+	fbvaucluse => $type10prefix.'${stationid}'.$type10asuffix,
 };
 
 foreach my $metakey (keys(%$stationSet)){
@@ -515,9 +644,11 @@ my $icons = {
 	mouvrapfr => 'https://cdn.radiofrance.fr/s3/cruiser-production/2019/01/3c4dc967-ed2c-4ce5-a998-9437a64e05d5/300x300_rapfr.jpg',
 	mouv100mix => 'https://cdn.radiofrance.fr/s3/cruiser-production/2019/01/689453b1-de6c-4c9e-9ebd-de70d0220e69/300x300_mouv-100mix-final.jpg',
 	mouvkidsnfamily => 'https://cdn.radiofrance.fr/s3/cruiser-production/2019/08/20b36ec0-fd19-4d92-b393-7977277e1452/300x300_mouv_webradio_kids_n_family.jpg',
+	mouvsansblabla => 'https://cdn.radiofrance.fr/s3/cruiser-production-eu3/2024/05/59a2cea8-2046-4473-885b-92b9497175ad/300x300_sc_visuel-mouvsansblabla-vert.jpg',
 	
 	franceinter => 'http://oblique.radiofrance.fr/files/charte/logos/png600/FranceInter.png',	# Note - official uses https but (for now) http works and might help legacy devices
 	#franceinter => 'http://mediateur.radiofrance.fr/wp-content/themes/radiofrance/img/france-inter.png',
+	franceinterlamusiqueinter => 'https://www.radiofrance.fr/s3/cruiser-production-eu3/2024/06/2eb99120-ff28-414d-a805-c354c3967edf/300x300_sc_fi-webradio-c3b2.jpg',
 	
 	franceinfo => 'http://mediateur.radiofrance.fr/wp-content/themes/radiofrance/img/france-info.png',
 	#francemusique => 'http://mediateur.radiofrance.fr/wp-content/themes/radiofrance/img/france-musique.png',
@@ -525,51 +656,100 @@ my $icons = {
 	#franceculture => 'http://mediateur.radiofrance.fr/wp-content/themes/radiofrance/img/france-culture.png',
 	franceculture => 'http://oblique.radiofrance.fr/files/charte/logos/png600/FranceCulture.png',
 	
-	fbalsace => 'plugins/RadioFrance/html/images/fbalsace_svg.png',
-	fbarmorique => 'plugins/RadioFrance/html/images/fbarmorique_svg.png',
-	fbauxerre => 'plugins/RadioFrance/html/images/fbauxerre_svg.png',
-	fbazur => 'plugins/RadioFrance/html/images/fbazur_svg.png',
-	fbbearn => 'plugins/RadioFrance/html/images/fbbearn_svg.png',
-	fbbelfort => 'plugins/RadioFrance/html/images/fbbelfort-montbeliard_svg.png',
-	fbberry => 'plugins/RadioFrance/html/images/fbberry_svg.png',
-	fbbesancon => 'plugins/RadioFrance/html/images/fbbesancon_svg.png',
-	fbbourgogne => 'plugins/RadioFrance/html/images/fbbourgogne_svg.png',
-	fbbreizhizel => 'plugins/RadioFrance/html/images/fbbreizh-izel_svg.png',
-	fbchampagne => 'plugins/RadioFrance/html/images/fbchampagne-ardenne_svg.png',
-	fbcotentin => 'plugins/RadioFrance/html/images/fbcotentin_svg.png',
-	fbcreuse => 'plugins/RadioFrance/html/images/fbcreuse_svg.png',
-	fbdromeardeche => 'plugins/RadioFrance/html/images/fbdrome-ardeche_svg.png',
-	fbelsass => 'plugins/RadioFrance/html/images/fbelsass_svg.png',
-	fbgardlozere => 'plugins/RadioFrance/html/images/fbgard-lozere_svg.png',
-	fbgascogne => 'plugins/RadioFrance/html/images/fbgascogne_svg.png',
-	fbgironde => 'plugins/RadioFrance/html/images/fbgironde_svg.png',
-	fbherault => 'plugins/RadioFrance/html/images/fbherault_svg.png',
-	fbisere => 'plugins/RadioFrance/html/images/fbisere_svg.png',
-	fblarochelle => 'plugins/RadioFrance/html/images/fbla-rochelle_svg.png',
-	fblimousin => 'plugins/RadioFrance/html/images/fblimousin_svg.png',
-	fbloireocean => 'plugins/RadioFrance/html/images/fbloire-ocean_svg.png',
-	fblorrainenord => 'plugins/RadioFrance/html/images/fblorraine-nord_svg.png',
-	fbmaine => 'plugins/RadioFrance/html/images/fbmaine_svg.png',
-	fbmayenne => 'plugins/RadioFrance/html/images/fbmayenne_svg.png',
-	fbnord => 'plugins/RadioFrance/html/images/fbnord_svg.png',
-	fbbassenormandie => 'plugins/RadioFrance/html/images/fbnormandie_svg.png',	# Wrong logo
-	fbhautenormandie => 'plugins/RadioFrance/html/images/fbnormandie_svg.png',	# Wrong logo
-	fbtoulouse => 'plugins/RadioFrance/html/images/fboccitanie_svg.png',
-	fborleans => 'plugins/RadioFrance/html/images/fborleans_svg.png',
-	fbparis => 'plugins/RadioFrance/html/images/fbparis_svg.png',
-	fbpaysbasque => 'plugins/RadioFrance/html/images/fbpays-basque_svg.png',
-	fbpaysdauvergne => 'plugins/RadioFrance/html/images/fbauvergne_svg.png',
-	fbpaysdesavoie => 'plugins/RadioFrance/html/images/fbsavoie_svg.png',
-	fbperigord => 'plugins/RadioFrance/html/images/fbperigord_svg.png',
-	fbpicardie => 'plugins/RadioFrance/html/images/fbpicardie_svg.png',
-	fbpoitou => 'plugins/RadioFrance/html/images/fbpoitou_svg.png',
-	fbprovence => 'plugins/RadioFrance/html/images/fbprovence_svg.png',
-	fbrcfm => 'plugins/RadioFrance/html/images/fbrcfm_svg.png',
-	fbroussillon => 'plugins/RadioFrance/html/images/fbroussillon_svg.png',
-	fbsaintetienneloire => 'plugins/RadioFrance/html/images/fbsaint-etienne-loire_svg.png',
-	fbsudlorraine => 'plugins/RadioFrance/html/images/fbsud-lorraine_svg.png',
-	fbtouraine => 'plugins/RadioFrance/html/images/fbtouraine_svg.png',
-	fbvaucluse => 'plugins/RadioFrance/html/images/fbvaucluse_svg.png',
+	# until Jan-2025 fb100chanson => 'https://www.radiofrance.fr/s3/cruiser-production-eu3/2024/03/113906b6-6173-403f-bda5-8ad0d7c022a4/300x300_sc_1024.jpg',
+	fb100chanson => 'https://www.francebleu.fr/client/immutable/assets/fallback-cover.CNLc2QwW.jpg',
+	# until Jan-2025 fbalsace => 'plugins/RadioFrance/html/images/fbalsace_svg.png',
+	# until Jan-2025 fbarmorique => 'plugins/RadioFrance/html/images/fbarmorique_svg.png',
+	# until Jan-2025 fbauxerre => 'plugins/RadioFrance/html/images/fbauxerre_svg.png',
+	# until Jan-2025 fbazur => 'plugins/RadioFrance/html/images/fbazur_svg.png',
+	# until Jan-2025 fbbearn => 'plugins/RadioFrance/html/images/fbbearn_svg.png',
+	# until Jan-2025 fbbelfort => 'plugins/RadioFrance/html/images/fbbelfort-montbeliard_svg.png',
+	# until Jan-2025 fbberry => 'plugins/RadioFrance/html/images/fbberry_svg.png',
+	# until Jan-2025 fbbesancon => 'plugins/RadioFrance/html/images/fbbesancon_svg.png',
+	# until Jan-2025 fbbourgogne => 'plugins/RadioFrance/html/images/fbbourgogne_svg.png',
+	# until Jan-2025 fbbreizhizel => 'plugins/RadioFrance/html/images/fbbreizh-izel_svg.png',
+	# until Jan-2025 fbchampagne => 'plugins/RadioFrance/html/images/fbchampagne-ardenne_svg.png',
+	# until Jan-2025 fbcotentin => 'plugins/RadioFrance/html/images/fbcotentin_svg.png',
+	# until Jan-2025 fbcreuse => 'plugins/RadioFrance/html/images/fbcreuse_svg.png',
+	# until Jan-2025 fbdromeardeche => 'plugins/RadioFrance/html/images/fbdrome-ardeche_svg.png',
+	# until Jan-2025 fbelsass => 'plugins/RadioFrance/html/images/fbelsass_svg.png',
+	# until Jan-2025 fbgardlozere => 'plugins/RadioFrance/html/images/fbgard-lozere_svg.png',
+	# until Jan-2025 fbgascogne => 'plugins/RadioFrance/html/images/fbgascogne_svg.png',
+	# until Jan-2025 fbgironde => 'plugins/RadioFrance/html/images/fbgironde_svg.png',
+	# until Jan-2025 fbherault => 'plugins/RadioFrance/html/images/fbherault_svg.png',
+	# until Jan-2025 fbisere => 'plugins/RadioFrance/html/images/fbisere_svg.png',
+	# until Jan-2025 fblarochelle => 'plugins/RadioFrance/html/images/fbla-rochelle_svg.png',
+	# until Jan-2025 fblimousin => 'plugins/RadioFrance/html/images/fblimousin_svg.png',
+	# until Jan-2025 fbloireocean => 'plugins/RadioFrance/html/images/fbloire-ocean_svg.png',
+	# until Jan-2025 fblorrainenord => 'plugins/RadioFrance/html/images/fblorraine-nord_svg.png',
+	# until Jan-2025 fbmaine => 'plugins/RadioFrance/html/images/fbmaine_svg.png',
+	# until Jan-2025 fbmayenne => 'plugins/RadioFrance/html/images/fbmayenne_svg.png',
+	# until Jan-2025 fbnord => 'plugins/RadioFrance/html/images/fbnord_svg.png',
+	# until Jan-2025 fbbassenormandie => 'plugins/RadioFrance/html/images/fbnormandie_svg.png',	# Wrong logo
+	# until Jan-2025 fbhautenormandie => 'plugins/RadioFrance/html/images/fbnormandie_svg.png',	# Wrong logo
+	# until Jan-2025 fbtoulouse => 'plugins/RadioFrance/html/images/fboccitanie_svg.png',
+	# until Jan-2025 fborleans => 'plugins/RadioFrance/html/images/fborleans_svg.png',
+	# until Jan-2025 fbparis => 'plugins/RadioFrance/html/images/fbparis_svg.png',
+	# until Jan-2025 fbpaysbasque => 'plugins/RadioFrance/html/images/fbpays-basque_svg.png',
+	# until Jan-2025 fbpaysdauvergne => 'plugins/RadioFrance/html/images/fbauvergne_svg.png',
+	# until Jan-2025 fbpaysdesavoie => 'plugins/RadioFrance/html/images/fbsavoie_svg.png',
+	# until Jan-2025 fbperigord => 'plugins/RadioFrance/html/images/fbperigord_svg.png',
+	# until Jan-2025 fbpicardie => 'plugins/RadioFrance/html/images/fbpicardie_svg.png',
+	# until Jan-2025 fbpoitou => 'plugins/RadioFrance/html/images/fbpoitou_svg.png',
+	# until Jan-2025 fbprovence => 'plugins/RadioFrance/html/images/fbprovence_svg.png',
+	# until Jan-2025 fbrcfm => 'plugins/RadioFrance/html/images/fbrcfm_svg.png',
+	# until Jan-2025 fbroussillon => 'plugins/RadioFrance/html/images/fbroussillon_svg.png',
+	# until Jan-2025 fbsaintetienneloire => 'plugins/RadioFrance/html/images/fbsaint-etienne-loire_svg.png',
+	# until Jan-2025 fbsudlorraine => 'plugins/RadioFrance/html/images/fbsud-lorraine_svg.png',
+	# until Jan-2025 fbtouraine => 'plugins/RadioFrance/html/images/fbtouraine_svg.png',
+	# until Jan-2025 fbvaucluse => 'plugins/RadioFrance/html/images/fbvaucluse_svg.png',
+	
+	fbalsace=> 'https://www.radiofrance.fr/s3/cruiser-production-eu3/2024/11/c57f3937-c855-4c37-bf3d-80dae44fb502/sc_logo-alsace.jpg',
+	fbarmorique=> 'https://www.radiofrance.fr/s3/cruiser-production-eu3/2024/11/99ac5a26-e5f0-490e-b513-38ee148c7e5a/sc_logo-armorique.jpg',
+	fbauxerre=> 'https://www.radiofrance.fr/s3/cruiser-production-eu3/2024/11/e2026fb2-4cab-4137-bf1e-0b5324ec2ca4/sc_logo-auxerre.jpg',
+	fbazur=> 'https://www.radiofrance.fr/s3/cruiser-production-eu3/2024/11/06460fe8-13db-4ec0-b98b-741c56a146d6/sc_logo-azur.jpg',
+	fbbearn=> 'https://www.radiofrance.fr/s3/cruiser-production-eu3/2024/11/ba415434-04bc-4c30-b350-7dcca070b935/sc_logo-bearn-bigorre.jpg',
+	fbbelfort=> 'https://www.radiofrance.fr/s3/cruiser-production-eu3/2024/11/f3238cc6-2f8a-4565-aa8a-d970bfac7d0a/sc_logo-belfort-montbeliard.jpg',
+	fbberry=> 'https://www.radiofrance.fr/s3/cruiser-production-eu3/2024/11/06bb2775-63d9-433b-af7b-f8f62f021203/sc_logo-berry.jpg',
+	fbbesancon=> 'https://www.radiofrance.fr/s3/cruiser-production-eu3/2024/11/e14152d8-168d-4b44-82e5-86c9c48176aa/sc_logo-besancion.jpg',
+	fbbourgogne=> 'https://www.radiofrance.fr/s3/cruiser-production-eu3/2024/11/4650a9b3-4395-4be8-a89d-73f61806a806/sc_logo-bourgogne.jpg',
+	fbbreizhizel=> 'https://www.radiofrance.fr/s3/cruiser-production-eu3/2024/11/269593ab-0229-4dc1-8625-cd19943a299d/sc_logo-beazh-izel.jpg',
+	fbchampagne=> 'https://www.radiofrance.fr/s3/cruiser-production-eu3/2024/11/b011edaa-d3f5-4489-9a57-eaded51894f9/sc_logo-chamagne-ardenne.jpg',
+	fbcotentin=> 'https://www.radiofrance.fr/s3/cruiser-production-eu3/2024/11/f6ec610c-4ae9-4128-86a5-12ad3f874636/sc_logo-cotentin.jpg',
+	fbcreuse=> 'https://www.radiofrance.fr/s3/cruiser-production-eu3/2024/11/4a6c076b-2049-4744-a211-bf5d811a4fe9/sc_logo-creuse.jpg',
+	fbdromeardeche=> 'https://www.radiofrance.fr/s3/cruiser-production-eu3/2024/11/044ffe9e-28d7-4dd3-960f-299a704ff71b/sc_logo-drome-ardeche.jpg',
+	fbelsass=> 'https://www.radiofrance.fr/s3/cruiser-production-eu3/2024/11/303be539-4fe2-4c8c-9b48-f5d0bc7b637f/sc_logo-elsass.jpg',
+	fbgardlozere=> 'https://www.radiofrance.fr/s3/cruiser-production-eu3/2024/11/06266b7e-38a5-458f-9926-3c3d8db11e4a/sc_logo-lozere.jpg',
+	fbgascogne=> 'https://www.radiofrance.fr/s3/cruiser-production-eu3/2024/11/be86fb63-ff3e-4d57-b8e5-e131e05c51d6/sc_logo-gascogne.jpg',
+	fbgironde=> 'https://www.radiofrance.fr/s3/cruiser-production-eu3/2024/11/e3a6cf54-c830-4466-bf6b-913d9b37322d/sc_logo-gironde.jpg',
+	fbherault=> 'https://www.radiofrance.fr/s3/cruiser-production-eu3/2024/11/536dcf8e-86ac-482a-9a95-8bfa16203a5b/sc_logo-heirault.jpg',
+	fbisere=> 'https://www.radiofrance.fr/s3/cruiser-production-eu3/2024/11/b862114b-7b80-4f69-9b88-e73a442522ff/sc_logo-iseire.jpg',
+	fblarochelle=> 'https://www.radiofrance.fr/s3/cruiser-production-eu3/2024/11/3094e84d-6b04-478f-be04-73969274e488/sc_logo-la-rochelle.jpg',
+	fblimousin=> 'https://www.radiofrance.fr/s3/cruiser-production-eu3/2024/11/ff4d3086-9902-44ac-98c7-649ae310ad59/sc_logo-limousin.jpg',
+	fbloireocean=> 'https://www.radiofrance.fr/s3/cruiser-production-eu3/2024/11/54bfa2c2-55e6-4a32-bc8a-c891a08f0626/sc_logo-oceian.jpg',
+	fblorrainenord=> 'https://www.radiofrance.fr/s3/cruiser-production-eu3/2025/01/eafc9a23-a5c8-4988-bbf8-c473f70a04f2/sc_logo-lorraine.jpg',
+	fbmaine=> 'https://www.radiofrance.fr/s3/cruiser-production-eu3/2024/11/ea9da570-4e6e-4212-b5fa-2bcd1bdb1e3a/sc_logo-maine.jpg',
+	fbmayenne=> 'https://www.radiofrance.fr/s3/cruiser-production-eu3/2024/11/655cca16-52bf-4eb1-aea7-2114bb6a2b46/sc_logo-mayenne.jpg',
+	fbnord=> 'https://www.radiofrance.fr/s3/cruiser-production-eu3/2024/11/26b3d826-f907-4c0c-bdc9-08115c3d4152/sc_logo-nord.jpg',
+	fbbassenormandie=> 'https://www.radiofrance.fr/s3/cruiser-production-eu3/2024/11/4b1a9d2d-30d6-4dd7-aacf-a5679ddf65f7/sc_logo-normandie.jpg',
+	fbhautenormandie=> 'https://www.radiofrance.fr/s3/cruiser-production-eu3/2024/11/4b1a9d2d-30d6-4dd7-aacf-a5679ddf65f7/sc_logo-normandie.jpg',
+	fbtoulouse=> 'https://www.radiofrance.fr/s3/cruiser-production-eu3/2024/11/84e39c1c-1ade-430d-ba5e-a2cb35a76771/sc_logo-occitanie.jpg',
+	fborleans=> 'https://www.radiofrance.fr/s3/cruiser-production-eu3/2024/11/6ba4f915-c15b-4b75-bbff-00264c473c75/sc_logo-orleians.jpg',
+	fbparis=> 'https://www.radiofrance.fr/s3/cruiser-production-eu3/2024/11/aa396eeb-f9fa-4b9d-84fd-a56f2efeb296/sc_logo-paris.jpg',
+	fbpaysbasque=> 'https://www.radiofrance.fr/s3/cruiser-production-eu3/2024/11/0d62617b-681e-4232-a903-ecdd0a997f3b/sc_logo-pays-basque.jpg',
+	fbpaysdauvergne=> 'https://www.radiofrance.fr/s3/cruiser-production-eu3/2024/11/64d1fb99-9fd7-439b-a1b4-62697ea9e7ff/sc_logo-pays-dauvergne.jpg',
+	fbpaysdesavoie=> 'https://www.radiofrance.fr/s3/cruiser-production-eu3/2024/11/ef0c5a84-ac12-4f70-acd0-5f3b3ad2be4b/sc_logo-pays-de-savoie.jpg',
+	fbperigord=> 'https://www.radiofrance.fr/s3/cruiser-production-eu3/2024/11/b168c741-cd3c-442b-9e2a-bc2095bd4419/sc_logo-peirigord.jpg',
+	fbpicardie=> 'https://www.radiofrance.fr/s3/cruiser-production-eu3/2024/11/8e2f0a62-a424-4f47-aa94-0f1574b005ff/sc_logo-picardie.jpg',
+	fbpoitou=> 'https://www.radiofrance.fr/s3/cruiser-production-eu3/2024/11/2ef2cf02-387b-4bfb-8a92-87cde963efd9/sc_logo-poitou.jpg',
+	fbprovence=> 'https://www.radiofrance.fr/s3/cruiser-production-eu3/2024/11/2e36ab01-c5d5-4c20-9cc3-eebeb9c29d5b/sc_logo-provence.jpg',
+	fbrcfm=> 'https://www.radiofrance.fr/s3/cruiser-production-eu3/2024/11/3398334a-8666-4cb2-978a-4853ec7d2583/sc_logo-rvfm.jpg',
+	fbroussillon=> 'https://www.radiofrance.fr/s3/cruiser-production-eu3/2024/11/a735ac1b-f89f-471b-b3ee-551b6946c2e2/sc_logo-roussillon.jpg',
+	fbsaintetienneloire=> 'https://www.radiofrance.fr/s3/cruiser-production-eu3/2024/11/17f5ec94-e96a-442f-9bf8-6f8c3798605c/sc_logo-saint-etienne-loire.jpg',
+	fbsudlorraine=> 'https://www.radiofrance.fr/s3/cruiser-production-eu3/2024/11/d0448ffa-9420-4c1f-8fef-21e0d9f208ab/sc_logo-sud-lorraine.jpg',
+	fbtouraine=> 'https://www.radiofrance.fr/s3/cruiser-production-eu3/2024/11/8bb007f4-d458-4dad-a18c-1902679a5d9a/sc_logo-tourraine.jpg',
+	fbvaucluse=> 'https://www.radiofrance.fr/s3/cruiser-production-eu3/2024/11/68c80936-8244-4806-bce2-52a17536fb56/sc_logo-vaucluse.jpg',
+
 };
 
 foreach my $metakey (keys(%$stationSet)){
@@ -606,6 +786,7 @@ my $iconsIgnoreRegex = {
 	mouvrapus => '(31d1838e-da34-4579-878b-0fb1027378b1|a0773022-c452-4206-9b16-76fe7147fec9|image_default_player.jpg)',
 	mouvrapfr => '(31d1838e-da34-4579-878b-0fb1027378b1|a0773022-c452-4206-9b16-76fe7147fec9|image_default_player.jpg)',
 	mouv100mix => '(31d1838e-da34-4579-878b-0fb1027378b1|a0773022-c452-4206-9b16-76fe7147fec9|image_default_player.jpg)',
+	mouvsansblabla => '(31d1838e-da34-4579-878b-0fb1027378b1|a0773022-c452-4206-9b16-76fe7147fec9|image_default_player.jpg)',
 };
 
 foreach my $metakey (keys(%$stationSet)){
@@ -682,7 +863,7 @@ foreach my $metakey (keys(%$stationSet)){
 # [ { "name": "banner", "visual_uuid": "4256a1da-f202-4cfa-8c0b-db0fb846da66" },
 #   { "name": "concept_visual", "visual_uuid": "aeb5db31-ea32-4149-8106-bc66c3ab26b7" } ]
 
-my @coverFieldsArr = ( 'cover|src', 'cover', 'visual', 'coverUuid', 'visualBanner', 'mainImage', '@name|square_banner|visual_uuid',
+my @coverFieldsArr = ( 'cover|src', 'cover', 'visual', 'xxxcoverUuid', 'visualBanner', 'cover_main', 'mainImage', 'cover_square', '@name|square_banner|visual_uuid',
 					   '@name|banner|visual_uuid', '@name|concept_visual|visual_uuid', 'src', 'cardVisual|src', 'visuals|player|src' );
 
 
@@ -1041,6 +1222,7 @@ sub getcover {
 	my ( $playinginfo, $station, $info ) = @_;
 	
 	my $thisartwork = '';
+	my $suffix = '';
 	
 	#$dumped = Dumper $playinginfo;
 	#main::DEBUGLOG && $log->is_debug && $log->debug("$station - getcover - checking $dumped");
@@ -1088,11 +1270,17 @@ sub getcover {
 				     exists $playinginfo->{$field1}->{$field2}->{$field3} && defined($playinginfo->{$field1}->{$field2}->{$field3}) && 
 					 ref($playinginfo->{$field1}->{$field2}->{$field3}) ne 'HASH' && $playinginfo->{$field1}->{$field2}->{$field3} ne ''){
 					$thisartwork = $playinginfo->{$field1}->{$field2}->{$field3};
+					
+					if ( $thisartwork !~ /\.(?:jpe?g|gif|png)/i && exists $playinginfo->{$field1}->{$field2}->{'preset'} && $playinginfo->{$field1}->{$field2}->{'preset'} eq 'raw' ){
+						$suffix = '/'.$playinginfo->{$field1}->{$field2}->{'preset'};
+					}
 					last;
 				}
 			}
 		}
 	}
+	
+	$thisartwork .= $suffix;
 
 	# Now check to see if there are any size issues and replace if possible
 	# Note - this uses attributes found in ABC Australia data so would need changing for other sources
@@ -1771,8 +1959,16 @@ sub parseContent {
 
 	if (defined($content) && $content ne ''){
 	
-		# main::DEBUGLOG && $log->is_debug && $log->debug("About to decode JSON");
+		my $guesssong = false;
+		if ( $station ){
+			if ( exists $stationSet->{$station}->{'guesssong'} ){
+				$guesssong = $stationSet->{$station}->{'guesssong'};
+			}
+		}
+		my $artistsignoreregex = getConfig($provider, $station, 'artistsignoreregex');
 		
+		# main::DEBUGLOG && $log->is_debug && $log->debug("About to decode JSON");
+
 		my $perl_data = eval { from_json( $content ) };
 
 		# $dumped =  Dumper $perl_data;
@@ -2664,7 +2860,7 @@ sub parseContent {
 			#$dumped =~ s/\n {44}/\n/g;   
 			#main::DEBUGLOG && $log->is_debug && $log->debug("Type $dataType:$dumped");
 		
-		} elsif ( ref($perl_data) ne "ARRAY" && ( exists $perl_data->{'next'} && exists $perl_data->{'now'}) ) {
+		} elsif ( ref($perl_data) ne "ARRAY" && ( exists $perl_data->{'next'} && exists $perl_data->{'now'} && exists $perl_data->{'now'}->{'firstLine'}) ) {
 			
 			# {
 				# "prev": [
@@ -2713,6 +2909,7 @@ sub parseContent {
 			my $nowplaying;
 			my $thisItem;
 			my $songItem;
+			my $constructedsong;
 			
 			# Used to have only programme info - but appears to have been updated in  mid-2023 to include song info
 			# "song": {
@@ -2740,6 +2937,32 @@ sub parseContent {
 					$nowplaying = $thisItem;
 					$songItem = $thisItem->{'song'};
 					$info->{isSong} = true;
+				} elsif ( $guesssong && exists $thisItem->{'secondLine'} && defined($thisItem->{'secondLine'}) && ref($thisItem->{'secondLine'}) eq '' && $thisItem->{'secondLine'} ne '' ){
+					# example - JULIEN CLERC \x{2022} This melody
+					if ( $thisItem->{'secondLine'} =~ / \x{2022} / ){
+						# Looks like this is really a song ... so take it and fake the data for later processing
+						$thisItem->{'secondLine'} =~ m/^(?<artist>.*?) \x{2022} (?<title>.*)$/ms;
+						
+						if ( defined $+{'artist'} && $+{'artist'} ne '' && defined $+{'title'} && $+{'title'} ne '' ){
+
+							my $a = $+{'artist'};
+							my $t = $+{'title'};
+							
+							# check to see if should be ignored as possible song
+							if ( defined $artistsignoreregex && $artistsignoreregex ne '' && $a =~ m/$artistsignoreregex/ ){
+								main::DEBUGLOG && $log->is_debug && $log->debug("guessing not song: $thisItem->{'secondLine'}");
+							} else {
+								$constructedsong->{'secondLine'} = $a;
+								$constructedsong->{'firstLine'} = $t;
+								$constructedsong->{'startTime'} = $hiResTime;
+								$nowplaying = $constructedsong;
+								$songItem = $thisItem;
+								$info->{isSong} = true;
+								#$dumped = Data::Dump::dump($constructedsong);
+								main::DEBUGLOG && $log->is_debug && $log->debug("guessing aong: $a - $t");
+							}
+						}
+					}
 				}
 				
 				$calculatedPlaying->{$station}->{'progtitle'} = '';
@@ -2842,11 +3065,19 @@ sub parseContent {
 						# This requires that the time on the machine running LMS should be accurate - and timezone set correctly
 
 						if (exists $nowplaying->{'secondLine'} && defined($nowplaying->{'secondLine'}) && $nowplaying->{'secondLine'} ne '') {
-							$calculatedPlaying->{$station}->{'songartist'} = _lowercase($nowplaying->{'secondLine'});
+							if ( ref($nowplaying->{'secondLine'}) eq 'HASH' && exists $nowplaying->{'secondLine'}->{'title'} && $nowplaying->{'secondLine'}->{'title'} ne '' ){
+								$calculatedPlaying->{$station}->{'songartist'} = _lowercase($nowplaying->{'secondLine'}->{'title'});
+							} else {
+								$calculatedPlaying->{$station}->{'songartist'} = _lowercase($nowplaying->{'secondLine'});
+							}
 						}
 
 						if (exists $nowplaying->{'firstLine'} && defined($nowplaying->{'firstLine'}) && $nowplaying->{'firstLine'} ne '') {
-							$calculatedPlaying->{$station}->{'songtitle'} = _lowercase($nowplaying->{'firstLine'});
+							if ( ref($nowplaying->{'firstLine'}) eq 'HASH' && $nowplaying->{'firstLine'}->{'title'} && $nowplaying->{'firstLine'}->{'title'} ne '' ){
+								$calculatedPlaying->{$station}->{'songtitle'} = $nowplaying->{'firstLine'}->{'title'}
+							} else {
+								$calculatedPlaying->{$station}->{'songtitle'} = _lowercase($nowplaying->{'firstLine'});
+							}
 						}
 
 						$calculatedPlaying->{$station}->{'songyear'} = '';
@@ -3612,6 +3843,96 @@ sub parseContent {
 			#$dumped =  Dumper $calculatedPlaying->{$station};
 			#$dumped =~ s/\n {44}/\n/g;   
 			#main::DEBUGLOG && $log->is_debug && $log->debug("Type $dataType:$dumped");
+		} elsif ( ref($perl_data) ne "ARRAY" && ( exists $perl_data->{'now'} && exists $perl_data->{'now'}->{'concept'} && 
+		          exists $perl_data->{'now'}->{'title'} && exists $perl_data->{'now'}->{'progress'}) ) {
+			# https://www.francebleu.fr/api/live-locale/la-rochelle
+			# {
+			  # "now": {
+			    # "id": "09ce3a69-5169-4a29-844b-d784751a4de4",
+			    # "title": "Les infos de 06h00 du mardi 07 janvier 2025",
+			    # "path": null,
+			    # "startTime": "5h59",
+			    # "endTime": "9h00",
+			    # "progress": {
+			      # "start": 1736225970,
+			      # "end": 1736236800
+			    # },
+			    # "concept": {
+			      # "title": "Le journal de 6h, ici La Rochelle",
+			      # "path": "emissions/les-infos-de-06h00/la-rochelle"
+			    # },
+			    # "contact": null,
+			    # "visual": {
+			      # "mobile": {
+				# "url": "https://www.francebleu.fr/s3/cruiser-production-eu3/2024/12/d943a241-9f1e-4a53-a651-8e2d3f93e101/400x400_sc_les-journaux-ici-la-rochelle-3000x3000.jpg",
+				# "urlWebp": "https://www.francebleu.fr/s3/cruiser-production-eu3/2024/12/d943a241-9f1e-4a53-a651-8e2d3f93e101/400x400_sc_les-journaux-ici-la-rochelle-3000x3000.webp",
+				# "legend": "Le journal, ici La Rochelle",
+				# "width": 400,
+				# "height": 400,
+				# "preview": "/9j/2wBDACgcHiMeGSgjISMtKygwPGRBPDc3PHtYXUlkkYCZlo+AjIqgtObDoKrarYqMyP/L2u71////m8H////6/+b9//j/2wBDASstLTw1PHZBQXb4pYyl+Pj4+Pj4+Pj4+Pj4+Pj4+Pj4+Pj4+Pj4+Pj4+Pj4+Pj4+Pj4+Pj4+Pj4+Pj4+Pj4+Pj/wAARCAAqACoDASIAAhEBAxEB/8QAFwABAQEBAAAAAAAAAAAAAAAAAgEAA//EABgQAQEBAQEAAAAAAAAAAAAAAAABERIC/8QAGAEBAQEBAQAAAAAAAAAAAAAAAAIBAwT/xAAWEQEBAQAAAAAAAAAAAAAAAAAAEQH/2gAMAwEAAhEDEQA/AOEWBpSvRXM4UrnrazdHaei7cOm7RqnHVlBdKQ9bQ1NZSH0nQWpoqEzIga0bVoVTF1NRhr//2Q=="
+			      # }
+			    # }
+			  # },
+			  # "next": {
+			    # "title": "ici matin, ici La Rochelle",
+			    # "path": null,
+			    # "time": "5h59 - 9h00"
+			  # }
+			# }			
+			$dataType = 'rf7';
+			my $nowplaying;
+			my $thisItem;
+			my $songItem;
+			
+			$thisItem = $perl_data;
+			
+			if (exists $perl_data->{'now'}->{'progress'}->{'start'} && defined $perl_data->{'now'}->{'progress'}->{'start'} && 
+			    exists $perl_data->{'now'}->{'progress'}->{'end'} && defined $perl_data->{'now'}->{'progress'}->{'end'} &&
+			    $hiResTime >= $perl_data->{'now'}->{'progress'}->{'start'} && $hiResTime <= $perl_data->{'now'}->{'progress'}->{'end'}+30) {
+				# Station / Programme name provided so use that if it is on now
+			
+				if (exists $perl_data->{'now'}->{'concept'}->{'title'} && $perl_data->{'now'}->{'concept'}->{'title'} ne ''){
+					$calculatedPlaying->{$station}->{'progtitle'} = $perl_data->{'now'}->{'concept'}->{'title'};
+				}
+				
+				$calculatedPlaying->{$station}->{'progsubtitle'} = '';
+				
+				if (exists $perl_data->{'now'}->{'title'} && $perl_data->{'now'}->{'title'} ne '' && $perl_data->{'now'}->{'title'} ne $calculatedPlaying->{$station}->{'progtitle'}){
+					$calculatedPlaying->{$station}->{'progsubtitle'} = $perl_data->{'now'}->{'title'};
+				}
+				$calculatedPlaying->{$station}->{proglogo} = '';
+				
+				if ($prefs->get('showprogimage')){
+					my $progIcon = '';
+
+					if (exists $perl_data->{'now'}->{'visual'}->{'mobile'}->{'url'}){
+						# Station / Programme icon provided so use that
+						$progIcon = $perl_data->{'now'}->{'visual'}->{'mobile'}->{'url'};
+					}
+
+					if ($progIcon ne '' && $progIcon !~ /$iconsIgnoreRegex->{$station}/ ){
+						$calculatedPlaying->{$station}->{proglogo} = $progIcon;
+					} else {
+						# Icon not present or matches one to be ignored
+						# if ($progIcon ne ''){main::DEBUGLOG && $log->is_debug && $log->debug("Prog Image skipped: $progIcon");}
+						$calculatedPlaying->{$station}->{proglogo} = '';
+					}
+				}
+				
+				$calculatedPlaying->{$station}->{'progstart'} = $thisItem->{'now'}->{'progress'}->{'start'};
+				$calculatedPlaying->{$station}->{'progend'} = $thisItem->{'now'}->{'progress'}->{'end'};
+				
+				# Work out programme duration and return if plausible
+				$progDuration = $calculatedPlaying->{$station}->{'progend'} - $calculatedPlaying->{$station}->{'progstart'};
+				
+				# main::DEBUGLOG && $log->is_debug && $log->debug("$station - Show Duration $progDuration");
+				
+				if ( $progDuration > 0 ) {$calculatedPlaying->{$station}->{'proglth'} = $progDuration};
+			}
+			
+			#$dumped =  Dumper $calculatedPlaying->{$station};
+			#$dumped =~ s/\n {44}/\n/g;   
+			#main::DEBUGLOG && $log->is_debug && $log->debug("Type $dataType:$dumped");
 		} else {
 			# Do not know how to parse this - probably a mistake in setup of $meta or $station
 			main::INFOLOG && $log->is_info && $log->info("Called for station $station - but do not know which format parser to use");
@@ -3650,7 +3971,7 @@ sub parseContent {
 	# Note - the calculatedPlaying info contains historic data from previous runs
 	# Calculate from what is thought to be playing (programme or song) and put it into $info (which reflects what we want to show)
 	if ($calculatedPlaying->{$station}->{'songtitle'} ne '' && $calculatedPlaying->{$station}->{'songartist'} ne '' &&
-	    $calculatedPlaying->{$station}->{'songstart'} < $hiResTime && $calculatedPlaying->{$station}->{'songend'} >= $hiResTime - cacheTTL ) {
+	    $calculatedPlaying->{$station}->{'songstart'} <= $hiResTime && $calculatedPlaying->{$station}->{'songend'} >= $hiResTime - cacheTTL ) {
 		# We appear to know about a song
 		$info->{title} = $calculatedPlaying->{$station}->{'songtitle'};
 		$info->{remote_title} = $info->{title};
@@ -4018,6 +4339,8 @@ sub updateClient {
 
 			$song->pluginData( wmaMeta => $info );
 			# $client->master->pluginData( metadata => $info );
+
+			$client->currentPlaylistUpdateTime($hiResTime);	# pretend the playlist has changed so that elseehere (Default skin in particular) does a full update - this helps where the "album" has changed but not the title
 			
 			Slim::Control::Request::notifyFromArray( $client, [ 'newmetadata' ] );
 			$myClientInfo->{$deviceName}->{lastpush} = $hiResTime;
@@ -4877,320 +5200,351 @@ sub toplevel {
 				image	=> $icons->{franceinter},
 				items	=> [
 					{
-						name	=> 'France Inter (HLS)',
-						type	=> 'audio',
-						icon	=> $icons->{franceinter},
-						url	=> 'https://stream.radiofrance.fr/franceinter/franceinter.m3u8',
-						on_select	=> 'play'
-					},{
-						name	=> 'France Inter (AAC)',
-						type	=> 'audio',
-						icon	=> $icons->{franceinter},
-						url	=> 'http://icecast.radiofrance.fr/franceinter-hifi.aac',
-						on_select	=> 'play'
-					},{
-						name	=> 'France Inter (MP3)',
-						type	=> 'audio',
-						icon	=> $icons->{franceinter},
-						url	=> 'http://icecast.radiofrance.fr/franceinter-midfi.mp3',
-						on_select	=> 'play'
-					},
-				]
-			},{
-				name => 'FIP',
-				image => $icons->{fipradio},
-				items => [
-					{
-						name => 'FIP',
-						image => $icons->{fipradio},
-						items => [
+						name	=> 'France Inter',
+						image	=> $icons->{franceinter},
+						items	=> [
 							{
-								name        => 'FIP (HLS)',
-								type        => 'audio',
-								icon        => $icons->{fipradio},
-								url         => 'https://stream.radiofrance.fr/fip/fip.m3u8',
-								on_select   => 'play'
-							},
-							{
-								name        => 'FIP (AAC)',
-								type        => 'audio',
-								icon        => $icons->{fipradio},
-								url         => 'http://icecast.radiofrance.fr/fip-hifi.aac',
-								on_select   => 'play'
-							},
-							{
-								name        => 'FIP (MP3)',
-								type        => 'audio',
-								icon        => $icons->{fipradio},
-								url         => 'http://icecast.radiofrance.fr/fip-midfi.mp3',
-								on_select   => 'play'
+								name	=> 'France Inter (HLS)',
+								type	=> 'audio',
+								icon	=> $icons->{franceinter},
+								url	=> 'https://stream.radiofrance.fr/franceinter/franceinter.m3u8',
+								on_select	=> 'play'
+							},{
+								name	=> 'France Inter (AAC)',
+								type	=> 'audio',
+								icon	=> $icons->{franceinter},
+								url	=> 'http://icecast.radiofrance.fr/franceinter-hifi.aac',
+								on_select	=> 'play'
+							},{
+								name	=> 'France Inter (MP3)',
+								type	=> 'audio',
+								icon	=> $icons->{franceinter},
+								url	=> 'http://icecast.radiofrance.fr/franceinter-midfi.mp3',
+								on_select	=> 'play'
 							},
 						],
-					},{
-						name	=> 'Rock',
-						image	=> $icons->{fiprock},
+					},
+					{
+						name	=> 'La musique d\'Inter',
+						image	=> $icons->{franceinterlamusiqueinter},
 						items	=> [
 							{
-								name	=> 'FIP Rock (HLS)',
+								name	=> 'La musique d\'Inter (HLS)',
 								type	=> 'audio',
-								icon	=> $icons->{fiprock},
-								url	=> 'https://stream.radiofrance.fr/fiprock/fiprock.m3u8',
+								icon	=> $icons->{franceinterlamusiqueinter},
+								url	=> 'https://stream.radiofrance.fr/franceinterlamusiqueinter/franceinterlamusiqueinter.m3u8',
 								on_select	=> 'play'
 							},{
-								name	=> 'FIP Rock (AAC)',
+								name	=> 'La musique d\'Inter (AAC)',
 								type	=> 'audio',
-								icon	=> $icons->{fiprock},
-								url	=> 'http://icecast.radiofrance.fr/fiprock-hifi.aac',
+								icon	=> $icons->{franceinterlamusiqueinter},
+								url	=> 'https://icecast.radiofrance.fr/franceinterlamusiqueinter-hifi.aac',
 								on_select	=> 'play'
 							},{
-								name	=> 'FIP Rock (MP3)',
+								name	=> 'La musique d\'Inter (MP3)',
 								type	=> 'audio',
-								icon	=> $icons->{fiprock},
-								url	=> 'http://icecast.radiofrance.fr/fiprock-midfi.mp3',
+								icon	=> $icons->{franceinterlamusiqueinter},
+								url	=> 'https://icecast.radiofrance.fr/franceinterlamusiqueinter-midfi.mp3',
 								on_select	=> 'play'
-							},
-						]
-					},{
-						name	=> 'Jazz',
-						image	=> $icons->{fipjazz},
-						items	=> [
-							{
-								name	=> 'FIP Jazz (HLS)',
-								type	=> 'audio',
-								icon	=> $icons->{fipjazz},
-								url	=> 'https://stream.radiofrance.fr/fipjazz/fipjazz.m3u8',
-								on_select	=> 'play'
-							},{
-								name	=> 'FIP Jazz (AAC)',
-								type	=> 'audio',
-								icon	=> $icons->{fipjazz},
-								url	=> 'http://icecast.radiofrance.fr/fipjazz-hifi.aac',
-								on_select	=> 'play'
-							},{
-								name	=> 'FIP Jazz (MP3)',
-								type	=> 'audio',
-								icon	=> $icons->{fipjazz},
-								url	=> 'http://icecast.radiofrance.fr/fipjazz-midfi.mp3',
-								on_select	=> 'play'
-							},
-						]
-					},{
-						name	=> 'Groove',
-						image	=> $icons->{fipgroove},
-						items	=> [
-							{
-								name	=> 'FIP Groove (HLS)',
-								type	=> 'audio',
-								icon	=> $icons->{fipgroove},
-								url	=> 'https://stream.radiofrance.fr/fipgroove/fipgroove.m3u8',
-								on_select	=> 'play'
-							},{
-								name	=> 'FIP Groove (AAC)',
-								type	=> 'audio',
-								icon	=> $icons->{fipgroove},
-								url	=> 'http://icecast.radiofrance.fr/fipgroove-hifi.aac',
-								on_select	=> 'play'
-							},{
-								name	=> 'FIP Groove (MP3)',
-								type	=> 'audio',
-								icon	=> $icons->{fipgroove},
-								url	=> 'http://icecast.radiofrance.fr/fipgroove-midfi.mp3',
-								on_select	=> 'play'
-							},
-						]
-					},{
-						name	=> 'Metal',
-						image	=> $icons->{fipmetal},
-						items	=> [
-							{
-								name	=> 'FIP Metal (HLS)',
-								type	=> 'audio',
-								icon	=> $icons->{fipmetal},
-								url	=> 'https://stream.radiofrance.fr/fipmetal/fipmetal.m3u8',
-								on_select	=> 'play'
-							},{
-								name	=> 'FIP Metal (AAC)',
-								type	=> 'audio',
-								icon	=> $icons->{fipmetal},
-								url	=> 'http://icecast.radiofrance.fr/fipmetal-hifi.aac',
-								on_select	=> 'play'
-							},{
-								name	=> 'FIP Metal (MP3)',
-								type	=> 'audio',
-								icon	=> $icons->{fipmetal},
-								url	=> 'http://icecast.radiofrance.fr/fipmetal-midfi.mp3',
-								on_select	=> 'play'
-							},
-						]
-					},{
-						name	=> 'Hip-Hop',
-						image	=> $icons->{fiphiphop},
-						items	=> [
-							{
-								name	=> 'FIP Hip-Hop (HLS)',
-								type	=> 'audio',
-								icon	=> $icons->{fiphiphop},
-								url	=> 'https://stream.radiofrance.fr/fiphiphop/fiphiphop.m3u8',
-								on_select	=> 'play'
-							},{
-								name	=> 'FIP Hip-Hop (AAC)',
-								type	=> 'audio',
-								icon	=> $icons->{fiphiphop},
-								url	=> 'http://icecast.radiofrance.fr/fiphiphop-hifi.aac',
-								on_select	=> 'play'
-							},{
-								name	=> 'FIP Hip-Hop (MP3)',
-								type	=> 'audio',
-								icon	=> $icons->{fiphiphop},
-								url	=> 'http://icecast.radiofrance.fr/fiphiphop-midfi.mp3',
-								on_select	=> 'play'
-							},
-						]
-					},{
-						name	=> 'Electro',
-						image	=> $icons->{fipelectro},
-						items	=> [
-							{
-								name	=> 'FIP Electro (HLS)',
-								type	=> 'audio',
-								icon	=> $icons->{fipelectro},
-								url	=> 'https://stream.radiofrance.fr/fipelectro/fipelectro.m3u8',
-								on_select	=> 'play'
-							},{
-								name	=> 'FIP Electro (AAC)',
-								type	=> 'audio',
-								icon	=> $icons->{fipelectro},
-								url	=> 'http://icecast.radiofrance.fr/fipelectro-hifi.aac',
-								on_select	=> 'play'
-							},{
-								name	=> 'FIP Electro (MP3)',
-								type	=> 'audio',
-								icon	=> $icons->{fipelectro},
-								url	=> 'http://icecast.radiofrance.fr/fipelectro-midfi.mp3',
-								on_select	=> 'play'
-							},
-						]
-					},{
-						name	=> 'Pop',
-						image	=> $icons->{fippop},
-						items	=> [
-							{
-								name	=> 'FIP Pop (HLS)',
-								type	=> 'audio',
-								icon	=> $icons->{fippop},
-								url	=> 'https://stream.radiofrance.fr/fippop/fippop.m3u8',
-								on_select	=> 'play'
-							},{
-								name	=> 'FIP Pop (AAC)',
-								type	=> 'audio',
-								icon	=> $icons->{fippop},
-								url	=> 'http://icecast.radiofrance.fr/fippop-hifi.aac',
-								on_select	=> 'play'
-							},{
-								name	=> 'FIP Pop (MP3)',
-								type	=> 'audio',
-								icon	=> $icons->{fippop},
-								url	=> 'http://icecast.radiofrance.fr/fippop-midfi.mp3',
-								on_select	=> 'play'
-							},
-						]
-					},{
-						name	=> 'Monde',
-						image	=> $icons->{fipmonde},
-						items	=> [
-							{
-								name	=> 'FIP Monde (HLS)',
-								type	=> 'audio',
-								icon	=> $icons->{fipmonde},
-								url	=> 'https://stream.radiofrance.fr/fipworld/fipworld.m3u8',
-								on_select	=> 'play'
-							},{
-								name	=> 'FIP Monde (AAC)',
-								type	=> 'audio',
-								icon	=> $icons->{fipmonde},
-								url	=> 'http://icecast.radiofrance.fr/fipworld-hifi.aac',
-								on_select	=> 'play'
-							},{
-								name	=> 'FIP Monde (MP3)',
-								type	=> 'audio',
-								icon	=> $icons->{fipmonde},
-								url	=> 'http://icecast.radiofrance.fr/fipworld-midfi.mp3',
-								on_select	=> 'play'
-							},
-						]
-					},{
-						name	=> 'Reggae',
-						image	=> $icons->{fipreggae},
-						items	=> [
-							{
-								name	=> 'FIP Reggae (HLS)',
-								type	=> 'audio',
-								icon	=> $icons->{fipreggae},
-								url	=> 'https://stream.radiofrance.fr/fipreggae/fipreggae.m3u8',
-								on_select	=> 'play'
-							},{
-								name	=> 'FIP Reggae (AAC)',
-								type	=> 'audio',
-								icon	=> $icons->{fipreggae},
-								url	=> 'http://icecast.radiofrance.fr/fipreggae-hifi.aac',
-								on_select	=> 'play'
-							},{
-								name	=> 'FIP Reggae (MP3)',
-								type	=> 'audio',
-								icon	=> $icons->{fipreggae},
-								url	=> 'http://icecast.radiofrance.fr/fipreggae-midfi.mp3',
-								on_select	=> 'play'
-							},
-						]
-					},{
-						name	=> 'Nouveau',
-						image	=> $icons->{fipnouveau},
-						items	=> [
-							{
-								name	=> 'FIP Nouveau (HLS)',
-								type	=> 'audio',
-								icon	=> $icons->{fipnouveau},
-								url	=> 'https://stream.radiofrance.fr/fipnouveautes/fipnouveautes.m3u8',
-								on_select	=> 'play'
-							},{
-								name	=> 'FIP Nouveau (AAC)',
-								type	=> 'audio',
-								icon	=> $icons->{fipnouveau},
-								url	=> 'http://icecast.radiofrance.fr/fipnouveautes-hifi.aac',
-								on_select	=> 'play'
-							},{
-								name	=> 'FIP Nouveau (MP3)',
-								type	=> 'audio',
-								icon	=> $icons->{fipnouveau},
-								url	=> 'http://icecast.radiofrance.fr/fipnouveautes-midfi.mp3',
-								on_select	=> 'play'
-							},
-						]
-					},{
-						name	=> 'Sacré français !',
-						image	=> $icons->{fipsacre},
-						items	=> [
-							{
-								name	=> 'FIP Sacré français ! (HLS)',
-								type	=> 'audio',
-								icon	=> $icons->{fipsacre},
-								url	=> 'https://stream.radiofrance.fr/fipsacrefrancais/fipsacrefrancais.m3u8',
-								on_select	=> 'play'
-							},{
-								name	=> 'FIP Sacré français ! (AAC)',
-								type	=> 'audio',
-								icon	=> $icons->{fipsacre},
-								url	=> 'http://icecast.radiofrance.fr/fipsacrefrancais-hifi.aac',
-								on_select	=> 'play'
-							},{
-								name	=> 'FIP Sacré français ! (MP3)',
-								type	=> 'audio',
-								icon	=> $icons->{fipsacre},
-								url	=> 'http://icecast.radiofrance.fr/fipsacrefrancais-midfi.mp3',
-								on_select	=> 'play'
-							},
+							}
 						]
 					}
+				]
+			},{
+					name => 'FIP',
+					image => $icons->{fipradio},
+					items => [
+						{
+							name => 'FIP',
+							image => $icons->{fipradio},
+							items => [
+								{
+									name        => 'FIP (HLS)',
+									type        => 'audio',
+									icon        => $icons->{fipradio},
+									url         => 'https://stream.radiofrance.fr/fip/fip.m3u8',
+									on_select   => 'play'
+								},
+								{
+									name        => 'FIP (AAC)',
+									type        => 'audio',
+									icon        => $icons->{fipradio},
+									url         => 'http://icecast.radiofrance.fr/fip-hifi.aac',
+									on_select   => 'play'
+								},
+								{
+									name        => 'FIP (MP3)',
+									type        => 'audio',
+									icon        => $icons->{fipradio},
+									url         => 'http://icecast.radiofrance.fr/fip-midfi.mp3',
+									on_select   => 'play'
+								},
+							],
+						},{
+							name	=> 'Rock',
+							image	=> $icons->{fiprock},
+							items	=> [
+								{
+									name	=> 'FIP Rock (HLS)',
+									type	=> 'audio',
+									icon	=> $icons->{fiprock},
+									url	=> 'https://stream.radiofrance.fr/fiprock/fiprock.m3u8',
+									on_select	=> 'play'
+								},{
+									name	=> 'FIP Rock (AAC)',
+									type	=> 'audio',
+									icon	=> $icons->{fiprock},
+									url	=> 'http://icecast.radiofrance.fr/fiprock-hifi.aac',
+									on_select	=> 'play'
+								},{
+									name	=> 'FIP Rock (MP3)',
+									type	=> 'audio',
+									icon	=> $icons->{fiprock},
+									url	=> 'http://icecast.radiofrance.fr/fiprock-midfi.mp3',
+									on_select	=> 'play'
+								},
+							]
+						},{
+							name	=> 'Jazz',
+							image	=> $icons->{fipjazz},
+							items	=> [
+								{
+									name	=> 'FIP Jazz (HLS)',
+									type	=> 'audio',
+									icon	=> $icons->{fipjazz},
+									url	=> 'https://stream.radiofrance.fr/fipjazz/fipjazz.m3u8',
+									on_select	=> 'play'
+								},{
+									name	=> 'FIP Jazz (AAC)',
+									type	=> 'audio',
+									icon	=> $icons->{fipjazz},
+									url	=> 'http://icecast.radiofrance.fr/fipjazz-hifi.aac',
+									on_select	=> 'play'
+								},{
+									name	=> 'FIP Jazz (MP3)',
+									type	=> 'audio',
+									icon	=> $icons->{fipjazz},
+									url	=> 'http://icecast.radiofrance.fr/fipjazz-midfi.mp3',
+									on_select	=> 'play'
+								},
+							]
+						},{
+							name	=> 'Groove',
+							image	=> $icons->{fipgroove},
+							items	=> [
+								{
+									name	=> 'FIP Groove (HLS)',
+									type	=> 'audio',
+									icon	=> $icons->{fipgroove},
+									url	=> 'https://stream.radiofrance.fr/fipgroove/fipgroove.m3u8',
+									on_select	=> 'play'
+								},{
+									name	=> 'FIP Groove (AAC)',
+									type	=> 'audio',
+									icon	=> $icons->{fipgroove},
+									url	=> 'http://icecast.radiofrance.fr/fipgroove-hifi.aac',
+									on_select	=> 'play'
+								},{
+									name	=> 'FIP Groove (MP3)',
+									type	=> 'audio',
+									icon	=> $icons->{fipgroove},
+									url	=> 'http://icecast.radiofrance.fr/fipgroove-midfi.mp3',
+									on_select	=> 'play'
+								},
+							]
+						},{
+							name	=> 'Metal',
+							image	=> $icons->{fipmetal},
+							items	=> [
+								{
+									name	=> 'FIP Metal (HLS)',
+									type	=> 'audio',
+									icon	=> $icons->{fipmetal},
+									url	=> 'https://stream.radiofrance.fr/fipmetal/fipmetal.m3u8',
+									on_select	=> 'play'
+								},{
+									name	=> 'FIP Metal (AAC)',
+									type	=> 'audio',
+									icon	=> $icons->{fipmetal},
+									url	=> 'http://icecast.radiofrance.fr/fipmetal-hifi.aac',
+									on_select	=> 'play'
+								},{
+									name	=> 'FIP Metal (MP3)',
+									type	=> 'audio',
+									icon	=> $icons->{fipmetal},
+									url	=> 'http://icecast.radiofrance.fr/fipmetal-midfi.mp3',
+									on_select	=> 'play'
+								},
+							]
+						},{
+							name	=> 'Hip-Hop',
+							image	=> $icons->{fiphiphop},
+							items	=> [
+								{
+									name	=> 'FIP Hip-Hop (HLS)',
+									type	=> 'audio',
+									icon	=> $icons->{fiphiphop},
+									url	=> 'https://stream.radiofrance.fr/fiphiphop/fiphiphop.m3u8',
+									on_select	=> 'play'
+								},{
+									name	=> 'FIP Hip-Hop (AAC)',
+									type	=> 'audio',
+									icon	=> $icons->{fiphiphop},
+									url	=> 'http://icecast.radiofrance.fr/fiphiphop-hifi.aac',
+									on_select	=> 'play'
+								},{
+									name	=> 'FIP Hip-Hop (MP3)',
+									type	=> 'audio',
+									icon	=> $icons->{fiphiphop},
+									url	=> 'http://icecast.radiofrance.fr/fiphiphop-midfi.mp3',
+									on_select	=> 'play'
+								},
+							]
+						},{
+							name	=> 'Electro',
+							image	=> $icons->{fipelectro},
+							items	=> [
+								{
+									name	=> 'FIP Electro (HLS)',
+									type	=> 'audio',
+									icon	=> $icons->{fipelectro},
+									url	=> 'https://stream.radiofrance.fr/fipelectro/fipelectro.m3u8',
+									on_select	=> 'play'
+								},{
+									name	=> 'FIP Electro (AAC)',
+									type	=> 'audio',
+									icon	=> $icons->{fipelectro},
+									url	=> 'http://icecast.radiofrance.fr/fipelectro-hifi.aac',
+									on_select	=> 'play'
+								},{
+									name	=> 'FIP Electro (MP3)',
+									type	=> 'audio',
+									icon	=> $icons->{fipelectro},
+									url	=> 'http://icecast.radiofrance.fr/fipelectro-midfi.mp3',
+									on_select	=> 'play'
+								},
+							]
+						},{
+							name	=> 'Pop',
+							image	=> $icons->{fippop},
+							items	=> [
+								{
+									name	=> 'FIP Pop (HLS)',
+									type	=> 'audio',
+									icon	=> $icons->{fippop},
+									url	=> 'https://stream.radiofrance.fr/fippop/fippop.m3u8',
+									on_select	=> 'play'
+								},{
+									name	=> 'FIP Pop (AAC)',
+									type	=> 'audio',
+									icon	=> $icons->{fippop},
+									url	=> 'http://icecast.radiofrance.fr/fippop-hifi.aac',
+									on_select	=> 'play'
+								},{
+									name	=> 'FIP Pop (MP3)',
+									type	=> 'audio',
+									icon	=> $icons->{fippop},
+									url	=> 'http://icecast.radiofrance.fr/fippop-midfi.mp3',
+									on_select	=> 'play'
+								},
+							]
+						},{
+							name	=> 'Monde',
+							image	=> $icons->{fipmonde},
+							items	=> [
+								{
+									name	=> 'FIP Monde (HLS)',
+									type	=> 'audio',
+									icon	=> $icons->{fipmonde},
+									url	=> 'https://stream.radiofrance.fr/fipworld/fipworld.m3u8',
+									on_select	=> 'play'
+								},{
+									name	=> 'FIP Monde (AAC)',
+									type	=> 'audio',
+									icon	=> $icons->{fipmonde},
+									url	=> 'http://icecast.radiofrance.fr/fipworld-hifi.aac',
+									on_select	=> 'play'
+								},{
+									name	=> 'FIP Monde (MP3)',
+									type	=> 'audio',
+									icon	=> $icons->{fipmonde},
+									url	=> 'http://icecast.radiofrance.fr/fipworld-midfi.mp3',
+									on_select	=> 'play'
+								},
+							]
+						},{
+							name	=> 'Reggae',
+							image	=> $icons->{fipreggae},
+							items	=> [
+								{
+									name	=> 'FIP Reggae (HLS)',
+									type	=> 'audio',
+									icon	=> $icons->{fipreggae},
+									url	=> 'https://stream.radiofrance.fr/fipreggae/fipreggae.m3u8',
+									on_select	=> 'play'
+								},{
+									name	=> 'FIP Reggae (AAC)',
+									type	=> 'audio',
+									icon	=> $icons->{fipreggae},
+									url	=> 'http://icecast.radiofrance.fr/fipreggae-hifi.aac',
+									on_select	=> 'play'
+								},{
+									name	=> 'FIP Reggae (MP3)',
+									type	=> 'audio',
+									icon	=> $icons->{fipreggae},
+									url	=> 'http://icecast.radiofrance.fr/fipreggae-midfi.mp3',
+									on_select	=> 'play'
+								},
+							]
+						},{
+							name	=> 'Nouveau',
+							image	=> $icons->{fipnouveau},
+							items	=> [
+								{
+									name	=> 'FIP Nouveau (HLS)',
+									type	=> 'audio',
+									icon	=> $icons->{fipnouveau},
+									url	=> 'https://stream.radiofrance.fr/fipnouveautes/fipnouveautes.m3u8',
+									on_select	=> 'play'
+								},{
+									name	=> 'FIP Nouveau (AAC)',
+									type	=> 'audio',
+									icon	=> $icons->{fipnouveau},
+									url	=> 'http://icecast.radiofrance.fr/fipnouveautes-hifi.aac',
+									on_select	=> 'play'
+								},{
+									name	=> 'FIP Nouveau (MP3)',
+									type	=> 'audio',
+									icon	=> $icons->{fipnouveau},
+									url	=> 'http://icecast.radiofrance.fr/fipnouveautes-midfi.mp3',
+									on_select	=> 'play'
+								},
+							]
+						},{
+							name	=> 'Sacré français !',
+							image	=> $icons->{fipsacre},
+							items	=> [
+								{
+									name	=> 'FIP Sacré français ! (HLS)',
+									type	=> 'audio',
+									icon	=> $icons->{fipsacre},
+									url	=> 'https://stream.radiofrance.fr/fipsacrefrancais/fipsacrefrancais.m3u8',
+									on_select	=> 'play'
+								},{
+									name	=> 'FIP Sacré français ! (AAC)',
+									type	=> 'audio',
+									icon	=> $icons->{fipsacre},
+									url	=> 'http://icecast.radiofrance.fr/fipsacrefrancais-hifi.aac',
+									on_select	=> 'play'
+								},{
+									name	=> 'FIP Sacré français ! (MP3)',
+									type	=> 'audio',
+									icon	=> $icons->{fipsacre},
+									url	=> 'http://icecast.radiofrance.fr/fipsacrefrancais-midfi.mp3',
+									on_select	=> 'play'
+								},
+							]
+						}
 				]
 			},{
 				name	=> 'France Musique',
@@ -5658,6 +6012,30 @@ sub toplevel {
 								on_select	=> 'play'
 							},
 						]
+					},{
+						name	=> 'Sans Blabla',
+						image	=> $icons->{mouvsansblabla},
+						items	=> [
+							{
+								name	=> 'Mouv\' Sans Blabla (HLS)',
+								type	=> 'audio',
+								icon	=> $icons->{mouvsansblabla},
+								url	=> 'https://stream.radiofrance.fr/mouvsansblabla/mouvsansblabla.m3u8',
+								on_select	=> 'play'
+							},{
+								name	=> 'Mouv\' Sans Blabla (AAC)',
+								type	=> 'audio',
+								icon	=> $icons->{mouvsansblabla},
+								url	=> 'http://icecast.radiofrance.fr/mouvsansblabla-hifi.aac',
+								on_select	=> 'play'
+							},{
+								name	=> 'Mouv\' Sans Blabla (MP3)',
+								type	=> 'audio',
+								icon	=> $icons->{mouvsansblabla},
+								url	=> 'http://icecast.radiofrance.fr/mouvsansblabla-midfi.mp3',
+								on_select	=> 'play'
+							},
+						]
 					}
 					]
 			},{
@@ -5710,23 +6088,47 @@ sub toplevel {
 					},
 				]
 			},{
-				name	=> 'France Bleu',
-				image	=> 'https://mediateur.radiofrance.fr/wp-content/themes/radiofrance/img/france-bleu.png',
+				name	=> 'ici',
+				#image	=> 'https://mediateur.radiofrance.fr/wp-content/themes/radiofrance/img/france-bleu.png',
+				image	=> 'https://www.radiofrance.fr/client/immutable/assets/francebleu-seosquare.CfwKvmMQ.png',
 				items	=> [
 					{
+						name	=> '100% Chanson Française',
+						icon	=> $icons->{fb100chanson},
+						items	=> [
+							{
+							name	=> '100% Chanson Française',
+							icon	=> $icons->{fb100chanson},
+								name	=> 'ici 100% Chanson Française (HLS)',
+								type	=> 'audio',
+								icon	=> $icons->{fb100chanson},
+								url	=> 'https://stream.radiofrance.fr/fbchansonfrancaise/fbchansonfrancaise_lofi.m3u8',
+								on_select	=> 'play'
+							},
+							{
+							name	=> '100% Chanson Française',
+							icon	=> $icons->{fb100chanson},
+								name	=> 'ici 100% Chanson Française (MP3)',
+								type	=> 'audio',
+								icon	=> $icons->{fb100chanson},
+								url	=> 'http://icecast.radiofrance.fr/fbchansonfrancaise-midfi.mp3',
+								on_select	=> 'play'
+							},
+						]
+					},{
 						name	=> 'Alsace',
 						icon	=> $icons->{fbalsace},
 						items	=> [
 							{
 							name	=> 'Alsace',
 							icon	=> $icons->{fbalsace},
-								name	=> 'France Bleu Alsace (HLS)',
+								name	=> 'ici Alsace (HLS)',
 								type	=> 'audio',
 								icon	=> $icons->{fbalsace},
 								url	=> 'https://stream.radiofrance.fr/fbalsace/fbalsace.m3u8',
 								on_select	=> 'play'
 							},{
-								name	=> 'France Bleu Alsace (MP3)',
+								name	=> 'ici Alsace (MP3)',
 								type	=> 'audio',
 								icon	=> $icons->{fbalsace},
 								url	=> 'http://direct.francebleu.fr/live/fbalsace-midfi.mp3',
@@ -5738,13 +6140,13 @@ sub toplevel {
 						image	=> $icons->{fbarmorique},
 						items	=> [
 							{
-								name	=> 'France Bleu Armorique (HLS)',
+								name	=> 'ici Armorique (HLS)',
 								type	=> 'audio',
 								icon	=> $icons->{fbarmorique},
 								url	=> 'https://stream.radiofrance.fr/fbarmorique/fbarmorique.m3u8',
 								on_select	=> 'play'
 							},{
-								name	=> 'France Bleu Armorique (MP3)',
+								name	=> 'ici Armorique (MP3)',
 								type	=> 'audio',
 								icon	=> $icons->{fbarmorique},
 								url	=> 'http://direct.francebleu.fr/live/fbarmorique-midfi.mp3',
@@ -5756,13 +6158,13 @@ sub toplevel {
 						image	=> $icons->{fbauxerre},
 						items	=> [
 							{
-								name	=> 'France Bleu Auxerre (HLS)',
+								name	=> 'ici Auxerre (HLS)',
 								type	=> 'audio',
 								icon	=> $icons->{fbauxerre},
 								url	=> 'https://stream.radiofrance.fr/fbauxerre/fbauxerre.m3u8',
 								on_select	=> 'play'
 							},{
-								name	=> 'France Bleu Auxerre (MP3)',
+								name	=> 'ici Auxerre (MP3)',
 								type	=> 'audio',
 								icon	=> $icons->{fbauxerre},
 								url	=> 'http://direct.francebleu.fr/live/fbauxerre-midfi.mp3',
@@ -5774,13 +6176,13 @@ sub toplevel {
 						image	=> $icons->{fbazur},
 						items	=> [
 							{
-								name	=> 'France Bleu Azur (HLS)',
+								name	=> 'ici Azur (HLS)',
 								type	=> 'audio',
 								icon	=> $icons->{fbazur},
 								url	=> 'https://stream.radiofrance.fr/fbazur/fbazur.m3u8',
 								on_select	=> 'play'
 							},{
-								name	=> 'France Bleu Azur (MP3)',
+								name	=> 'ici Azur (MP3)',
 								type	=> 'audio',
 								icon	=> $icons->{fbazur},
 								url	=> 'http://direct.francebleu.fr/live/fbazur-midfi.mp3',
@@ -5792,13 +6194,13 @@ sub toplevel {
 						image	=> $icons->{fbbearn},
 						items	=> [
 							{
-								name	=> 'France Bleu Béarn (HLS)',
+								name	=> 'ici Béarn (HLS)',
 								type	=> 'audio',
 								icon	=> $icons->{fbbearn},
 								url	=> 'https://stream.radiofrance.fr/fbbearn/fbbearn.m3u8',
 								on_select	=> 'play'
 							},{
-								name	=> 'France Bleu Béarn (MP3)',
+								name	=> 'ici Béarn (MP3)',
 								type	=> 'audio',
 								icon	=> $icons->{fbbearn},
 								url	=> 'http://direct.francebleu.fr/live/fbbearn-midfi.mp3',
@@ -5810,13 +6212,13 @@ sub toplevel {
 						image	=> $icons->{fbbelfort},
 						items	=> [
 							{
-								name	=> 'France Bleu Belfort-Montbéliard (HLS)',
+								name	=> 'ici Belfort-Montbéliard (HLS)',
 								type	=> 'audio',
 								icon	=> $icons->{fbbelfort},
 								url	=> 'https://stream.radiofrance.fr/fbbelfort/fbbelfort.m3u8',
 								on_select	=> 'play'
 							},{
-								name	=> 'France Bleu Belfort-Montbéliard (MP3)',
+								name	=> 'ici Belfort-Montbéliard (MP3)',
 								type	=> 'audio',
 								icon	=> $icons->{fbbelfort},
 								url	=> 'http://direct.francebleu.fr/live/fbbelfort-midfi.mp3',
@@ -5828,13 +6230,13 @@ sub toplevel {
 						image	=> $icons->{fbberry},
 						items	=> [
 							{
-								name	=> 'France Bleu Berry (HLS)',
+								name	=> 'ici Berry (HLS)',
 								type	=> 'audio',
 								icon	=> $icons->{fbberry},
 								url	=> 'https://stream.radiofrance.fr/fbberry/fbberry.m3u8',
 								on_select	=> 'play'
 							},{
-								name	=> 'France Bleu Berry (MP3)',
+								name	=> 'ici Berry (MP3)',
 								type	=> 'audio',
 								icon	=> $icons->{fbberry},
 								url	=> 'http://direct.francebleu.fr/live/fbberry-midfi.mp3',
@@ -5846,13 +6248,13 @@ sub toplevel {
 						image	=> $icons->{fbbesancon},
 						items	=> [
 							{
-								name	=> 'France Bleu Besançon (HLS)',
+								name	=> 'ici Besançon (HLS)',
 								type	=> 'audio',
 								icon	=> $icons->{fbbesancon},
 								url	=> 'https://stream.radiofrance.fr/fbbesancon/fbbesancon.m3u8',
 								on_select	=> 'play'
 							},{
-								name	=> 'France Bleu Besançon (MP3)',
+								name	=> 'ici Besançon (MP3)',
 								type	=> 'audio',
 								icon	=> $icons->{fbbesancon},
 							url	=> 'http://direct.francebleu.fr/live/fbbesancon-midfi.mp3',
@@ -5864,13 +6266,13 @@ sub toplevel {
 						image	=> $icons->{fbbourgogne},
 						items	=> [
 							{
-								name	=> 'France Bleu Bourgogne (HLS)',
+								name	=> 'ici Bourgogne (HLS)',
 								type	=> 'audio',
 								icon	=> $icons->{fbbourgogne},
 								url	=> 'https://stream.radiofrance.fr/fbbourgogne/fbbourgogne.m3u8',
 								on_select	=> 'play'
 							},{
-								name	=> 'France Bleu Bourgogne (MP3)',
+								name	=> 'ici Bourgogne (MP3)',
 								type	=> 'audio',
 								icon	=> $icons->{fbbourgogne},
 								url	=> 'http://direct.francebleu.fr/live/fbbourgogne-midfi.mp3',
@@ -5882,13 +6284,13 @@ sub toplevel {
 						image	=> $icons->{fbbreizhizel},
 						items	=> [
 							{
-								name	=> 'France Bleu Breizh Izel (HLS)',
+								name	=> 'ici Breizh Izel (HLS)',
 								type	=> 'audio',
 								icon	=> $icons->{fbbreizhizel},
 								url	=> 'https://stream.radiofrance.fr/fbbreizizel/fbbreizizel.m3u8',
 								on_select	=> 'play'
 							},{
-								name	=> 'France Bleu Breizh Izel (MP3)',
+								name	=> 'ici Breizh Izel (MP3)',
 								type	=> 'audio',
 								icon	=> $icons->{fbbreizhizel},
 								url	=> 'http://direct.francebleu.fr/live/fbbreizizel-midfi.mp3',
@@ -5900,13 +6302,13 @@ sub toplevel {
 						image	=> $icons->{fbchampagne},
 						items	=> [
 							{
-								name	=> 'France Bleu Champagne-Ardenne (HLS)',
+								name	=> 'ici Champagne-Ardenne (HLS)',
 								type	=> 'audio',
 								icon	=> $icons->{fbchampagne},
 								url	=> 'https://stream.radiofrance.fr/fbchampagne/fbchampagne.m3u8',
 								on_select	=> 'play'
 							},{
-								name	=> 'France Bleu Champagne-Ardenne (MP3)',
+								name	=> 'ici Champagne-Ardenne (MP3)',
 								type	=> 'audio',
 								icon	=> $icons->{fbchampagne},
 								url	=> 'http://direct.francebleu.fr/live/fbchampagne-midfi.mp3',
@@ -5918,13 +6320,13 @@ sub toplevel {
 						image	=> $icons->{fbcotentin},
 						items	=> [
 							{
-								name	=> 'France Bleu Cotentin (HLS)',
+								name	=> 'ici Cotentin (HLS)',
 								type	=> 'audio',
 								icon	=> $icons->{fbcotentin},
 								url	=> 'https://stream.radiofrance.fr/fbcotentin/fbcotentin.m3u8',
 								on_select	=> 'play'
 							},{
-								name	=> 'France Bleu Cotentin (MP3)',
+								name	=> 'ici Cotentin (MP3)',
 								type	=> 'audio',
 								icon	=> $icons->{fbcotentin},
 								url	=> 'http://direct.francebleu.fr/live/fbcotentin-midfi.mp3',
@@ -5936,13 +6338,13 @@ sub toplevel {
 						image	=> $icons->{fbcreuse},
 						items	=> [
 							{
-								name	=> 'France Bleu Creuse (HLS)',
+								name	=> 'ici Creuse (HLS)',
 								type	=> 'audio',
 								icon	=> $icons->{fbcreuse},
 								url	=> 'https://stream.radiofrance.fr/fbcreuse/fbcreuse.m3u8',
 								on_select	=> 'play'
 							},{
-								name	=> 'France Bleu Creuse (MP3)',
+								name	=> 'ici Creuse (MP3)',
 								type	=> 'audio',
 								icon	=> $icons->{fbcreuse},
 								url	=> 'http://direct.francebleu.fr/live/fbcreuse-midfi.mp3',
@@ -5954,13 +6356,13 @@ sub toplevel {
 						image	=> $icons->{fbdromeardeche},
 						items	=> [
 							{
-								name	=> 'France Bleu Drôme Ardèche (HLS)',
+								name	=> 'ici Drôme Ardèche (HLS)',
 								type	=> 'audio',
 								icon	=> $icons->{fbdromeardeche},
 								url	=> 'https://stream.radiofrance.fr/fbdromeardeche/fbdromeardeche.m3u8',
 								on_select	=> 'play'
 							},{
-								name	=> 'France Bleu Drôme Ardèche (MP3)',
+								name	=> 'ici Drôme Ardèche (MP3)',
 								type	=> 'audio',
 								icon	=> $icons->{fbdromeardeche},
 								url	=> 'http://direct.francebleu.fr/live/fbdromeardeche-midfi.mp3',
@@ -5974,13 +6376,13 @@ sub toplevel {
 						image	=> $icons->{fbelsass},
 						items	=> [
 							{
-								name	=> 'France Bleu Elsass (HLS)',
+								name	=> 'ici Elsass (HLS)',
 								type	=> 'audio',
 								icon	=> $icons->{fbelsass},
 								url	=> 'https://stream.radiofrance.fr/fbelsass/fbelsass.m3u8',
 								on_select	=> 'play'
 							},{
-								name	=> 'France Bleu Elsass (MP3)',
+								name	=> 'ici Elsass (MP3)',
 								type	=> 'audio',
 								icon	=> $icons->{fbelsass},
 								url	=> 'http://direct.francebleu.fr/live/fbelsass-midfi.mp3',
@@ -5992,13 +6394,13 @@ sub toplevel {
 						image	=> $icons->{fbgardlozere},
 						items	=> [
 							{
-								name	=> 'France Bleu Gard Lozère (HLS)',
+								name	=> 'ici Gard Lozère (HLS)',
 								type	=> 'audio',
 								icon	=> $icons->{fbgardlozere},
 								url	=> 'https://stream.radiofrance.fr/fbgardlozere/fbgardlozere.m3u8',
 								on_select	=> 'play'
 							},{
-								name	=> 'France Bleu Gard Lozère (MP3)',
+								name	=> 'ici Gard Lozère (MP3)',
 								type	=> 'audio',
 								icon	=> $icons->{fbgardlozere},
 								url	=> 'http://direct.francebleu.fr/live/fbgardlozere-midfi.mp3',
@@ -6010,13 +6412,13 @@ sub toplevel {
 						image	=> $icons->{fbgascogne},
 						items	=> [
 							{
-								name	=> 'France Bleu Gascogne (HLS)',
+								name	=> 'ici Gascogne (HLS)',
 								type	=> 'audio',
 								icon	=> $icons->{fbgascogne},
 								url	=> 'https://stream.radiofrance.fr/fbgascogne/fbgascogne.m3u8',
 								on_select	=> 'play'
 							},{
-								name	=> 'France Bleu Gascogne (MP3)',
+								name	=> 'ici Gascogne (MP3)',
 								type	=> 'audio',
 								icon	=> $icons->{fbgascogne},
 								url	=> 'http://direct.francebleu.fr/live/fbgascogne-midfi.mp3',
@@ -6028,13 +6430,13 @@ sub toplevel {
 						image	=> $icons->{fbgironde},
 						items	=> [
 							{
-								name	=> 'France Bleu Gironde (HLS)',
+								name	=> 'ici Gironde (HLS)',
 								type	=> 'audio',
 								icon	=> $icons->{fbgironde},
 								url	=> 'https://stream.radiofrance.fr/fbgironde/fbgironde.m3u8',
 								on_select	=> 'play'
 							},{
-								name	=> 'France Bleu Gironde (MP3)',
+								name	=> 'ici Gironde (MP3)',
 								type	=> 'audio',
 								icon	=> $icons->{fbgironde},
 								url	=> 'http://direct.francebleu.fr/live/fbgironde-midfi.mp3',
@@ -6046,13 +6448,13 @@ sub toplevel {
 						image	=> $icons->{fbherault},
 						items	=> [
 							{
-								name	=> 'France Bleu Hérault (HLS)',
+								name	=> 'ici Hérault (HLS)',
 								type	=> 'audio',
 								icon	=> $icons->{fbherault},
 								url	=> 'https://stream.radiofrance.fr/fbherault/fbherault.m3u8',
 								on_select	=> 'play'
 							},{
-								name	=> 'France Bleu Hérault (MP3)',
+								name	=> 'ici Hérault (MP3)',
 								type	=> 'audio',
 								icon	=> $icons->{fbherault},
 								url	=> 'http://direct.francebleu.fr/live/fbherault-midfi.mp3',
@@ -6064,13 +6466,13 @@ sub toplevel {
 						image	=> $icons->{fbisere},
 						items	=> [
 							{
-								name	=> 'France Bleu Isère (HLS)',
+								name	=> 'ici Isère (HLS)',
 								type	=> 'audio',
 								icon	=> $icons->{fbisere},
 								url	=> 'https://stream.radiofrance.fr/fbisere/fbisere.m3u8',
 								on_select	=> 'play'
 							},{
-								name	=> 'France Bleu Isère (MP3)',
+								name	=> 'ici Isère (MP3)',
 								type	=> 'audio',
 								icon	=> $icons->{fbisere},
 								url	=> 'http://direct.francebleu.fr/live/fbisere-midfi.mp3',
@@ -6082,13 +6484,13 @@ sub toplevel {
 						image	=> $icons->{fblarochelle},
 						items	=> [
 							{
-								name	=> 'France Bleu La Rochelle (HLS)',
+								name	=> 'ici La Rochelle (HLS)',
 								type	=> 'audio',
 								icon	=> $icons->{fblarochelle},
 								url	=> 'https://stream.radiofrance.fr/fblarochelle/fblarochelle.m3u8',
 								on_select	=> 'play'
 							},{
-								name	=> 'France Bleu La Rochelle (MP3)',
+								name	=> 'ici La Rochelle (MP3)',
 								type	=> 'audio',
 								icon	=> $icons->{fblarochelle},
 								url	=> 'http://direct.francebleu.fr/live/fblarochelle-midfi.mp3',
@@ -6100,13 +6502,13 @@ sub toplevel {
 						image	=> $icons->{fblimousin},
 						items	=> [
 							{
-								name	=> 'France Bleu Limousin (HLS)',
+								name	=> 'ici Limousin (HLS)',
 								type	=> 'audio',
 								icon	=> $icons->{fblimousin},
 								url	=> 'https://stream.radiofrance.fr/fblimousin/fblimousin.m3u8',
 								on_select	=> 'play'
 							},{
-								name	=> 'France Bleu Limousin (MP3)',
+								name	=> 'ici Limousin (MP3)',
 								type	=> 'audio',
 								icon	=> $icons->{fblimousin},
 								url	=> 'http://direct.francebleu.fr/live/fblimousin-midfi.mp3',
@@ -6118,13 +6520,13 @@ sub toplevel {
 						image	=> $icons->{fbloireocean},
 						items	=> [
 							{
-								name	=> 'France Bleu Loire Océan (HLS)',
+								name	=> 'ici Loire Océan (HLS)',
 								type	=> 'audio',
 								icon	=> $icons->{fbloireocean},
 								url	=> 'https://stream.radiofrance.fr/fbloireocean/fbloireocean.m3u8',
 								on_select	=> 'play'
 							},{
-								name	=> 'France Bleu Loire Océan (MP3)',
+								name	=> 'ici Loire Océan (MP3)',
 								type	=> 'audio',
 								icon	=> $icons->{fbloireocean},
 								url	=> 'http://direct.francebleu.fr/live/fbloireocean-midfi.mp3',
@@ -6136,13 +6538,13 @@ sub toplevel {
 						image	=> $icons->{fblorrainenord},
 						items	=> [
 							{
-								name	=> 'France Bleu Lorraine Nord (HLS)',
+								name	=> 'ici Lorraine Nord (HLS)',
 								type	=> 'audio',
 								icon	=> $icons->{fblorrainenord},
 								url	=> 'https://stream.radiofrance.fr/fblorrainenord/fblorrainenord.m3u8',
 								on_select	=> 'play'
 							},{
-								name	=> 'France Bleu Lorraine Nord (MP3)',
+								name	=> 'ici Lorraine Nord (MP3)',
 								type	=> 'audio',
 								icon	=> $icons->{fblorrainenord},
 								url	=> 'http://direct.francebleu.fr/live/fblorrainenord-midfi.mp3',
@@ -6154,13 +6556,13 @@ sub toplevel {
 						image	=> $icons->{fbmaine},
 						items	=> [
 							{
-								name	=> 'France Bleu Maine (HLS)',
+								name	=> 'ici Maine (HLS)',
 								type	=> 'audio',
 								icon	=> $icons->{fbmaine},
 								url	=> 'https://stream.radiofrance.fr/fbmaine/fbmaine.m3u8',
 								on_select	=> 'play'
 							},{
-								name	=> 'France Bleu Maine (MP3)',
+								name	=> 'ici Maine (MP3)',
 								type	=> 'audio',
 								icon	=> $icons->{fbmaine},
 								url	=> 'http://direct.francebleu.fr/live/fbmaine-midfi.mp3',
@@ -6172,13 +6574,13 @@ sub toplevel {
 						image	=> $icons->{fbmayenne},
 						items	=> [
 							{
-								name	=> 'France Bleu Mayenne (HLS)',
+								name	=> 'ici Mayenne (HLS)',
 								type	=> 'audio',
 								icon	=> $icons->{fbmayenne},
 								url	=> 'https://stream.radiofrance.fr/fbmayenne/fbmayenne.m3u8',
 								on_select	=> 'play'
 							},{
-								name	=> 'France Bleu Mayenne (MP3)',
+								name	=> 'ici Mayenne (MP3)',
 								type	=> 'audio',
 								icon	=> $icons->{fbmayenne},
 								url	=> 'http://direct.francebleu.fr/live/fbmayenne-midfi.mp3',
@@ -6190,13 +6592,13 @@ sub toplevel {
 						image	=> $icons->{fbnord},
 						items	=> [
 							{
-								name	=> 'France Bleu Nord (HLS)',
+								name	=> 'ici Nord (HLS)',
 								type	=> 'audio',
 								icon	=> $icons->{fbnord},
 								url	=> 'https://stream.radiofrance.fr/fbnord/fbnord.m3u8',
 								on_select	=> 'play'
 							},{
-								name	=> 'France Bleu Nord (MP3)',
+								name	=> 'ici Nord (MP3)',
 								type	=> 'audio',
 								icon	=> $icons->{fbnord},
 								url	=> 'http://direct.francebleu.fr/live/fbnord-midfi.mp3',
@@ -6209,13 +6611,13 @@ sub toplevel {
 						image	=> $icons->{fbbassenormandie},
 						items	=> [
 							{
-								name	=> 'France Bleu Normandie (Calvados - Orne) (HLS)',
+								name	=> 'ici Normandie (Calvados - Orne) (HLS)',
 								type	=> 'audio',
 								icon	=> $icons->{fbbassenormandie},
 								url	=> 'https://stream.radiofrance.fr/fbbassenormandie/fbbassenormandie.m3u8',
 								on_select	=> 'play'
 							},{
-								name	=> 'France Bleu Normandie (Calvados - Orne) (MP3)',
+								name	=> 'ici Normandie (Calvados - Orne) (MP3)',
 								type	=> 'audio',
 								icon	=> $icons->{fbbassenormandie},
 								url	=> 'http://direct.francebleu.fr/live/fbbassenormandie-midfi.mp3',
@@ -6228,13 +6630,13 @@ sub toplevel {
 						image	=> $icons->{fbhautenormandie},
 						items	=> [
 							{
-								name	=> 'France Bleu Normandie (Seine-Maritime - Eure) (HLS)',
+								name	=> 'ici Normandie (Seine-Maritime - Eure) (HLS)',
 								type	=> 'audio',
 								icon	=> $icons->{fbhautenormandie},
 								url	=> 'https://stream.radiofrance.fr/fbhautenormandie/fbhautenormandie.m3u8',
 								on_select	=> 'play'
 							},{
-								name	=> 'France Bleu Normandie (Seine-Maritime - Eure) (MP3)',
+								name	=> 'ici Normandie (Seine-Maritime - Eure) (MP3)',
 								type	=> 'audio',
 								icon	=> $icons->{fbhautenormandie},
 								url	=> 'http://direct.francebleu.fr/live/fbhautenormandie-midfi.mp3',
@@ -6246,13 +6648,13 @@ sub toplevel {
 						image	=> $icons->{fbtoulouse},
 						items	=> [
 							{
-								name	=> 'France Bleu Occitanie (HLS)',
+								name	=> 'ici Occitanie (HLS)',
 								type	=> 'audio',
 								icon	=> $icons->{fbtoulouse},
 								url	=> 'https://stream.radiofrance.fr/fbtoulouse/fbtoulouse.m3u8',
 								on_select	=> 'play'
 							},{
-								name	=> 'France Bleu Occitanie (MP3)',
+								name	=> 'ici Occitanie (MP3)',
 								type	=> 'audio',
 								icon	=> $icons->{fbtoulouse},
 								url	=> 'http://direct.francebleu.fr/live/fbtoulouse-midfi.mp3',
@@ -6264,13 +6666,13 @@ sub toplevel {
 						image	=> $icons->{fborleans},
 						items	=> [
 							{
-								name	=> 'France Bleu Orléans (HLS)',
+								name	=> 'ici Orléans (HLS)',
 								type	=> 'audio',
 								icon	=> $icons->{fborleans},
 								url	=> 'https://stream.radiofrance.fr/fborleans/fborleans.m3u8',
 								on_select	=> 'play'
 							},{
-								name	=> 'France Bleu Orléans (MP3)',
+								name	=> 'ici Orléans (MP3)',
 								type	=> 'audio',
 								icon	=> $icons->{fborleans},
 								url	=> 'http://direct.francebleu.fr/live/fborleans-midfi.mp3',
@@ -6283,13 +6685,13 @@ sub toplevel {
 						image	=> $icons->{fbparis},
 						items	=> [
 							{
-								name	=> 'France Bleu Paris (HLS)',
+								name	=> 'ici Paris (HLS)',
 								type	=> 'audio',
 								icon	=> $icons->{fbparis},
 								url	=> 'https://stream.radiofrance.fr/fb1071/fb1071.m3u8',
 								on_select	=> 'play'
 							},{
-								name	=> 'France Bleu Paris (MP3)',
+								name	=> 'ici Paris (MP3)',
 								type	=> 'audio',
 								icon	=> $icons->{fbparis},
 								url	=> 'http://direct.francebleu.fr/live/fb1071-midfi.mp3',
@@ -6301,13 +6703,13 @@ sub toplevel {
 						image	=> $icons->{fbpaysbasque},
 						items	=> [
 							{
-								name	=> 'France Bleu Pays Basque (HLS)',
+								name	=> 'ici Pays Basque (HLS)',
 								type	=> 'audio',
 								icon	=> $icons->{fbpaysbasque},
 								url	=> 'https://stream.radiofrance.fr/fbpaysbasque/fbpaysbasque.m3u8',
 								on_select	=> 'play'
 							},{
-								name	=> 'France Bleu Pays Basque (MP3)',
+								name	=> 'ici Pays Basque (MP3)',
 								type	=> 'audio',
 								icon	=> $icons->{fbpaysbasque},
 								url	=> 'http://direct.francebleu.fr/live/fbpaysbasque-midfi.mp3',
@@ -6319,13 +6721,13 @@ sub toplevel {
 						image	=> $icons->{fbpaysdauvergne},
 						items	=> [
 							{
-								name	=> 'France Bleu Pays d\'Auvergne (HLS)',
+								name	=> 'ici Pays d\'Auvergne (HLS)',
 								type	=> 'audio',
 								icon	=> $icons->{fbpaysdauvergne},
 								url	=> 'https://stream.radiofrance.fr/fbpaysdauvergne/fbpaysdauvergne.m3u8',
 								on_select	=> 'play'
 							},{
-								name	=> 'France Bleu Pays d\'Auvergne (MP3)',
+								name	=> 'ici Pays d\'Auvergne (MP3)',
 								type	=> 'audio',
 								icon	=> $icons->{fbpaysdauvergne},
 								url	=> 'http://direct.francebleu.fr/live/fbpaysdauvergne-midfi.mp3',
@@ -6337,13 +6739,13 @@ sub toplevel {
 						image	=> $icons->{fbpaysdesavoie},
 						items	=> [
 							{
-								name	=> 'France Bleu Pays de Savoie (HLS)',
+								name	=> 'ici Pays de Savoie (HLS)',
 								type	=> 'audio',
 								icon	=> $icons->{fbpaysdesavoie},
 								url	=> 'https://stream.radiofrance.fr/fbpaysdesavoie/fbpaysdesavoie.m3u8',
 								on_select	=> 'play'
 							},{
-								name	=> 'France Bleu Pays de Savoie (MP3)',
+								name	=> 'ici Pays de Savoie (MP3)',
 								type	=> 'audio',
 								icon	=> $icons->{fbpaysdesavoie},
 								url	=> 'http://direct.francebleu.fr/live/fbpaysdesavoie-midfi.mp3',
@@ -6355,13 +6757,13 @@ sub toplevel {
 						image	=> $icons->{fbperigord},
 						items	=> [
 							{
-								name	=> 'France Bleu Périgord (HLS)',
+								name	=> 'ici Périgord (HLS)',
 								type	=> 'audio',
 								icon	=> $icons->{fbperigord},
 								url	=> 'https://stream.radiofrance.fr/fbperigord/fbperigord.m3u8',
 								on_select	=> 'play'
 							},{
-								name	=> 'France Bleu Périgord (MP3)',
+								name	=> 'ici Périgord (MP3)',
 								type	=> 'audio',
 								icon	=> $icons->{fbperigord},
 								url	=> 'http://direct.francebleu.fr/live/fbperigord-midfi.mp3',
@@ -6373,13 +6775,13 @@ sub toplevel {
 						image	=> $icons->{fbpicardie},
 						items	=> [
 							{
-								name	=> 'France Bleu Picardie (HLS)',
+								name	=> 'ici Picardie (HLS)',
 								type	=> 'audio',
 								icon	=> $icons->{fbpicardie},
 								url	=> 'https://stream.radiofrance.fr/fbpicardie/fbpicardie.m3u8',
 								on_select	=> 'play'
 							},{
-								name	=> 'France Bleu Picardie (MP3)',
+								name	=> 'ici Picardie (MP3)',
 								type	=> 'audio',
 								icon	=> $icons->{fbpicardie},
 								url	=> 'http://direct.francebleu.fr/live/fbpicardie-midfi.mp3',
@@ -6391,13 +6793,13 @@ sub toplevel {
 						image	=> $icons->{fbpoitou},
 						items	=> [
 							{
-								name	=> 'France Bleu Poitou (HLS)',
+								name	=> 'ici Poitou (HLS)',
 								type	=> 'audio',
 								icon	=> $icons->{fbpoitou},
 								url	=> 'https://stream.radiofrance.fr/fbpoitou/fbpoitou.m3u8',
 								on_select	=> 'play'
 							},{
-								name	=> 'France Bleu Poitou (MP3)',
+								name	=> 'ici Poitou (MP3)',
 								type	=> 'audio',
 								icon	=> $icons->{fbpoitou},
 								url	=> 'http://direct.francebleu.fr/live/fbpoitou-midfi.mp3',
@@ -6409,13 +6811,13 @@ sub toplevel {
 						image	=> $icons->{fbprovence},
 						items	=> [
 							{
-								name	=> 'France Bleu Provence (HLS)',
+								name	=> 'ici Provence (HLS)',
 								type	=> 'audio',
 								icon	=> $icons->{fbprovence},
 								url	=> 'https://stream.radiofrance.fr/fbprovence/fbprovence.m3u8',
 								on_select	=> 'play'
 							},{
-								name	=> 'France Bleu Provence (MP3)',
+								name	=> 'ici Provence (MP3)',
 								type	=> 'audio',
 								icon	=> $icons->{fbprovence},
 								url	=> 'http://direct.francebleu.fr/live/fbprovence-midfi.mp3',
@@ -6427,13 +6829,13 @@ sub toplevel {
 						image	=> $icons->{fbrcfm},
 						items	=> [
 							{
-								name	=> 'France Bleu RCFM (HLS)',
+								name	=> 'ici RCFM (HLS)',
 								type	=> 'audio',
 								icon	=> $icons->{fbrcfm},
 								url	=> 'https://stream.radiofrance.fr/fbfrequenzamora/fbfrequenzamora.m3u8',
 								on_select	=> 'play'
 							},{
-								name	=> 'France Bleu RCFM (MP3)',
+								name	=> 'ici RCFM (MP3)',
 								type	=> 'audio',
 								icon	=> $icons->{fbrcfm},
 								url	=> 'http://direct.francebleu.fr/live/fbfrequenzamora-midfi.mp3',
@@ -6445,13 +6847,13 @@ sub toplevel {
 						image	=> $icons->{fbroussillon},
 						items	=> [
 							{
-								name	=> 'France Bleu Roussillon (HLS)',
+								name	=> 'ici Roussillon (HLS)',
 								type	=> 'audio',
 								icon	=> $icons->{fbroussillon},
 								url	=> 'https://stream.radiofrance.fr/fbroussillon/fbroussillon.m3u8',
 								on_select	=> 'play'
 							},{
-								name	=> 'France Bleu Roussillon (MP3)',
+								name	=> 'ici Roussillon (MP3)',
 								type	=> 'audio',
 								icon	=> $icons->{fbroussillon},
 								url	=> 'http://direct.francebleu.fr/live/fbroussillon-midfi.mp3',
@@ -6464,13 +6866,13 @@ sub toplevel {
 						image	=> $icons->{fbsaintetienneloire},
 						items	=> [
 							{
-								name	=> 'France Bleu Saint-Étienne Loire (HLS)',
+								name	=> 'ici Saint-Étienne Loire (HLS)',
 								type	=> 'audio',
 								icon	=> $icons->{fbsaintetienneloire},
 								url	=> 'https://stream.radiofrance.fr/fbstetienne/fbstetienne.m3u8',
 								on_select	=> 'play'
 							},{
-								name	=> 'France Bleu Saint-Étienne Loire (MP3)',
+								name	=> 'ici Saint-Étienne Loire (MP3)',
 								type	=> 'audio',
 								icon	=> $icons->{fbsaintetienneloire},
 								url	=> 'http://direct.francebleu.fr/live/fbstetienne-midfi.mp3',
@@ -6482,13 +6884,13 @@ sub toplevel {
 						image	=> $icons->{fbsudlorraine},
 						items	=> [
 							{
-								name	=> 'France Bleu Sud Lorraine (HLS)',
+								name	=> 'ici Sud Lorraine (HLS)',
 								type	=> 'audio',
 								icon	=> $icons->{fbsudlorraine},
 								url	=> 'https://stream.radiofrance.fr/fbsudlorraine/fbsudlorraine.m3u8',
 								on_select	=> 'play'
 							},{
-								name	=> 'France Bleu Sud Lorraine (MP3)',
+								name	=> 'ici Sud Lorraine (MP3)',
 								type	=> 'audio',
 								icon	=> $icons->{fbsudlorraine},
 								url	=> 'http://direct.francebleu.fr/live/fbsudlorraine-midfi.mp3',
@@ -6500,13 +6902,13 @@ sub toplevel {
 						image	=> $icons->{fbtouraine},
 						items	=> [
 							{
-								name	=> 'France Bleu Touraine (HLS)',
+								name	=> 'ici Touraine (HLS)',
 								type	=> 'audio',
 								icon	=> $icons->{fbtouraine},
 								url	=> 'https://stream.radiofrance.fr/fbtouraine/fbtouraine.m3u8',
 								on_select	=> 'play'
 							},{
-								name	=> 'France Bleu Touraine (MP3)',
+								name	=> 'ici Touraine (MP3)',
 								type	=> 'audio',
 								icon	=> $icons->{fbtouraine},
 								url	=> 'http://direct.francebleu.fr/live/fbtouraine-midfi.mp3',
@@ -6518,13 +6920,13 @@ sub toplevel {
 						image	=> $icons->{fbvaucluse},
 						items	=> [
 							{
-								name	=> 'France Bleu Vaucluse (HLS)',
+								name	=> 'ici Vaucluse (HLS)',
 								type	=> 'audio',
 								icon	=> $icons->{fbvaucluse},
 								url	=> 'https://stream.radiofrance.fr/fbvaucluse/fbvaucluse.m3u8',
 								on_select	=> 'play'
 							},{
-								name	=> 'France Bleu Vaucluse (MP3)',
+								name	=> 'ici Vaucluse (MP3)',
 								type	=> 'audio',
 								icon	=> $icons->{fbvaucluse},
 								url	=> 'http://direct.francebleu.fr/live/fbvaucluse-midfi.mp3',
@@ -6606,8 +7008,9 @@ sub toplevel {
 							],
 				},
 				{
-					name	=> 'France Bleu',
-					image	=> 'https://mediateur.radiofrance.fr/wp-content/themes/radiofrance/img/france-bleu.png',
+					name	=> 'ici',
+					# until Jan-2025 image	=> 'https://mediateur.radiofrance.fr/wp-content/themes/radiofrance/img/france-bleu.png',
+					image	=> 'https://www.radiofrance.fr/client/immutable/assets/francebleu-seosquare.CfwKvmMQ.png',
 					items	=> [
 					{
 						name	=> 'Alsace',
@@ -7070,6 +7473,47 @@ sub toplevel {
 
 	main::DEBUGLOG && $log->is_debug && $log->debug("--toplevel");
 	return;
+}
+
+
+# Get Configuration item (non-blank) value from hierarchy. Return undef if not found or empty
+# Priority order (most to least) Station / Provider / plugin Settings / Global Config
+sub getConfig {
+	my $provider = shift;
+	my $station = shift;
+	my $settingName = shift;
+	
+	my $value;
+
+	if ( defined $station && $station ne '' && exists $stationSet->{$station} && exists $stationSet->{$station}->{$settingName} &&
+	    (ref $stationSet->{$station}->{$settingName} eq 'ARRAY' || $stationSet->{$station}->{$settingName} ne '' ) ){
+		$value = $stationSet->{$station}->{$settingName};
+		
+		return $value;
+	}
+
+	if ( defined $provider && $provider ne '' && exists $broadcasterSet->{$provider} && exists $broadcasterSet->{$provider}->{$settingName} &&
+	     (ref $broadcasterSet->{$provider}->{$settingName} eq  'ARRAY' || $broadcasterSet->{$provider}->{$settingName} ne '' ) ){
+		$value = $broadcasterSet->{$provider}->{$settingName};
+		
+		return $value;
+	}
+	
+	$value = $prefs->get($settingName);
+
+	if (defined $value && $value ne ''){
+		#main::DEBUGLOG && $log->is_debug && $log->debug("Config value found for $provider station: $station in settings: $settingName: $value");	
+		return $value;
+	}
+
+	if ( exists $globalSettings->{$settingName} && (ref $globalSettings->{$settingName} eq 'ARRAY' || $globalSettings->{$settingName} ne '' ) ){
+		$value = $globalSettings->{$settingName};
+		
+		return $value;
+	}
+
+	#main::DEBUGLOG && $log->is_debug && $log->debug("Config value not found: $settingName for station: $station");	
+	return $value;
 }
 
 # Return string with leading and trailing whitespace removed
