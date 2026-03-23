@@ -11,7 +11,7 @@ Display artist, track, cover and, optionally, album name, label and year for:
 * France Musique (http://www.francemusique.fr) web stations (such as Ocora and Classique Plus)
 * Mouv' (http://www.mouv.fr)
 Display programme name, segment name (when available) and synopsis (when available) for:
-* France Inter, France Info, France Musique, France Culture and France Blue (40+ stations)
+* France Inter, France Info, France Musique, France Culture and ici (previously known as France Blue) (40+ stations)
 Browse station schedule by date to select old programmes and segments for replay
 * Note - very limited content from FIP and none from web-only stations
 
@@ -39,31 +39,20 @@ If the plugin is working then you should see artist details appear around the ti
 You can also access the list of stations and schedules from the "My Apps" or "Radio" menu item in LMS (you can configure which one it appears under).
 
 **FIP stations supported:**
-FIP (including regional variants while they last), FIP ... Rock, Jazz, Groove, Monde, Electro, Reggae, Tout Nouveau, Pop, Metal, Hip-Hop, Sacré français ! --
+FIP, FIP ... Rock, Jazz, Groove, Metal, Hip-Hop, Electro, Monde, Pop, Reggae, Tout Nouveau, Sacré français !, Cultes --
 
 **France Musique stations supported:**
-France Musique
-Classique Easy
-Opéra
-La Baroque
-Classique Plus
-Concerts Radio France
-La Jazz
-La Contemporaine
-Ocora Monde
-Piano Zen
-Evenementielle / Classique Kids / B.O. (Films)
+France Musique, Classique Easy, Classique Love, Opéra, La Baroque, Classique Plus, Concerts Radio France.
+La Jazz, La Contemporaine, Piano Zen, Ocora Monde, Films
 
-**Mouv' stations supported:**
-Mouv'
-~~Mouv'Xtra~~ (Replaced by 100% Mix)
-Classics, DanceHall, R'N'B, Rap US, Rap Français, 100% Mix, Kids'n Family
+**France Inter stations supported:**
+France Inter, La Musique d'Inter, Mon Petit France Inter, Mon Tout Petit France Inter
 
 **Other Radio France (general) stations supported:**
-France Inter
 France Info
 France Culture
-Frnce Bleu (40+ stations)
+Mouv'
+ici (40+ regional stations) plus 100% Chanson Français, 100% années 80
 
 Note: Radio France does not always provide track information in a timely manner - so if you find that sometimes no new details arrive then check on the broadcaster's site or their mobile app to see if they have the same problem.
 

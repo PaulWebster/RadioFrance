@@ -4,20 +4,33 @@
 		<title lang="EN">Paul Webster's LMS Plugin for Radio France</title>
 	</details>
 	<plugins>
-		<plugin name="RadioFrance" version="0.4.10" minTarget="7.5" maxTarget="*">
+		<plugin name="RadioFrance" version="0.4.22" minTarget="7.5" maxTarget="*">
 			<title lang="EN">Radio France</title>
 			<desc  lang="EN">Radio France programme and track information plus on demand replay</desc>
 			<desc  lang="FR">Radio France - info sur le programme et morceau de musique, ainsi que la lecture à la demande</desc>
 			<creator>Paul Webster</creator>
 			<email></email>
+			<link>https://forums.lyrion.org/forum/user-forums/fran-ais/103535-annonce-plugin-pour-radio-france-fip-france-musique-et-mouv?p=1287025#post1287025</link>
+			<icon>http://radionowplaying.com/slimserver-rep/images/radiofrance_svg.png</icon>
+			<category>radio</category>
 			<changes lang="EN">
-				- For France Culture, metadata source changed
+				- Update stations logos and some 'ici' station names
+				- For Mouv - all secondary stations closed
+				- Add Mon tout petit France Inter
+				- For France Info, use programme specific icons
+				- Thanks @Atmis
+				- Radio France removed some of their APIs so change plugin to try to adapt
 			</changes>
 			<changes lang="FR">
-				- Pour France Culture, la source des métadonnées a changé
+				- Mettre à jour les logos des stations et certains noms de stations 'ici' 
+				- Pour Mouv - toutes les stations secondaires sont fermées
+				- Ajouter Mon tout petit France Inter
+				- Pour France Info, utiliser des icônes spécifiques au programme
+				- Merci @Atmis
+				- Radio France a supprimé certaines de ses API, il faut donc changer de plugin pour tenter de s'adapter.
 			</changes>
-			<url>https://paulwebster.github.io/RadioFrance/RadioFrance-0.4.10.zip</url>
-			<sha>e7baf381bfbaca42bd8a73a6b563b7a1895d66bf</sha>
+			<url>https://paulwebster.github.io/RadioFrance/RadioFrance-0.4.22.zip</url>
+			<sha>78a9d5fb0aaf9bd642739af662415fe9a5eaac9d</sha>
 		</plugin>
 	</plugins>
 </extensions>
