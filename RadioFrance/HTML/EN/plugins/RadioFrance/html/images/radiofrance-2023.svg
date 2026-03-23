@@ -1,0 +1,64 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<svg
+   xmlns:dc="http://purl.org/dc/elements/1.1/"
+   xmlns:cc="http://creativecommons.org/ns#"
+   xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+   xmlns:svg="http://www.w3.org/2000/svg"
+   xmlns="http://www.w3.org/2000/svg"
+   xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
+   xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
+   width="460"
+   height="460"
+   viewBox="0 0 460 460"
+   version="1.1"
+   id="svg2"
+   inkscape:version="1.0.2-2 (e86c870879, 2021-01-15)"
+   sodipodi:docname="radiofrance-alternative.svg"
+   inkscape:export-filename="radiofrance-alternative_svg.png"
+   inkscape:export-xdpi="90"
+   inkscape:export-ydpi="90">
+  <sodipodi:namedview
+     pagecolor="#ffffff"
+     bordercolor="#666666"
+     borderopacity="1"
+     objecttolerance="10"
+     gridtolerance="10"
+     guidetolerance="10"
+     inkscape:pageopacity="0"
+     inkscape:pageshadow="2"
+     inkscape:window-width="1066"
+     inkscape:window-height="792"
+     id="namedview9"
+     showgrid="false"
+     inkscape:zoom="1.5978261"
+     inkscape:cx="249.71429"
+     inkscape:cy="230"
+     inkscape:window-x="168"
+     inkscape:window-y="256"
+     inkscape:window-maximized="0"
+     inkscape:current-layer="svg2" />
+  <metadata
+     id="metadata17">
+    <rdf:RDF>
+      <cc:Work
+         rdf:about="">
+        <dc:format>image/svg+xml</dc:format>
+        <dc:type
+           rdf:resource="http://purl.org/dc/dcmitype/StillImage" />
+        <dc:title>AVATARS_FM rond</dc:title>
+      </cc:Work>
+    </rdf:RDF>
+  </metadata>
+  <!-- Generator: Sketch 43.2 (39069) - http://www.bohemiancoding.com/sketch -->
+  <title
+     id="title4">AVATARS_RF</title>
+  <desc
+     id="desc6">Created with Sketch.</desc>
+  <defs
+     id="defs8" />
+  <path
+     inkscape:connector-curvature="0"
+     style="fill:#000;stroke-width:1"
+     id="path2999"
+     d="m 254.2056,87.545 -65.46066,5.02725 0.90555,130.12856 c 0,0 78.78288,4.06047 97.38372,5.22062 18.55894,1.19235 38.37794,1.57906 44.30753,23.97614 6.41297,24.29839 -22.23594,42.08715 -31.93597,42.08715 29.32566,0 22.75156,-0.0966 44.72968,-0.0966 17.91765,-3.28706 38.22003,-24.78179 35.64194,-56.87886 -3.38372,-42.40941 -35.93198,-52.49614 -70.57492,-52.49614 H 254.2056 Z M 98.914981,210.61606 C 87.020373,225.02108 75.190217,246.96699 81.996347,271.52319 102.35674,340.26123 211.7253,370.61811 257.73113,372.455 l -5.43975,-80.4683 c 0,0 -74.63863,9.86115 -112.38816,-29.71237 -16.02275,-16.75752 -12.86461,-34.38514 -0.80565,-49.66026 -14.12464,-0.64452 -30.68557,-1.57908 -40.182589,-1.99801 z" />
+</svg>

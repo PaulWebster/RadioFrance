@@ -83,7 +83,8 @@ sub flushCache { $cache->cleanup(); }
 my $dumped;
 # If no image provided in return then try to create one from 'visual' or 'visualbanner'
 my $imageapiprefix = 'https://api.radiofrance.fr/v1/services/embed/image/';
-my $imageapisuffix = '?preset=400x400';
+#my $imageapisuffix = '?preset=400x400';
+my $imageapisuffix = '?preset=raw';
 
 # GraphQL queries for data from Radio France - insert the numeric station id between prefix1 and prefix2
 my $type3prefix1fip = 'https://www.fip.fr/latest/api/graphql?operationName=NowList&variables=%7B%22bannerPreset%22%3A%22266x266%22%2C%22stationIds%22%3A%5B';
@@ -117,10 +118,21 @@ my $type9suffix = '';
 
 my $type10prefix = 'https://api.radiofrance.fr/livemeta/live/';
 my $type10suffix = '/inter_player';
-my $type10asuffix = '/new_apprf_bleu';	# special for Frabce Blue (ici)
+my $type10asuffix = '/new_apprf_bleu';	# special for France Blue (ici)
+my $type10bsuffix = '/transistor_info_player';
+my $type10csuffix = '/transistor_musical_player';
+my $type10dsuffix = '/transistor_musique_player';
+my $type10esuffix = '/fip_extended';
+my $type10fsuffix = '/transistor_culture_player';
+my $type10gsuffix = '/webrf_musique_player';
+my $type10hsuffix = '/transistor_mouv_player';
+
 
 my $type11prefix = 'https://www.francebleu.fr/api/live-locale/';
 my $type11suffix = '';
+
+my $type12prefix = 'https://www.radiofrance.fr/';
+my $type12suffix = '/api/live';
 
 my $radiofrancescheuleurl = 'https://api.radiofrance.fr/v1/stations/${stationid}/steps?filter[depth]=1&filter[start-time]=${datestring}T00:00&filter[end-time]=${datestring}T23:59&fields[shows]=title,visuals,stationId,mainImage&fields[diffusions]=title,startTime,endTime,mainImage,visuals,stationId&include=diffusion&include=show&include=diffusion.manifestations&include=diffusion.station&include=children-steps&include=children-steps.show&include=children-steps.diffusion&include=children-steps.diffusion.manifestations';
 my %radiofranceapiondemandheaderset = ( 'x-token' => '0cbe991e-18ac-4635-ad7f-773257c63797' );	# token as used by Radio France web interface
@@ -234,55 +246,61 @@ my $stationSet = { # Take extra care if pasting in from external spreadsheet ...
 	fipbordeaux => { fullname => 'FIP Bordeaux', stationid => '7', fetchid => 'fip', region => '', tuneinid => 's50706', notexcludable => true, match1 => 'fipbordeaux', match2 => '' },
 	fipnantes => { fullname => 'FIP Nantes', stationid => '7', fetchid => 'fip', region => '', tuneinid => 's50770', notexcludable => true, match1 => 'fipnantes', match2 => '' },
 	fipstrasbourg => { fullname => 'FIP Strasbourg', stationid => '7', fetchid => 'fip', region => '', tuneinid => 's111944', notexcludable => true, match1 => 'fipstrasbourg', match2 => '' },
-	fiprock => { fullname => 'FIP Rock', stationid => '64', fetchid => 'fip_rock', region => '', tuneinid => 's262528', notexcludable => true, match1 => 'fip-webradio1.', match2 => 'fiprock' },
-	fipjazz => { fullname => 'FIP Jazz', stationid => '65', fetchid => 'fip_jazz', region => '', tuneinid => 's262533', notexcludable => true, match1 => 'fip-webradio2.', match2 => 'fipjazz' },
-	fipgroove => { fullname => 'FIP Groove', stationid => '66', fetchid => 'fip_groove', region => '', tuneinid => 's262537', notexcludable => true, match1 => 'fip-webradio3.', match2 => 'fipgroove' },
-	fipmonde => { fullname => 'FIP Monde', stationid => '69', fetchid => 'fip_world', region => '', tuneinid => 's262538', notexcludable => true, match1 => 'fip-webradio4.', match2 => 'fipworld' },
-	fipnouveau => { fullname => 'Tout nouveau, tout Fip', stationid => '70', fetchid => 'fip_nouveautes', region => '', tuneinid => 's262540', notexcludable => true, match1 => 'fip-webradio5.', match2 => 'fipnouveautes' },
-	fipreggae => { fullname => 'FIP Reggae', stationid => '71', fetchid => 'fip_reggae', region => '', tuneinid => 's293090', notexcludable => true, match1 => 'fip-webradio6.', match2 => 'fipreggae' },
-	fipelectro => { fullname => 'FIP Electro', stationid => '74', fetchid => 'fip_electro', region => '', tuneinid => 's293089', notexcludable => true, match1 => 'fip-webradio8.', match2 => 'fipelectro' },
-	fipmetal => { fullname => 'FIP Metal', stationid => '77', fetchid => 'fip_metal', region => '', tuneinid => 's308366', notexcludable => true, match1 => 'fip-webradio7.', match2 => 'fipmetal' },
-	fippop => { fullname => 'FIP Pop', stationid => '78', fetchid => 'fip_pop', region => '', tuneinid => '', notexcludable => true, match1 => 'fip-webradio8.', match2 => 'fippop' },
-	fiphiphop => { fullname => 'FIP Hip-Hop', stationid => 'fip_hiphop', fetchid => 'fip_hiphop', region => '', tuneinid => '', notexcludable => true, match1 => '', match2 => 'fiphiphop' },
-	fipsacre => { fullname => 'FIP Sacré français !', stationid => 'fip_sacre_francais', fetchid => 'fip_sacre_francais', region => '', tuneinid => '', notexcludable => true, match1 => '', match2 => 'fipsacrefrancais' },
+	fiprock => { fullname => 'FIP Rock', stationid => '64', fetchid => 'fip_rock', region => '', tuneinid => 's262528', notexcludable => true, match1 => 'fip-webradio1.', match2 => 'fiprock', guesssong => true },
+	fipjazz => { fullname => 'FIP Jazz', stationid => '65', fetchid => 'fip_jazz', region => '', tuneinid => 's262533', notexcludable => true, match1 => 'fip-webradio2.', match2 => 'fipjazz', guesssong => true },
+	fipgroove => { fullname => 'FIP Groove', stationid => '66', fetchid => 'fip_groove', region => '', tuneinid => 's262537', notexcludable => true, match1 => 'fip-webradio3.', match2 => 'fipgroove', guesssong => true },
+	fipmonde => { fullname => 'FIP Monde', stationid => '69', fetchid => 'fip_world', region => '', tuneinid => 's262538', notexcludable => true, match1 => 'fip-webradio4.', match2 => 'fipworld', guesssong => true },
+	fipnouveau => { fullname => 'Tout nouveau, tout Fip', stationid => '70', fetchid => 'fip_nouveautes', region => '', tuneinid => 's262540', notexcludable => true, match1 => 'fip-webradio5.', match2 => 'fipnouveautes', guesssong => true },
+	fipreggae => { fullname => 'FIP Reggae', stationid => '71', fetchid => 'fip_reggae', region => '', tuneinid => 's293090', notexcludable => true, match1 => 'fip-webradio6.', match2 => 'fipreggae', guesssong => true },
+	fipelectro => { fullname => 'FIP Electro', stationid => '74', fetchid => 'fip_electro', region => '', tuneinid => 's293089', notexcludable => true, match1 => 'fip-webradio8.', match2 => 'fipelectro', guesssong => true },
+	fipmetal => { fullname => 'FIP Metal', stationid => '77', fetchid => 'fip_metal', region => '', tuneinid => 's308366', notexcludable => true, match1 => 'fip-webradio7.', match2 => 'fipmetal', guesssong => true },
+	fippop => { fullname => 'FIP Pop', stationid => '78', fetchid => 'fip_pop', region => '', tuneinid => '', notexcludable => true, match1 => 'fip-webradio8.', match2 => 'fippop', guesssong => true },
+	fiphiphop => { fullname => 'FIP Hip-Hop', stationid => '95', fetchid => 'fip_hiphop', region => '', tuneinid => '', notexcludable => true, match1 => '', match2 => 'fiphiphop', guesssong => true },
+	fipsacre => { fullname => 'FIP Sacré français !', stationid => '96', fetchid => 'fip_sacre_francais', region => '', tuneinid => '', notexcludable => true, match1 => '', match2 => 'fipsacrefrancais', guesssong => true },
+	fipcultes => { fullname => 'FIP Cultes', stationid => '709', fetchid => 'fip_cultes', region => '', tuneinid => '', notexcludable => true, match1 => '', match2 => 'fipcultes', guesssong => true },
 
-	fmclassiqueeasy => { fullname => 'France Musique Classique Easy', stationid => '401', fetchid => 'francemusique_classique_easy', region => '', tuneinid => 's283174', notexcludable => true, match1 => 'francemusiqueeasyclassique', match2 => '' },
-	fmbaroque => { fullname => 'France Musique La Baroque', stationid => '408', fetchid => 'francemusique_baroque', region => '', tuneinid => 's309415', notexcludable => true, match1 => 'francemusiquebaroque', match2 => '' },
-	fmclassiqueplus => { fullname => 'France Musique Classique Plus', stationid => '402', fetchid => 'francemusique_classique_plus', region => '', tuneinid => 's283175', notexcludable => true, match1 => 'francemusiqueclassiqueplus', match2 => '' },
-	fmconcertsradiofrance => { fullname => 'France Musique Concerts', stationid => '403', fetchid => 'francemusique_concert_rf', region => '', tuneinid => 's283176', notexcludable => true, match1 => 'francemusiqueconcertsradiofrance', match2 => '' },
-	fmlajazz => { fullname => 'France Musique La Jazz', stationid => '405', fetchid => 'francemusique_la_jazz', region => '', tuneinid => 's283178', notexcludable => true, match1 => 'francemusiquelajazz', match2 => '' },
-	fmlacontemporaine => { fullname => 'France Musique La Contemporaine', stationid => '406', fetchid => 'francemusique_la_contemporaine', region => '', tuneinid => 's283179', notexcludable => true, match1 => 'francemusiquelacontemporaine', match2 => '' },
-	fmocoramonde => { fullname => 'France Musique Ocora Monde', stationid => '404', fetchid => 'francemusique_ocora_monde', region => '', tuneinid => 's283177', notexcludable => true, match1 => 'francemusiqueocoramonde', match2 => '' },
-	#fmevenementielle => { fullname => 'France Musique Evenementielle', stationid => '407', fetchid => 'francemusique_evenementielle', region => '', tuneinid => 's285660&|id=s306575', notexcludable => true, match1 => 'francemusiquelevenementielle', match2 => '' }, # Special case ... 2 TuneIn Id
-	fmlabo => { fullname => 'France Musique Films', stationid => '407', fetchid => 'francemusique_evenementielle', region => '', tuneinid => 's306575', notexcludable => true, match1 => 'francemusiquelabo', match2 => '' }, 
-	fmopera => { fullname => 'France Musique Opéra', stationid => '409', fetchid => 'francemusique_opera', region => '', tuneinid => '', notexcludable => true, match1 => 'francemusiqueopera', match2 => '' },
-	fmpianozen => { fullname => 'France Musique Piano Zen', stationid => '410', fetchid => 'francemusique_piano_zen', region => '', tuneinid => '', notexcludable => true, match1 => 'francemusiquepianozen', match2 => '' },
+# finished March 2026 - francemusique => { fullname => 'France Musique', stationid => '4', fetchid => 'francemusique', region => '', tuneinid => 's15198', notexcludable => false, match1 => 'francemusique', match2 => '', ondemandurl => $radiofrancescheuleurl, ondemandheaders => \%radiofranceapiondemandheaderset, individualprogurl => ['https://www.radiofrance.fr/api/v1.7/path?value=${progpath}', 'https://www.radiofrance.fr/api/v1.7/stations/francemusique/songs?pageCursor=Mg%3D%3D&startDate=${progstart}&endDate=${progend}&isPad=false'] },
+	francemusique => { fullname => 'France Musique', stationid => '4', fetchid => 'francemusique', region => '', tuneinid => 's15198', notexcludable => false, match1 => 'francemusique', match2 => '', ondemandurl => $radiofrancescheuleurl, ondemandheaders => \%radiofranceapiondemandheaderset, guesssong => true },
+	fmclassiqueeasy => { fullname => 'France Musique Classique Easy', stationid => '401', fetchid => 'francemusique_classique_easy', region => '', tuneinid => 's283174', notexcludable => true, match1 => 'francemusiqueeasyclassique', match2 => '', guesssong => true },
+	fmbaroque => { fullname => 'France Musique La Baroque', stationid => '408', fetchid => 'francemusique_baroque', region => '', tuneinid => 's309415', notexcludable => true, match1 => 'francemusiquebaroque', match2 => '', guesssong => true },
+	fmclassiqueplus => { fullname => 'France Musique Classique Plus', stationid => '402', fetchid => 'francemusique_classique_plus', region => '', tuneinid => 's283175', notexcludable => true, match1 => 'francemusiqueclassiqueplus', match2 => '', guesssong => true },
+	fmconcertsradiofrance => { fullname => 'France Musique Concerts', stationid => '403', fetchid => 'francemusique_concert_rf', region => '', tuneinid => 's283176', notexcludable => true, match1 => 'francemusiqueconcertsradiofrance', match2 => '', guesssong => true },
+	fmlajazz => { fullname => 'France Musique La Jazz', stationid => '405', fetchid => 'francemusique_la_jazz', region => '', tuneinid => 's283178', notexcludable => true, match1 => 'francemusiquelajazz', match2 => '', guesssong => true },
+	fmlacontemporaine => { fullname => 'France Musique La Contemporaine', stationid => '406', fetchid => 'francemusique_la_contemporaine', region => '', tuneinid => 's283179', notexcludable => true, match1 => 'francemusiquelacontemporaine', match2 => '', guesssong => true },
+	fmocoramonde => { fullname => 'France Musique Ocora Monde', stationid => '404', fetchid => 'francemusique_ocora_monde', region => '', tuneinid => 's283177', notexcludable => true, match1 => 'francemusiqueocoramonde', match2 => '', guesssong => true },
+	#fmevenementielle => { fullname => 'France Musique Evenementielle', stationid => '407', fetchid => 'francemusique_evenementielle', region => '', tuneinid => 's285660&|id=s306575', notexcludable => true, match1 => 'francemusiquelevenementielle', match2 => '', guesssong => true }, # Special case ... 2 TuneIn Id
+	fmlabo => { fullname => 'France Musique Films', stationid => '407', fetchid => 'francemusique_evenementielle', region => '', tuneinid => 's306575', notexcludable => true, match1 => 'francemusiquelabo', match2 => '', guesssong => true }, 
+	fmopera => { fullname => 'France Musique Opéra', stationid => '409', fetchid => 'francemusique_opera', region => '', tuneinid => '', notexcludable => true, match1 => 'francemusiqueopera', match2 => '', guesssong => true },
+	fmpianozen => { fullname => 'France Musique Piano Zen', stationid => '410', fetchid => 'francemusique_piano_zen', region => '', tuneinid => '', notexcludable => true, match1 => 'francemusiquepianozen', match2 => '', guesssong => true },
+	fmclassiquelove => { fullname => 'France Musique Classique Love', stationid => '411', fetchid => 'francemusique_classique_love', region => '', tuneinid => '', notexcludable => true, match1 => 'francemusiqueclassiquelove', match2 => '', guesssong => true },	
 
-	mouv => { fullname => 'Mouv\'', stationid => '6', fetchid => 'mouv', region => '', tuneinid => 's6597', notexcludable => true, match1 => 'mouv', match2 => '', ondemandurl => $radiofrancescheuleurl, ondemandheaders => \%radiofranceapiondemandheaderset, artfromuid => true },
-	mouvxtra => { fullname => 'Mouv\' Xtra', stationid => '75', fetchid => '', region => '', tuneinid => '', notexcludable => true, match1 => 'mouvxtra', match2 => '' },
-	mouvclassics => { fullname => 'Mouv\' Classics', stationid => '601', fetchid => 'mouv_classics', region => '', tuneinid => 's307696', notexcludable => true, match1 => 'mouvclassics', match2 => '' },
-	mouvdancehall => { fullname => 'Mouv\' Dancehall', stationid => '602', fetchid => 'mouv_dancehall', region => '', tuneinid => 's307697', notexcludable => true, match1 => 'mouvdancehall', match2 => '' },
-	mouvrnb => { fullname => 'Mouv\' R\'N\'B', stationid => '603', fetchid => 'mouv_rnb', region => '', tuneinid => 's307695', notexcludable => true, match1 => 'mouvrnb', match2 => '' },
-	mouvrapus => { fullname => 'Mouv\' RAP US', stationid => '604', fetchid => 'mouv_rapus', region => '', tuneinid => 's307694', notexcludable => true, match1 => 'mouvrapus', match2 => '' },
-	mouvrapfr => { fullname => 'Mouv\' RAP Français', stationid => '605', fetchid => 'mouv_rapfr', region => '', tuneinid => 's307693', notexcludable => true, match1 => 'mouvrapfr', match2 => '' },
-	mouvkidsnfamily => { fullname => 'Mouv\' Kids\'n Family', stationid => '606', fetchid => 'mouv_kids_n_family', region => '', tuneinid => '', notexcludable => true, match1 => 'mouvkidsnfamily', match2 => '' },
-	mouv100mix => { fullname => 'Mouv\' 100\% Mix', stationid => '75', fetchid => 'mouv_100mix', region => '', tuneinid => 's244069', notexcludable => true, match1 => 'mouv100p100mix', match2 => '' },
-	mouvsansblabla => { fullname => 'Mouv\' Sans Blabla', stationid => 'mouvsansblabla', fetchid => 'mouv_sans_blabla', region => '', tuneinid => '', notexcludable => true, match1 => 'mouvsansblabla', match2 => '' },
+	mouv => { fullname => 'Mouv\'', stationid => '6', fetchid => 'mouv', region => '', tuneinid => 's6597', notexcludable => true, match1 => 'mouv', match2 => '', ondemandurl => $radiofrancescheuleurl, ondemandheaders => \%radiofranceapiondemandheaderset, artfromuid => true, guesssong => true },
+# finished late 2025 - 	mouvxtra => { fullname => 'Mouv\' Xtra', stationid => '75', fetchid => '', region => '', tuneinid => '', notexcludable => true, match1 => 'mouvxtra', match2 => '' },
+# finished late 2025 - 	mouvclassics => { fullname => 'Mouv\' Classics', stationid => '601', fetchid => 'mouv_classics', region => '', tuneinid => 's307696', notexcludable => true, match1 => 'mouvclassics', match2 => '' },
+# finished late 2025 - 	mouvdancehall => { fullname => 'Mouv\' Dancehall', stationid => '602', fetchid => 'mouv_dancehall', region => '', tuneinid => 's307697', notexcludable => true, match1 => 'mouvdancehall', match2 => '' },
+# finished late 2025 - 	mouvrnb => { fullname => 'Mouv\' R\'N\'B', stationid => '603', fetchid => 'mouv_rnb', region => '', tuneinid => 's307695', notexcludable => true, match1 => 'mouvrnb', match2 => '' },
+# finished late 2025 - 	mouvrapus => { fullname => 'Mouv\' RAP US', stationid => '604', fetchid => 'mouv_rapus', region => '', tuneinid => 's307694', notexcludable => true, match1 => 'mouvrapus', match2 => '' },
+# finished late 2025 - 	mouvrapfr => { fullname => 'Mouv\' RAP Français', stationid => '605', fetchid => 'mouv_rapfr', region => '', tuneinid => 's307693', notexcludable => true, match1 => 'mouvrapfr', match2 => '' },
+# finished late 2025 - 	mouvkidsnfamily => { fullname => 'Mouv\' Kids\'n Family', stationid => '606', fetchid => 'mouv_kids_n_family', region => '', tuneinid => '', notexcludable => true, match1 => 'mouvkidsnfamily', match2 => '' },
+# finished late 2025 - 	mouv100mix => { fullname => 'Mouv\' 100\% Mix', stationid => '75', fetchid => 'mouv_100mix', region => '', tuneinid => 's244069', notexcludable => true, match1 => 'mouv100p100mix', match2 => '' },
+# finished late 2025 - 	mouvsansblabla => { fullname => 'Mouv\' Sans Blabla', stationid => 'mouvsansblabla', fetchid => 'mouv_sans_blabla', region => '', tuneinid => '', notexcludable => true, match1 => 'mouvsansblabla', match2 => '' },
 
 	franceinter => { fullname => 'France Inter', stationid => '1', fetchid => '', region => '', tuneinid => 's24875', notexcludable => false, match1 => 'franceinter', match2 => '', ondemandurl => $radiofrancescheuleurl, ondemandheaders => \%radiofranceapiondemandheaderset },
-	franceinterlamusiqueinter => { fullname => 'La Musique d\'Inter', stationid => 'la-musique-inter', fetchid => 'franceinter_la_musique_inter', region => '', tuneinid => '', notexcludable => false, match1 => 'franceinterlamusiqueinter', match2 => '', scheduleurl => '', artfromuid => true },
+	franceinterlamusiqueinter => { fullname => 'La Musique d\'Inter', stationid => '1101', fetchid => 'franceinter_la_musique_inter', region => '', tuneinid => '', notexcludable => false, match1 => 'franceinterlamusiqueinter', match2 => '', scheduleurl => '', artfromuid => true, guesssong => true },
+	franceintermonpetit => { fullname => 'Mon petit France Inter', stationid => '1102', fetchid => 'monpetitfranceinter', region => '', tuneinid => '', notexcludable => false, match1 => 'monpetitfranceinter', match2 => '', scheduleurl => '', artfromuid => true, guesssong => true  },
+	franceintermontoutpetit => { fullname => 'Mon tout petit France Inter', stationid => '1103', fetchid => 'montoutpetitfranceinter', region => '', tuneinid => '', notexcludable => false, match1 => 'montoutpetitfranceinter', match2 => '', scheduleurl => '', artfromuid => true, guesssong => true  },
 
 	franceinfo => { fullname => 'France Info', stationid => '2', fetchid => '', region => '', tuneinid => 's9948', notexcludable => false, match1 => 'franceinfo', match2 => '', ondemandurl => $radiofrancescheuleurl, ondemandheaders => \%radiofranceapiondemandheaderset, artfromuid => true },
-	francemusique => { fullname => 'France Musique', stationid => '4', fetchid => 'francemusique', region => '', tuneinid => 's15198', notexcludable => false, match1 => 'francemusique', match2 => '', ondemandurl => $radiofrancescheuleurl, ondemandheaders => \%radiofranceapiondemandheaderset, individualprogurl => ['https://www.radiofrance.fr/api/v1.7/path?value=${progpath}', 'https://www.radiofrance.fr/api/v1.7/stations/francemusique/songs?pageCursor=Mg%3D%3D&startDate=${progstart}&endDate=${progend}&isPad=false'] },
 	franceculture => { fullname => 'France Culture', stationid => '5', fetchid => 'franceculture', region => '', tuneinid => 's2442', notexcludable => false, match1 => 'franceculture', match2 => '', ondemandurl => $radiofrancescheuleurl, ondemandheaders => \%radiofranceapiondemandheaderset, artfromuid => true },
 
-	# until Nov-2024 - fb100chanson => { fullname => 'France Bleu 100% Chanson Française', stationid => 'fbchansonfrancaise', fetchid => 'chanson-francaise', region => '', tuneinid => '', notexcludable => false, match1 => 'fbchansonfrancaise', match2 => '', scheduleurl => '', artfromuid => true },
-	fb100chanson => { fullname => 'ici 100% Chanson Française', stationid => 'fbchansonfrancaise', fetchid => 'francebleu_chanson_francaise', region => '', tuneinid => '', notexcludable => false, match1 => 'fbchansonfrancaise', match2 => '', scheduleurl => '', artfromuid => true },
+	fb100chanson => { fullname => 'ici 100% Chanson Française', stationid => '5601', fetchid => 'francebleu_chanson_francaise', region => '', tuneinid => '', notexcludable => false, match1 => 'fbchansonfrancaise', match2 => '', scheduleurl => '', artfromuid => true, guesssong => true },
+	fbannees80 => { fullname => 'ici 100% années 80', stationid => '5602', fetchid => 'francebleu_annee_80', region => '', tuneinid => '', notexcludable => false, match1 => 'fb100pour100annees80', match2 => '', scheduleurl => '', artfromuid => true, guesssong => true },
+	
 	fbalsace => { fullname => 'ici Alsace', stationid => '12', fetchid => 'alsace', region => '', tuneinid => 's2992', notexcludable => false, match1 => 'fbalsace', match2 => '', scheduleurl => '', artfromuid => true, guesssong => true },
 	fbarmorique => { fullname => 'ici Armorique', stationid => '13', fetchid => 'armorique', region => '', tuneinid => 's25492', notexcludable => false, match1 => 'fbarmorique', match2 => '', scheduleurl => '', artfromuid => true, guesssong => true },
 	fbauxerre => { fullname => 'ici Auxerre', stationid => '14', fetchid => 'auxerre', region => '', tuneinid => 's47473', notexcludable => false, match1 => 'fbauxerre', match2 => '', scheduleurl => '', artfromuid => true, guesssong => true },
 	fbazur => { fullname => 'ici Azur', stationid => '49', fetchid => 'azur', region => '', tuneinid => 's45035', notexcludable => false, match1 => 'fbazur', match2 => '', scheduleurl => '', artfromuid => true, guesssong => true },
-	fbbearn => { fullname => 'ici Béarn', stationid => '15', fetchid => 'bearn', region => '', tuneinid => 's48291', notexcludable => false, match1 => 'fbbearn', match2 => '', scheduleurl => '', artfromuid => true, guesssong => true },
+	fbbearn => { fullname => 'ici Béarn Bigorre', stationid => '15', fetchid => 'bearn', region => '', tuneinid => 's48291', notexcludable => false, match1 => 'fbbearn', match2 => '', scheduleurl => '', artfromuid => true, guesssong => true },
 	fbbelfort => { fullname => 'ici Belfort-Montbéliard', stationid => '16', fetchid => 'belfort-montbeliard', region => '', tuneinid => 's25493', notexcludable => false, match1 => 'fbbelfort', match2 => '', scheduleurl => '', artfromuid => true, guesssong => true },
 	fbberry => { fullname => 'ici Berry', stationid => '17', fetchid => 'berry', region => '', tuneinid => 's48650', notexcludable => false, match1 => 'fbberry', match2 => '', scheduleurl => '', artfromuid => true, guesssong => true },
 	fbbesancon => { fullname => 'ici Besançon', stationid => '18', fetchid => 'besancon', region => '', tuneinid => 's48652', notexcludable => false, match1 => 'fbbesancon', match2 => '', scheduleurl => '', artfromuid => true, guesssong => true },
@@ -301,7 +319,7 @@ my $stationSet = { # Take extra care if pasting in from external spreadsheet ...
 	fblarochelle => { fullname => 'ici La Rochelle', stationid => '30', fetchid => 'la-rochelle', region => '', tuneinid => 's48669', notexcludable => false, match1 => 'fblarochelle', match2 => '', ondemandurl => $radiofrancescheuleurl, ondemandheaders => \%radiofranceapiondemandheaderset, artfromuid => true, guesssong => true },  #Possible alternate for schedule https://www.francebleu.fr/grid/la-rochelle/${unixtime}
 	fblimousin => { fullname => 'ici Limousin', stationid => '31', fetchid => 'limousin', region => '', tuneinid => 's48670', notexcludable => false, match1 => 'fblimousin', match2 => '', scheduleurl => '', artfromuid => true, guesssong => true },
 	fbloireocean => { fullname => 'ici Loire Océan', stationid => '32', fetchid => 'loire-ocean', region => '', tuneinid => 's36096', notexcludable => false, match1 => 'fbloireocean', match2 => '', scheduleurl => '', artfromuid => true, guesssong => true },
-	fblorrainenord => { fullname => 'ici Lorraine Nord', stationid => '50', fetchid => 'lorraine-nord', region => '', tuneinid => 's48672', notexcludable => false, match1 => 'fblorrainenord', match2 => '', scheduleurl => '', artfromuid => true, guesssong => true },
+	fblorrainenord => { fullname => 'ici Lorraine (Moselle et Pays Haut)', stationid => '50', fetchid => 'lorraine-nord', region => '', tuneinid => 's48672', notexcludable => false, match1 => 'fblorrainenord', match2 => '', scheduleurl => '', artfromuid => true, guesssong => true },
 	fbmaine => { fullname => 'ici Maine', stationid => '91', fetchid => 'maine', region => '', tuneinid => 's127941', notexcludable => false, match1 => 'fbmaine', match2 => '', scheduleurl => '', artfromuid => true, guesssong => true },
 	fbmayenne => { fullname => 'ici Mayenne', stationid => '34', fetchid => 'mayenne', region => '', tuneinid => 's48673', notexcludable => false, match1 => 'fbmayenne', match2 => '', scheduleurl => '', artfromuid => true, guesssong => true },
 	fbnord => { fullname => 'ici Nord', stationid => '36', fetchid => 'nord', region => '', tuneinid => 's44237', notexcludable => false, match1 => 'fbnord', match2 => '', scheduleurl => '', artfromuid => true, guesssong => true },
@@ -320,7 +338,7 @@ my $stationSet = { # Take extra care if pasting in from external spreadsheet ...
 	fbrcfm => { fullname => 'ici RCFM', stationid => '11', fetchid => 'rcfm', region => '', tuneinid => 's48656', notexcludable => false, match1 => 'fbfrequenzamora', match2 => '', scheduleurl => '', artfromuid => true, guesssong => true },
 	fbroussillon => { fullname => 'ici Roussillon', stationid => '46', fetchid => 'roussillon', region => '', tuneinid => 's48689', notexcludable => false, match1 => 'fbroussillon', match2 => '', scheduleurl => '', artfromuid => true, guesssong => true },
 	fbsaintetienneloire => { fullname => 'ici Saint-Étienne Loire', stationid => '93', fetchid => 'saint-etienne-loire', region => '', tuneinid => 's212244', notexcludable => false, match1 => 'fbstetienne', match2 => '', scheduleurl => '', artfromuid => true, guesssong => true },
-	fbsudlorraine => { fullname => 'ici Sud Lorraine', stationid => '33', fetchid => 'sud-lorraine', region => '', tuneinid => 's45039', notexcludable => false, match1 => 'fbsudlorraine', match2 => '', scheduleurl => '', artfromuid => true, guesssong => true },
+	fbsudlorraine => { fullname => 'ici Lorraine (Meurthe-et-Moselle et Vosges)', stationid => '33', fetchid => 'sud-lorraine', region => '', tuneinid => 's45039', notexcludable => false, match1 => 'fbsudlorraine', match2 => '', scheduleurl => '', artfromuid => true, guesssong => true },
 	fbtouraine => { fullname => 'ici Touraine', stationid => '47', fetchid => 'touraine', region => '', tuneinid => 's48694', notexcludable => false, match1 => 'fbtouraine', match2 => '', scheduleurl => '', artfromuid => true, guesssong => true },
 	fbvaucluse => { fullname => 'ici Vaucluse', stationid => '48', fetchid => 'vaucluse', region => '', tuneinid => 's47474', notexcludable => false, match1 => 'fbvaucluse', match2 => '', scheduleurl => '', artfromuid => true, guesssong => true },
 };
@@ -358,8 +376,9 @@ my $urls = {
 # finished December 2020 - fipradio => 'https://api.radiofrance.fr/livemeta/pull/${stationid}',
 	# finished mid-2023 - fipradio => 'https://api.radiofrance.fr/livemeta/live/${stationid}/webrf_fip_player?preset=400x400',
 	# finished Nov-2024 - fipradio => $type4prefix.'${fetchid}'.$type4suffix,
-	fipradio => $type8prefix.'${fetchid}'.$type8suffix,
-	fipradio_alt => $type10prefix.'${stationid}'.$type10asuffix,
+# finished March 2026 - fipradio => $type8prefix.'${fetchid}'.$type8suffix,
+	fipradio => $type10prefix.'${stationid}'.$type10esuffix,
+	fipradio_alt => $type10prefix.'${stationid}'.$type10csuffix,
 # finished 1521553005 - 2018-03-20 13:36:45	fipbordeaux_alt => 'http://www.fipradio.fr/sites/default/files/import_si/si_titre_antenne/FIP_player_current.json',
 # finished December 2020 - fipbordeaux => 'https://api.radiofrance.fr/livemeta/pull/${stationid}',
 	fipbordeaux => $type4prefix.'${fetchid}'.$type4suffix,
@@ -375,126 +394,164 @@ my $urls = {
 # finished 1507650288 - 2017-10-10 16:44:48	fiprock_alt => 'http://www.fipradio.fr/sites/default/files/import_si_webradio_1/si_titre_antenne/FIP_player_current.json',
 # finished December 2020 - fiprock => 'https://api.radiofrance.fr/livemeta/pull/${stationid}',
 # finished November 2024 - fiprock => $type4prefix.'${fetchid}'.$type4suffix,
-	fiprock => $type9prefix.'${fetchid}'.$type9suffix,
+# finished March 2026 - fiprock => $type9prefix.'${fetchid}'.$type9suffix,
+	fiprock => $type10prefix.'${stationid}'.$type10esuffix,
 	# fiprock_alt => $type3prefix1fip.'${stationid}'.$type3prefix2fip.$type3suffixfip,
 # finished 1507650914 - 2017-10-10 16:55:14	fipjazz_alt => 'http://www.fipradio.fr/sites/default/files/import_si_webradio_2/si_titre_antenne/FIP_player_current.json',
 # finished December 2020 - fipjazz => 'https://api.radiofrance.fr/livemeta/pull/${stationid}',
-	fipjazz => $type4prefix.'${fetchid}'.$type4suffix,
+# finished March 2026 - fipjazz => $type4prefix.'${fetchid}'.$type4suffix,
+	fipjazz => $type10prefix.'${stationid}'.$type10esuffix,
 	# fipjazz_alt => $type3prefix1fip.'${stationid}'.$type3prefix2fip.$type3suffixfip,
 # finished 1507650885 - 2017-10-10 16:54:45	fipgroove_alt => 'http://www.fipradio.fr/sites/default/files/import_si_webradio_3/si_titre_antenne/FIP_player_current.json',
 # finished December 2020 - fipgroove => 'https://api.radiofrance.fr/livemeta/pull/${stationid}',
-	fipgroove => $type4prefix.'${fetchid}'.$type4suffix,
+# finished March 2026 - fipgroove => $type4prefix.'${fetchid}'.$type4suffix,
+	fipgroove => $type10prefix.'${stationid}'.$type10esuffix,
 	# fipgroove_alt => $type3prefix1fip.'${stationid}'.$type3prefix2fip.$type3suffixfip,
 # finished 1507650800 - 2017-10-10 16:53:20	fipmonde_alt => 'http://www.fipradio.fr/sites/default/files/import_si_webradio_4/si_titre_antenne/FIP_player_current.json',
 # finished December 2020 - fipmonde => 'https://api.radiofrance.fr/livemeta/pull/${stationid}',
-	fipmonde => $type4prefix.'${fetchid}'.$type4suffix,
+# finished March 2026 - fipmonde => $type4prefix.'${fetchid}'.$type4suffix,
+	fipmonde => $type10prefix.'${stationid}'.$type10esuffix,
 	# fipmonde_alt => $type3prefix1fip.'${stationid}'.$type3prefix2fip.$type3suffixfip,
 # finished 1507650797 - 2017-10-10 16:53:17	fipnouveau_alt => 'http://www.fipradio.fr/sites/default/files/import_si_webradio_5/si_titre_antenne/FIP_player_current.json',
 # finished December 2020 - fipnouveau => 'https://api.radiofrance.fr/livemeta/pull/${stationid}',
-	fipnouveau => $type4prefix.'${fetchid}'.$type4suffix,
+# finished March 2026 - fipnouveau => $type4prefix.'${fetchid}'.$type4suffix,
+	fipnouveau => $type10prefix.'${stationid}'.$type10esuffix,
 	# fipnouveau_alt => $type3prefix1fip.'${stationid}'.$type3prefix2fip.$type3suffixfip,
 # finished 1507650800 - 2017-10-10 16:53:20	fipevenement_alt => 'http://www.fipradio.fr/sites/default/files/import_si_webradio_6/si_titre_antenne/FIP_player_current.json',
 # FIP Evenement became FIP Autour Du Reggae
 # finished December 2020 - fipreggae => 'https://api.radiofrance.fr/livemeta/pull/${stationid}',
-	fipreggae => $type4prefix.'${fetchid}'.$type4suffix,
+# finished March 2026 - fipreggae => $type4prefix.'${fetchid}'.$type4suffix,
+	fipreggae => $type10prefix.'${stationid}'.$type10esuffix,
 	# fipreggae_alt => $type3prefix1fip.'${stationid}'.$type3prefix2fip.$type3suffixfip,
 # finished December 2020 - fipelectro => 'https://api.radiofrance.fr/livemeta/pull/${stationid}',
-	fipelectro => $type4prefix.'${fetchid}'.$type4suffix,
+# finished March 2026 - fipelectro => $type4prefix.'${fetchid}'.$type4suffix,
+	fipelectro => $type10prefix.'${stationid}'.$type10esuffix,
 	# fipelectro_alt => $type3prefix1fip.'${stationid}'.$type3prefix2fip.$type3suffixfip,
 # finished December 2020 - fipmetal => 'https://api.radiofrance.fr/livemeta/pull/${stationid}',
-	fipmetal => $type4prefix.'${fetchid}'.$type4suffix,
+# finished March 2026 - fipmetal => $type4prefix.'${fetchid}'.$type4suffix,
+	fipmetal => $type10prefix.'${stationid}'.$type10esuffix,
 	# fipmetal_alt => $type3prefix1fip.'${stationid}'.$type3prefix2fip.$type3suffixfip,
-	fippop => $type4prefix.'${fetchid}'.$type4suffix,
-	fiphiphop => $type4prefix.'${fetchid}'.$type4suffix,
-	fipsacre => $type4prefix.'${fetchid}'.$type4suffix,
-	
+# finished March 2026 - fippop => $type4prefix.'${fetchid}'.$type4suffix,
+	fippop => $type10prefix.'${stationid}'.$type10esuffix,
+# finished March 2026 - fiphiphop => $type4prefix.'${fetchid}'.$type4suffix,
+	fiphiphop => $type10prefix.'${stationid}'.$type10esuffix,
+# finished March 2026 - fipsacre => $type4prefix.'${fetchid}'.$type4suffix,
+	fipsacre => $type10prefix.'${stationid}'.$type10esuffix,
+# finished March 2026 - fipcultes => $type4prefix.'${fetchid}'.$type4suffix,
+	fipcultes => $type10prefix.'${stationid}'.$type10esuffix,
+
+# finished December 2020 - francemusique => 'https://api.radiofrance.fr/livemeta/pull/${stationid}',
+# finished July 2023 - 	francemusique => 'https://api.radiofrance.fr/livemeta/live/${stationid}/inter_player',
+# finished March 2026 - francemusique => $type4prefix.'${fetchid}'.$type4suffix,
+	francemusique => $type10prefix.'${stationid}'.$type10gsuffix,
+	#francemusique_alt => $type3prefix1fip.'${stationid}'.$type3prefix2fip.$type3suffixfip,
+	#francemusique_alt => $type10prefix.'${stationid}'.$type10dsuffix,
 # finished December 2020 - fmclassiqueeasy => 'https://api.radiofrance.fr/livemeta/pull/${stationid}',
 # finished July 2023 - fmclassiqueeasy => 'https://api.radiofrance.fr/livemeta/live/${stationid}/inter_player',
-	fmclassiqueeasy => $type4prefix.'${fetchid}'.$type4suffix,
+# finished March 2026 - fmclassiqueeasy => $type4prefix.'${fetchid}'.$type4suffix,
+	fmclassiqueeasy => $type10prefix.'${stationid}'.$type10esuffix,
 	# fmclassiqueeasy_alt => $type3prefix1fip.'${stationid}'.$type3prefix2fip.$type3suffixfip,
 # finished December 2020 - fmbaroque => 'https://api.radiofrance.fr/livemeta/pull/${stationid}',
 # finished July 2023 - fmbaroque => 'https://api.radiofrance.fr/livemeta/live/${stationid}/inter_player',
-	fmbaroque => $type4prefix.'${fetchid}'.$type4suffix,
+# finished March 2026 - fmbaroque => $type4prefix.'${fetchid}'.$type4suffix,
+	fmbaroque => $type10prefix.'${stationid}'.$type10esuffix,
 	#fmbaroque_alt => $type3prefix1fip.'${stationid}'.$type3prefix2fip.$type3suffixfip,
 # finished December 2020 - fmclassiqueplus => 'https://api.radiofrance.fr/livemeta/pull/${stationid}',
 # finished July 2023 - fmclassiqueplus => 'https://api.radiofrance.fr/livemeta/live/${stationid}/inter_player',
-	fmclassiqueplus => $type4prefix.'${fetchid}'.$type4suffix,
+# finished March 2026 - fmclassiqueplus => $type4prefix.'${fetchid}'.$type4suffix,
+	fmclassiqueplus => $type10prefix.'${stationid}'.$type10esuffix,
 	#fmclassiqueplus_alt => $type3prefix1fip.'${stationid}'.$type3prefix2fip.$type3suffixfip,
 # finished December 2020 - fmconcertsradiofrance => 'https://api.radiofrance.fr/livemeta/pull/${stationid}',
 # finished July 2023 - fmconcertsradiofrance => 'https://api.radiofrance.fr/livemeta/live/${stationid}/inter_player',
-	fmconcertsradiofrance => $type4prefix.'${fetchid}'.$type4suffix,
+# finished March 2026 - fmconcertsradiofrance => $type4prefix.'${fetchid}'.$type4suffix,
+	fmconcertsradiofrance => $type10prefix.'${stationid}'.$type10csuffix,
 	#fmconcertsradiofrance_alt => $type3prefix1fip.'${stationid}'.$type3prefix2fip.$type3suffixfip,
 # finished December 2020 - fmlajazz => 'https://api.radiofrance.fr/livemeta/pull/${stationid}',
 # finished July 2023 - fmlajazz => 'https://api.radiofrance.fr/livemeta/live/${stationid}/inter_player',
-	fmlajazz => $type4prefix.'${fetchid}'.$type4suffix,
+# finished March 2026 - fmlajazz => $type4prefix.'${fetchid}'.$type4suffix,
+	fmlajazz => $type10prefix.'${stationid}'.$type10esuffix,
 	#fmlajazz_alt => $type3prefix1fip.'${stationid}'.$type3prefix2fip.$type3suffixfip,
 # finished December 2020 - fmlacontemporaine => 'https://api.radiofrance.fr/livemeta/pull/${stationid}',
 # finished July 2023 - fmlacontemporaine => 'https://api.radiofrance.fr/livemeta/live/${stationid}/inter_player',
-	fmlacontemporaine => $type4prefix.'${fetchid}'.$type4suffix,
+# finished March 2026 - fmlacontemporaine => $type4prefix.'${fetchid}'.$type4suffix,
+	fmlacontemporaine => $type10prefix.'${stationid}'.$type10esuffix,
 	#fmlacontemporaine_alt => $type3prefix1fip.'${stationid}'.$type3prefix2fip.$type3suffixfip,
 # finished December 2020 - fmocoramonde => 'https://api.radiofrance.fr/livemeta/pull/${stationid}',
 # finished July 2023 - fmocoramonde => 'https://api.radiofrance.fr/livemeta/live/${stationid}/inter_player',
-	fmocoramonde => $type4prefix.'${fetchid}'.$type4suffix,
+# finished March 2026 - fmocoramonde => $type4prefix.'${fetchid}'.$type4suffix,
+	fmocoramonde => $type10prefix.'${stationid}'.$type10esuffix,
 	#fmocoramonde_alt => $type3prefix1fip.'${stationid}'.$type3prefix2fip.$type3suffixfip,
 	#fmevenementielle => 'https://api.radiofrance.fr/livemeta/pull/${stationid}',
 # finished December 2020 - fmlabo => 'https://api.radiofrance.fr/livemeta/pull/${stationid}',
 # finished July 2023 - fmlabo => 'https://api.radiofrance.fr/livemeta/live/${stationid}/inter_player',
-	fmlabo => $type4prefix.'${fetchid}'.$type4suffix,
+# finished March 2026 - fmlabo => $type4prefix.'${fetchid}'.$type4suffix,
+	fmlabo => $type10prefix.'${stationid}'.$type10esuffix,
 	# fmlabo_alt => $type3prefix1fip.'${stationid}'.$type3prefix2fip.$type3suffixfip,
 # finished December 2020 - fmopera => 'https://api.radiofrance.fr/livemeta/pull/${stationid}',
 # finished July 2023 - fmopera => 'https://api.radiofrance.fr/livemeta/live/${stationid}/inter_player',
-	fmopera => $type4prefix.'${fetchid}'.$type4suffix,
+# finished March 2026 - fmopera => $type4prefix.'${fetchid}'.$type4suffix,
+	fmopera => $type10prefix.'${stationid}'.$type10esuffix,
 	# fmopera_alt => $type3prefix1fip.'${stationid}'.$type3prefix2fip.$type3suffixfip,
-	fmpianozen => $type4prefix.'${fetchid}'.$type4suffix,
-	
+# finished March 2026 - fmpianozen => $type4prefix.'${fetchid}'.$type4suffix,
+	fmpianozen => $type10prefix.'${stationid}'.$type10csuffix,
+# finished March 2026 - fmclassiquelove => $type4prefix.'${fetchid}'.$type4suffix,
+	fmclassiquelove => $type10prefix.'${stationid}'.$type10esuffix,
+
 # finished December 2020 - mouv => 'https://api.radiofrance.fr/livemeta/pull/${stationid}',
 # finished July 2023 - 	mouv => 'https://api.radiofrance.fr/livemeta/live/${stationid}/inter_player',
-	mouv => $type4prefix.'${fetchid}'.$type4suffix,
+# finished March 2026 - mouv => $type4prefix.'${fetchid}'.$type4suffix,
+	mouv => $type10prefix.'${stationid}'.$type10hsuffix,
 	# mouv_alt => $type3prefix1fip.'${stationid}'.$type3prefix2fip.$type3suffixfip,
 # finished December 2020 - mouvxtra => 'https://api.radiofrance.fr/livemeta/pull/${stationid}',
 # finished July 2023 - 	mouvxtra => 'https://api.radiofrance.fr/livemeta/live/${stationid}/inter_player',
-	mouvxtra => $type4prefix.'${fetchid}'.$type4suffix,
+# finished late 2025 - 	mouvxtra => $type4prefix.'${fetchid}'.$type4suffix,
 	#mouvxtra_alt => $type3prefix1fip.'${stationid}'.$type3prefix2fip.$type3suffixfip,
 # finished July 2023 - 	mouvclassics => 'https://www.mouv.fr/latest/api/graphql?operationName=NowWebradio&variables=%7B%22stationId%22%3A601%7D&'.$type3suffix,
-	mouvclassics => $type4prefix.'${fetchid}'.$type4suffix,
+# finished late 2025 - 	mouvclassics => $type4prefix.'${fetchid}'.$type4suffix,
 	#mouvclassics_alt => $type3prefix1fip.'${stationid}'.$type3prefix2fip.$type3suffixfip,
 # finished July 2023 - 	mouvdancehall => 'https://www.mouv.fr/latest/api/graphql?operationName=NowWebradio&variables=%7B%22stationId%22%3A602%7D&'.$type3suffix,
-	mouvdancehall => $type4prefix.'${fetchid}'.$type4suffix,
+# finished late 2025 - 	mouvdancehall => $type4prefix.'${fetchid}'.$type4suffix,
 	#mouvdancehall_alt => $type3prefix1fip.'${stationid}'.$type3prefix2fip.$type3suffixfip,
 # finished July 2023 - 	mouvrnb => 'https://www.mouv.fr/latest/api/graphql?operationName=NowWebradio&variables=%7B%22stationId%22%3A603%7D&'.$type3suffix,
-	mouvrnb => $type4prefix.'${fetchid}'.$type4suffix,
+# finished late 2025 - 	mouvrnb => $type4prefix.'${fetchid}'.$type4suffix,
 	#mouvrnb_alt => $type3prefix1fip.'${stationid}'.$type3prefix2fip.$type3suffixfip,
 # finished July 2023 - 	mouvrapus => 'https://www.mouv.fr/latest/api/graphql?operationName=NowWebradio&variables=%7B%22stationId%22%3A604%7D&'.$type3suffix,
-	mouvrapus => $type4prefix.'${fetchid}'.$type4suffix,
+# finished late 2025 - 	mouvrapus => $type4prefix.'${fetchid}'.$type4suffix,
 	#mouvrapus_alt => $type3prefix1fip.'${stationid}'.$type3prefix2fip.$type3suffixfip,
 # finished July 2023 - 	mouvrapfr => 'https://www.mouv.fr/latest/api/graphql?operationName=NowWebradio&variables=%7B%22stationId%22%3A605%7D&'.$type3suffix,
-	mouvrapfr => $type4prefix.'${fetchid}'.$type4suffix,
+# finished late 2025 - 	mouvrapfr => $type4prefix.'${fetchid}'.$type4suffix,
 	#mouvrapfr_alt => $type3prefix1fip.'${stationid}'.$type3prefix2fip.$type3suffixfip,
-	mouvkidsnfamily => $type4prefix.'${fetchid}'.$type4suffix,
+# finished late 2025 - 	mouvkidsnfamily => $type4prefix.'${fetchid}'.$type4suffix,
 # finished July 2023 - 	mouv100mix => 'https://www.mouv.fr/latest/api/graphql?operationName=NowWebradio&variables=%7B%22stationId%22%3A75%7D&'.$type3suffix,
-	mouv100mix => $type4prefix.'${fetchid}'.$type4suffix,
+# finished late 2025 - 	mouv100mix => $type4prefix.'${fetchid}'.$type4suffix,
 	#mouv100mix_alt => $type3prefix1fip.'${stationid}'.$type3prefix2fip.$type3suffixfip,
-	mouvsansblabla => $type4prefix.'${fetchid}'.$type4suffix,
+# finished late 2025 - 	mouvsansblabla => $type4prefix.'${fetchid}'.$type4suffix,
 
 	
 # finished December 2020 - franceinter => 'https://api.radiofrance.fr/livemeta/pull/${stationid}',
 	franceinter => $type10prefix.'${stationid}'.$type10suffix,
 	#franceinter_alt => $type3prefix1fip.'${stationid}'.$type3prefix2fip.$type3suffixfip,
-	franceinterlamusiqueinter => $type7prefix.'${fetchid}'.$type7suffix,
+# finished March 2026 - franceinterlamusiqueinter => $type7prefix.'${fetchid}'.$type7suffix,
+franceinterlamusiqueinter => $type10prefix.'${stationid}'.$type10esuffix,
+# finished March 2026 - franceintermonpetit => $type12prefix.'${fetchid}'.$type12suffix,
+	franceintermonpetit => $type10prefix.'${stationid}'.$type10esuffix,
+# finished March 2026 - franceintermontoutpetit => $type7prefix.'${fetchid}'.$type7suffix,
+	franceintermontoutpetit => $type10prefix.'${stationid}'.$type10esuffix,
+
 # finished December 2020 - franceinfo => 'https://api.radiofrance.fr/livemeta/pull/${stationid}',
-	franceinfo => $type10prefix.'${stationid}'.$type10suffix,
+	franceinfo => $type10prefix.'${stationid}'.$type10bsuffix,
 	#franceinfo_alt => $type3prefix1fip.'${stationid}'.$type3prefix2fip.$type3suffixfip,
-# finished December 2020 - francemusique => 'https://api.radiofrance.fr/livemeta/pull/${stationid}',
-# finished July 2023 - 	francemusique => 'https://api.radiofrance.fr/livemeta/live/${stationid}/inter_player',
-	francemusique => $type4prefix.'${fetchid}'.$type4suffix,
-	#francemusique_alt => $type3prefix1fip.'${stationid}'.$type3prefix2fip.$type3suffixfip,
 # finished December 2020 - franceculture => 'https://api.radiofrance.fr/livemeta/pull/${stationid}',
 # Removed July 2023 - franceculture => 'https://api.radiofrance.fr/livemeta/live/${stationid}/inter_player',
 # retired Mar-2024 - franceculture => 'https://www.radiofrance.fr/api/v2.1/stations/franceculture/live',
-	franceculture => $type4prefix.'${fetchid}'.$type4suffix,
+# finished March 2026 - franceculture => $type4prefix.'${fetchid}'.$type4suffix,
+	franceculture => $type10prefix.'${stationid}'.$type10fsuffix,
 	#franceculture_alt => $type3prefix1fip.'${stationid}'.$type3prefix2fip.$type3suffixfip,
 	
-	fb100chanson => $type6prefix.'${fetchid}'.$type6suffix,
+# until March 2026 - fb100chanson => $type6prefix.'${fetchid}'.$type6suffix,
+	fb100chanson => $type10prefix.'${stationid}'.$type10csuffix,
+# until March 2026 - fbannees80 => $type6prefix.'${fetchid}'.$type6suffix,
+	fbannees80 => $type10prefix.'${stationid}'.$type10esuffix,
 	# Limited song data from France Bleu local stations
 	# Possible alternative source for programme info ...
 	# https://www.francebleu.fr/grid/alsace/1641206097?xmlHttpRequest=1&ignoreGridHour=1
@@ -606,149 +663,122 @@ foreach my $metakey (keys(%$stationSet)){
 # Also - https://mediateur.radiofrance.fr/wp-content/themes/radiofrance/img/radio-france.png
 my $icons = {
 	#fipradio => 'http://mediateur.radiofrance.fr/wp-content/themes/radiofrance/img/fip.png',
-	fipradio => 'http://oblique.radiofrance.fr/files/charte/logos/png600/FIP.png',
+	#fipradio => 'http://oblique.radiofrance.fr/files/charte/logos/png600/FIP.png',
+	#fipradio => 'https://charte.radiofrance.fr/images/fip/fip.png',
+	fipradio => 'https://www.radiofrance.fr/pikapi/images/34e98566-058b-428f-a39e-d74bdef1cf77/600x600?webp=false',
 	fipbordeaux => 'http://mediateur.radiofrance.fr/wp-content/themes/radiofrance/img/fip.png',
 	fipnantes => 'http://mediateur.radiofrance.fr/wp-content/themes/radiofrance/img/fip.png',
 	fipstrasbourg => 'http://mediateur.radiofrance.fr/wp-content/themes/radiofrance/img/fip.png',
-	fiprock => 'https://cdn.radiofrance.fr/s3/cruiser-production/2019/06/f5b944ca-9a21-4970-8eed-e711dac8ac15/300x300_fip-rock_ok.jpg',
-	fipjazz => 'https://cdn.radiofrance.fr/s3/cruiser-production/2019/06/840a4431-0db0-4a94-aa28-53f8de011ab6/300x300_fip-jazz-01.jpg',
-	fipgroove => 'https://cdn.radiofrance.fr/s3/cruiser-production/2019/06/3673673e-30f7-4caf-92c6-4161485d284d/300x300_fip-groove_ok.jpg',
-	fipmonde => 'https://cdn.radiofrance.fr/s3/cruiser-production/2019/06/9a1d42c5-8a36-4253-bfae-bdbfb85cbe14/300x300_fip-monde_ok.jpg',
-	fipnouveau => 'https://cdn.radiofrance.fr/s3/cruiser-production/2019/06/e061141c-f6b4-4502-ba43-f6ec693a049b/300x300_fip-nouveau_ok.jpg',
-	fipreggae => 'https://cdn.radiofrance.fr/s3/cruiser-production/2019/06/15a58f25-86a5-4b1a-955e-5035d9397da3/300x300_fip-reggae_ok.jpg',
-	fipelectro => 'https://cdn.radiofrance.fr/s3/cruiser-production/2019/06/29044099-6469-4f2f-845c-54e607179806/300x300_fip-electro-ok.jpg',
-	fipmetal => 'https://www.radiofrance.fr/s3/cruiser-production/2022/07/160994f8-296b-4cd8-97a0-34c9111cdd9d/300x300_fip-metal-20222x_2.jpg',
-	fippop => 'https://cdn.radiofrance.fr/s3/cruiser-production/2020/06/14f16d25-960c-4cf4-8e39-682268b1a0c1/300x300_fip-pop_ok.jpg',
-	fiphiphop => 'https://www.radiofrance.fr/s3/cruiser-production/2022/07/af67eb80-feac-441e-aea6-ba7c653e220d/300x300_fip-hip-hop-2022-v12x-1.jpg',
-	fipsacre => 'https://www.radiofrance.fr/s3/cruiser-production/2023/07/562152b5-9c46-46c1-a166-683448aa1fbe/250x250_sc_sacre-franaais.jpg',
+	fiprock => 'https://www.radiofrance.fr/pikapi/images/cda37279-f985-4017-bc03-2dad643c7306/600x600?webp=false',
+	fipjazz => 'https://www.radiofrance.fr/pikapi/images/2de59c50-9912-401e-9d1f-95a2f0b66567/600x600?webp=false',
+	fipgroove => 'https://www.radiofrance.fr/pikapi/images/95cf76c3-26bc-404e-be1c-b81666188c3f/600x600?webp=false',
+	fipmonde => 'https://www.radiofrance.fr/pikapi/images/524fabe1-7645-4847-aa93-932d9835de67/600x600?webp=false',
+	fipnouveau => 'https://www.radiofrance.fr/pikapi/images/9f85ac9d-1151-429a-9645-d030e92b441f/600x600?webp=false',
+	fipreggae => 'https://www.radiofrance.fr/pikapi/images/a242c7c5-bf1e-468b-9cb9-2154550f8be7/600x600?webp=false',
+	fipelectro => 'https://www.radiofrance.fr/pikapi/images/bf85964f-395a-4e6a-beb4-6cc0590d20bb/600x600?webp=false',
+	fipmetal => 'https://www.radiofrance.fr/pikapi/images/a3406ba2-41d4-4a94-89a2-c45470d606ff/600x600?webp=false',
+	fippop => 'https://www.radiofrance.fr/pikapi/images/867b3aac-d06c-4f79-85a3-fc1565526889/600x600?webp=false',
+	fiphiphop => 'https://www.radiofrance.fr/pikapi/images/5c52d959-7ea2-4c9e-b298-5aab893a9b86/600x600?webp=false',
+	fipsacre => 'https://www.radiofrance.fr/pikapi/images/1641a25c-e8c8-49f8-b5e1-cffd8b722231/600x600?webp=false',
+	fipcultes => 'https://www.radiofrance.fr/pikapi/images/d16aab34-0e5c-439f-a364-31f7e0ac4abb/600x600?webp=false',
 	
-	fmclassiqueeasy => 'https://cdn.radiofrance.fr/s3/cruiser-production/2022/02/36c9fa83-a2c6-4432-9234-36f22ddabc24/300x300_webradios_fm_classique-easy.jpg',
-	fmbaroque => 'https://cdn.radiofrance.fr/s3/cruiser-production/2022/02/544d1b3c-fc0f-462d-bc6e-f96bb199c672/300x300_webradios_fm_la-baroque.jpg',
-	fmclassiqueplus => 'https://cdn.radiofrance.fr/s3/cruiser-production/2022/02/4eb2980e-2d53-4f4c-ba9d-ddbf3e96b9d8/300x300_webradios_fm_classique-plus.jpg',
-	fmconcertsradiofrance => 'https://cdn.radiofrance.fr/s3/cruiser-production/2022/02/c9c1dacf-6fc5-49ef-ac9e-7fa6145fd850/300x300_webradios_fm_concerts-radio-france.jpg',
-	fmlajazz => 'https://cdn.radiofrance.fr/s3/cruiser-production/2022/02/13381986-e962-4809-ad21-23e8260c8f75/300x300_webradios_fm_la-jazz.jpg',
-	fmlacontemporaine => 'https://cdn.radiofrance.fr/s3/cruiser-production/2022/02/b365b09f-8ca2-4ae3-beda-d45711df7a49/300x300_webradios_fm_la-contemporaine.jpg',
-	fmocoramonde => 'https://cdn.radiofrance.fr/s3/cruiser-production/2022/02/75db3a09-1545-487b-ab11-81db3642a5cd/300x300_webradios_fm_musiques-du-monde-ocora.jpg',
+	fmclassiqueeasy => 'https://www.radiofrance.fr/pikapi/images/0c934a62-8d73-43c1-9465-fa44bc8ec7eb/600x600?webp=false',
+	fmbaroque => 'https://www.radiofrance.fr/pikapi/images/b9f9389f-7d94-4791-a17b-a29f4d79ebe6/600x600?webp=false',
+	fmclassiqueplus => 'https://www.radiofrance.fr/pikapi/images/e47fcd32-56a5-4871-8bdf-7ed0f65759f1/600x600?webp=false',
+	fmconcertsradiofrance => 'https://www.radiofrance.fr/pikapi/images/e75c040e-87d3-4cd7-9848-47c4bce0533f/600x600?webp=false',
+	fmlajazz => 'https://www.radiofrance.fr/pikapi/images/eb79d2dd-d522-4bdd-ae95-48dbd6cddc35/600x600?webp=false',
+	fmlacontemporaine => 'https://www.radiofrance.fr/pikapi/images/6bb38c34-0c90-415b-8212-bb2d8a1200c9/600x600?webp=false',
+	fmocoramonde => 'https://www.radiofrance.fr/pikapi/images/83f776a4-e99e-489f-8dc9-599d2438bfc9/600x600?webp=false',
 	#fmevenementielle => 'https://cdn.radiofrance.fr/s3/cruiser-production/2017/06/d2ac7a26-843d-4f0c-a497-8ddf6f3b2f0f/200x200_fmwebbotout.jpg',
-	fmlabo => 'https://www.radiofrance.fr/s3/cruiser-production/2023/05/4f0b91f5-d507-4924-b3c2-518a9c087aec/300x300_sc_musique-de-films.jpg',
-	fmopera => 'https://cdn.radiofrance.fr/s3/cruiser-production/2020/10/c1fb2b03-5c04-42c9-b415-d56e4c61dcd9/fm-opera-webradio2x.png',
-	fmpianozen => 'https://www.radiofrance.fr/s3/cruiser-production-eu3/2024/02/2ed60106-b535-4949-8a40-5636bb0d9979/300x300_sc_fm_webradios_pianozen_1400x1400.jpg',
+	fmlabo => 'https://www.radiofrance.fr/pikapi/images/427e86ef-7219-4f38-b7b1-c43b55e77b4b/600x600?webp=false',
+	fmopera => 'https://www.radiofrance.fr/pikapi/images/c2e99581-41d7-4d8f-aa47-82ff4b2b33de/600x600?webp=false',
+	fmpianozen => 'https://www.radiofrance.fr/pikapi/images/2ed60106-b535-4949-8a40-5636bb0d9979/600x600?webp=false',
+	fmclassiquelove => 'https://www.radiofrance.fr/pikapi/images/f517eb9b-3860-4204-beaf-72d569331502/600x600?webp=false',
+	#fmclassiquelove => 'http://radionowplaying.com/logo/rfmusiqueclassiquelove.jpg',
 	
 	#mouv => 'https://www.radiofrance.fr/sites/default/files/styles/format_16_9/public/2019-08/logo_mouv_bloc_c.png.jpeg',
-	mouv => 'http://oblique.radiofrance.fr/files/charte/logos/png600/Mouv.png',
-	mouvxtra => 'http://www.mouv.fr/sites/all/modules/rf/rf_lecteur_commun/lecteur_rf/img/logo_mouv_xtra.png',
-	mouvclassics => 'https://cdn.radiofrance.fr/s3/cruiser-production/2019/01/bb8da8da-f679-405f-8810-b4a172f6a32d/300x300_mouv-classic_02.jpg',
-	mouvdancehall => 'https://cdn.radiofrance.fr/s3/cruiser-production/2019/01/9d04e918-c907-4627-a332-1071bdc2366e/300x300_dancehall.jpg',
-	mouvrnb => 'https://cdn.radiofrance.fr/s3/cruiser-production/2019/01/f3bf764e-637c-48c0-b152-1a258726710f/300x300_rnb.jpg',
-	mouvrapus => 'https://cdn.radiofrance.fr/s3/cruiser-production/2019/01/54f3a745-fcf5-4f62-885a-a014cdd50a62/300x300_rapus.jpg',
-	mouvrapfr => 'https://cdn.radiofrance.fr/s3/cruiser-production/2019/01/3c4dc967-ed2c-4ce5-a998-9437a64e05d5/300x300_rapfr.jpg',
-	mouv100mix => 'https://cdn.radiofrance.fr/s3/cruiser-production/2019/01/689453b1-de6c-4c9e-9ebd-de70d0220e69/300x300_mouv-100mix-final.jpg',
-	mouvkidsnfamily => 'https://cdn.radiofrance.fr/s3/cruiser-production/2019/08/20b36ec0-fd19-4d92-b393-7977277e1452/300x300_mouv_webradio_kids_n_family.jpg',
-	mouvsansblabla => 'https://cdn.radiofrance.fr/s3/cruiser-production-eu3/2024/05/59a2cea8-2046-4473-885b-92b9497175ad/300x300_sc_visuel-mouvsansblabla-vert.jpg',
+	#mouv => 'http://oblique.radiofrance.fr/files/charte/logos/png600/Mouv.png',
+	mouv => 'https://www.radiofrance.fr/pikapi/images/13dc5910-3a90-45e8-880d-5e7e31d21a3c/600x600?webp=false',
+# finished late 2025 - 	mouvxtra => 'http://www.mouv.fr/sites/all/modules/rf/rf_lecteur_commun/lecteur_rf/img/logo_mouv_xtra.png',
+# finished late 2025 - 	mouvclassics => 'https://cdn.radiofrance.fr/s3/cruiser-production/2019/01/bb8da8da-f679-405f-8810-b4a172f6a32d/300x300_mouv-classic_02.jpg',
+# finished late 2025 - 	mouvdancehall => 'https://cdn.radiofrance.fr/s3/cruiser-production/2019/01/9d04e918-c907-4627-a332-1071bdc2366e/300x300_dancehall.jpg',
+# finished late 2025 - 	mouvrnb => 'https://cdn.radiofrance.fr/s3/cruiser-production/2019/01/f3bf764e-637c-48c0-b152-1a258726710f/300x300_rnb.jpg',
+# finished late 2025 - 	mouvrapus => 'https://cdn.radiofrance.fr/s3/cruiser-production/2019/01/54f3a745-fcf5-4f62-885a-a014cdd50a62/300x300_rapus.jpg',
+# finished late 2025 - 	mouvrapfr => 'https://cdn.radiofrance.fr/s3/cruiser-production/2019/01/3c4dc967-ed2c-4ce5-a998-9437a64e05d5/300x300_rapfr.jpg',
+# finished late 2025 - 	mouv100mix => 'https://cdn.radiofrance.fr/s3/cruiser-production/2019/01/689453b1-de6c-4c9e-9ebd-de70d0220e69/300x300_mouv-100mix-final.jpg',
+# finished late 2025 - 	mouvkidsnfamily => 'https://cdn.radiofrance.fr/s3/cruiser-production/2019/08/20b36ec0-fd19-4d92-b393-7977277e1452/300x300_mouv_webradio_kids_n_family.jpg',
+# finished late 2025 - 	mouvsansblabla => 'https://cdn.radiofrance.fr/s3/cruiser-production-eu3/2024/05/59a2cea8-2046-4473-885b-92b9497175ad/300x300_sc_visuel-mouvsansblabla-vert.jpg',
 	
-	franceinter => 'http://oblique.radiofrance.fr/files/charte/logos/png600/FranceInter.png',	# Note - official uses https but (for now) http works and might help legacy devices
+	#franceinter => 'http://oblique.radiofrance.fr/files/charte/logos/png600/FranceInter.png',	# Note - official uses https but (for now) http works and might help legacy devices
 	#franceinter => 'http://mediateur.radiofrance.fr/wp-content/themes/radiofrance/img/france-inter.png',
-	franceinterlamusiqueinter => 'https://www.radiofrance.fr/s3/cruiser-production-eu3/2024/06/2eb99120-ff28-414d-a805-c354c3967edf/300x300_sc_fi-webradio-c3b2.jpg',
+	#franceinter => 'https://charte.radiofrance.fr/images/franceinter/france-inter.png',
+	franceinter => 'https://www.radiofrance.fr/pikapi/images/c6288843-9269-4ca5-ab0e-49454aed8fdc/600x600?webp=false',
+	franceinterlamusiqueinter => 'https://www.radiofrance.fr/pikapi/images/2eb99120-ff28-414d-a805-c354c3967edf/600x600?webp=false',
+	franceintermonpetit => 'https://www.radiofrance.fr/pikapi/images/cbfde3c3-8213-45a6-ac89-b6a3b521025c/600x600?webp=false',
+	franceintermontoutpetit => 'https://www.radiofrance.fr/pikapi/images/0189684e-c44a-40f0-b833-2f5f126aaca3/600x600?webp=false',
 	
-	franceinfo => 'http://mediateur.radiofrance.fr/wp-content/themes/radiofrance/img/france-info.png',
+	#franceinfo => 'http://mediateur.radiofrance.fr/wp-content/themes/radiofrance/img/france-info.png',
+	franceinfo => 'https://www.radiofrance.fr/pikapi/images/52bb749e-f832-4dd1-ba0a-8c5d11e0aa3a/600x600?webp=false',
 	#francemusique => 'http://mediateur.radiofrance.fr/wp-content/themes/radiofrance/img/france-musique.png',
-	francemusique => 'http://oblique.radiofrance.fr/files/charte/logos/png600/FranceMusique.png',
+	#francemusique => 'http://oblique.radiofrance.fr/files/charte/logos/png600/FranceMusique.png',
+	#francemusique => 'https://charte.radiofrance.fr/images/francemusique/france-musique.png',
+	francemusique => 'https://www.radiofrance.fr/pikapi/images/df8d1b79-8823-4421-a694-2b7561430b79/600x600?webp=false',
 	#franceculture => 'http://mediateur.radiofrance.fr/wp-content/themes/radiofrance/img/france-culture.png',
-	franceculture => 'http://oblique.radiofrance.fr/files/charte/logos/png600/FranceCulture.png',
+	#franceculture => 'http://oblique.radiofrance.fr/files/charte/logos/png600/FranceCulture.png',
+	#franceculture => 'https://charte.radiofrance.fr/images/franceculture/france-culture.png',
+	franceculture => 'https://www.radiofrance.fr/pikapi/images/9cee7dd1-ee0d-4b88-b764-3cf9b748c266/600x600?webp=false',
 	
-	# until Jan-2025 fb100chanson => 'https://www.radiofrance.fr/s3/cruiser-production-eu3/2024/03/113906b6-6173-403f-bda5-8ad0d7c022a4/300x300_sc_1024.jpg',
-	fb100chanson => 'https://www.francebleu.fr/client/immutable/assets/fallback-cover.CNLc2QwW.jpg',
-	# until Jan-2025 fbalsace => 'plugins/RadioFrance/html/images/fbalsace_svg.png',
-	# until Jan-2025 fbarmorique => 'plugins/RadioFrance/html/images/fbarmorique_svg.png',
-	# until Jan-2025 fbauxerre => 'plugins/RadioFrance/html/images/fbauxerre_svg.png',
-	# until Jan-2025 fbazur => 'plugins/RadioFrance/html/images/fbazur_svg.png',
-	# until Jan-2025 fbbearn => 'plugins/RadioFrance/html/images/fbbearn_svg.png',
-	# until Jan-2025 fbbelfort => 'plugins/RadioFrance/html/images/fbbelfort-montbeliard_svg.png',
-	# until Jan-2025 fbberry => 'plugins/RadioFrance/html/images/fbberry_svg.png',
-	# until Jan-2025 fbbesancon => 'plugins/RadioFrance/html/images/fbbesancon_svg.png',
-	# until Jan-2025 fbbourgogne => 'plugins/RadioFrance/html/images/fbbourgogne_svg.png',
-	# until Jan-2025 fbbreizhizel => 'plugins/RadioFrance/html/images/fbbreizh-izel_svg.png',
-	# until Jan-2025 fbchampagne => 'plugins/RadioFrance/html/images/fbchampagne-ardenne_svg.png',
-	# until Jan-2025 fbcotentin => 'plugins/RadioFrance/html/images/fbcotentin_svg.png',
-	# until Jan-2025 fbcreuse => 'plugins/RadioFrance/html/images/fbcreuse_svg.png',
-	# until Jan-2025 fbdromeardeche => 'plugins/RadioFrance/html/images/fbdrome-ardeche_svg.png',
-	# until Jan-2025 fbelsass => 'plugins/RadioFrance/html/images/fbelsass_svg.png',
-	# until Jan-2025 fbgardlozere => 'plugins/RadioFrance/html/images/fbgard-lozere_svg.png',
-	# until Jan-2025 fbgascogne => 'plugins/RadioFrance/html/images/fbgascogne_svg.png',
-	# until Jan-2025 fbgironde => 'plugins/RadioFrance/html/images/fbgironde_svg.png',
-	# until Jan-2025 fbherault => 'plugins/RadioFrance/html/images/fbherault_svg.png',
-	# until Jan-2025 fbisere => 'plugins/RadioFrance/html/images/fbisere_svg.png',
-	# until Jan-2025 fblarochelle => 'plugins/RadioFrance/html/images/fbla-rochelle_svg.png',
-	# until Jan-2025 fblimousin => 'plugins/RadioFrance/html/images/fblimousin_svg.png',
-	# until Jan-2025 fbloireocean => 'plugins/RadioFrance/html/images/fbloire-ocean_svg.png',
-	# until Jan-2025 fblorrainenord => 'plugins/RadioFrance/html/images/fblorraine-nord_svg.png',
-	# until Jan-2025 fbmaine => 'plugins/RadioFrance/html/images/fbmaine_svg.png',
-	# until Jan-2025 fbmayenne => 'plugins/RadioFrance/html/images/fbmayenne_svg.png',
-	# until Jan-2025 fbnord => 'plugins/RadioFrance/html/images/fbnord_svg.png',
-	# until Jan-2025 fbbassenormandie => 'plugins/RadioFrance/html/images/fbnormandie_svg.png',	# Wrong logo
-	# until Jan-2025 fbhautenormandie => 'plugins/RadioFrance/html/images/fbnormandie_svg.png',	# Wrong logo
-	# until Jan-2025 fbtoulouse => 'plugins/RadioFrance/html/images/fboccitanie_svg.png',
-	# until Jan-2025 fborleans => 'plugins/RadioFrance/html/images/fborleans_svg.png',
-	# until Jan-2025 fbparis => 'plugins/RadioFrance/html/images/fbparis_svg.png',
-	# until Jan-2025 fbpaysbasque => 'plugins/RadioFrance/html/images/fbpays-basque_svg.png',
-	# until Jan-2025 fbpaysdauvergne => 'plugins/RadioFrance/html/images/fbauvergne_svg.png',
-	# until Jan-2025 fbpaysdesavoie => 'plugins/RadioFrance/html/images/fbsavoie_svg.png',
-	# until Jan-2025 fbperigord => 'plugins/RadioFrance/html/images/fbperigord_svg.png',
-	# until Jan-2025 fbpicardie => 'plugins/RadioFrance/html/images/fbpicardie_svg.png',
-	# until Jan-2025 fbpoitou => 'plugins/RadioFrance/html/images/fbpoitou_svg.png',
-	# until Jan-2025 fbprovence => 'plugins/RadioFrance/html/images/fbprovence_svg.png',
-	# until Jan-2025 fbrcfm => 'plugins/RadioFrance/html/images/fbrcfm_svg.png',
-	# until Jan-2025 fbroussillon => 'plugins/RadioFrance/html/images/fbroussillon_svg.png',
-	# until Jan-2025 fbsaintetienneloire => 'plugins/RadioFrance/html/images/fbsaint-etienne-loire_svg.png',
-	# until Jan-2025 fbsudlorraine => 'plugins/RadioFrance/html/images/fbsud-lorraine_svg.png',
-	# until Jan-2025 fbtouraine => 'plugins/RadioFrance/html/images/fbtouraine_svg.png',
-	# until Jan-2025 fbvaucluse => 'plugins/RadioFrance/html/images/fbvaucluse_svg.png',
+	# France Bleu became ICI but old prefix still being used here for now
+	francebleu => 'https://charte.radiofrance.fr/images/ici/ici-avatar.png',
+	francebleu => 'https://www.radiofrance.fr/pikapi/images/9b26d3ff-563d-401c-934d-ee343bd3bcb5/600x600?webp=false',
+	fb100chanson => 'https://www.radiofrance.fr/pikapi/images/c11b0cac-12e7-472b-aabf-3ad3a071b79e/600x600?webp=false',
+	fbannees80 => 'https://www.radiofrance.fr/pikapi/images/df86f237-e698-4afc-98a3-1973fb7bb316/600x600?webp=false',
 	
-	fbalsace=> 'https://www.radiofrance.fr/s3/cruiser-production-eu3/2024/11/c57f3937-c855-4c37-bf3d-80dae44fb502/sc_logo-alsace.jpg',
-	fbarmorique=> 'https://www.radiofrance.fr/s3/cruiser-production-eu3/2024/11/99ac5a26-e5f0-490e-b513-38ee148c7e5a/sc_logo-armorique.jpg',
-	fbauxerre=> 'https://www.radiofrance.fr/s3/cruiser-production-eu3/2024/11/e2026fb2-4cab-4137-bf1e-0b5324ec2ca4/sc_logo-auxerre.jpg',
-	fbazur=> 'https://www.radiofrance.fr/s3/cruiser-production-eu3/2024/11/06460fe8-13db-4ec0-b98b-741c56a146d6/sc_logo-azur.jpg',
-	fbbearn=> 'https://www.radiofrance.fr/s3/cruiser-production-eu3/2024/11/ba415434-04bc-4c30-b350-7dcca070b935/sc_logo-bearn-bigorre.jpg',
-	fbbelfort=> 'https://www.radiofrance.fr/s3/cruiser-production-eu3/2024/11/f3238cc6-2f8a-4565-aa8a-d970bfac7d0a/sc_logo-belfort-montbeliard.jpg',
-	fbberry=> 'https://www.radiofrance.fr/s3/cruiser-production-eu3/2024/11/06bb2775-63d9-433b-af7b-f8f62f021203/sc_logo-berry.jpg',
-	fbbesancon=> 'https://www.radiofrance.fr/s3/cruiser-production-eu3/2024/11/e14152d8-168d-4b44-82e5-86c9c48176aa/sc_logo-besancion.jpg',
-	fbbourgogne=> 'https://www.radiofrance.fr/s3/cruiser-production-eu3/2024/11/4650a9b3-4395-4be8-a89d-73f61806a806/sc_logo-bourgogne.jpg',
-	fbbreizhizel=> 'https://www.radiofrance.fr/s3/cruiser-production-eu3/2024/11/269593ab-0229-4dc1-8625-cd19943a299d/sc_logo-beazh-izel.jpg',
-	fbchampagne=> 'https://www.radiofrance.fr/s3/cruiser-production-eu3/2024/11/b011edaa-d3f5-4489-9a57-eaded51894f9/sc_logo-chamagne-ardenne.jpg',
-	fbcotentin=> 'https://www.radiofrance.fr/s3/cruiser-production-eu3/2024/11/f6ec610c-4ae9-4128-86a5-12ad3f874636/sc_logo-cotentin.jpg',
-	fbcreuse=> 'https://www.radiofrance.fr/s3/cruiser-production-eu3/2024/11/4a6c076b-2049-4744-a211-bf5d811a4fe9/sc_logo-creuse.jpg',
-	fbdromeardeche=> 'https://www.radiofrance.fr/s3/cruiser-production-eu3/2024/11/044ffe9e-28d7-4dd3-960f-299a704ff71b/sc_logo-drome-ardeche.jpg',
-	fbelsass=> 'https://www.radiofrance.fr/s3/cruiser-production-eu3/2024/11/303be539-4fe2-4c8c-9b48-f5d0bc7b637f/sc_logo-elsass.jpg',
-	fbgardlozere=> 'https://www.radiofrance.fr/s3/cruiser-production-eu3/2024/11/06266b7e-38a5-458f-9926-3c3d8db11e4a/sc_logo-lozere.jpg',
-	fbgascogne=> 'https://www.radiofrance.fr/s3/cruiser-production-eu3/2024/11/be86fb63-ff3e-4d57-b8e5-e131e05c51d6/sc_logo-gascogne.jpg',
-	fbgironde=> 'https://www.radiofrance.fr/s3/cruiser-production-eu3/2024/11/e3a6cf54-c830-4466-bf6b-913d9b37322d/sc_logo-gironde.jpg',
-	fbherault=> 'https://www.radiofrance.fr/s3/cruiser-production-eu3/2024/11/536dcf8e-86ac-482a-9a95-8bfa16203a5b/sc_logo-heirault.jpg',
-	fbisere=> 'https://www.radiofrance.fr/s3/cruiser-production-eu3/2024/11/b862114b-7b80-4f69-9b88-e73a442522ff/sc_logo-iseire.jpg',
-	fblarochelle=> 'https://www.radiofrance.fr/s3/cruiser-production-eu3/2024/11/3094e84d-6b04-478f-be04-73969274e488/sc_logo-la-rochelle.jpg',
-	fblimousin=> 'https://www.radiofrance.fr/s3/cruiser-production-eu3/2024/11/ff4d3086-9902-44ac-98c7-649ae310ad59/sc_logo-limousin.jpg',
-	fbloireocean=> 'https://www.radiofrance.fr/s3/cruiser-production-eu3/2024/11/54bfa2c2-55e6-4a32-bc8a-c891a08f0626/sc_logo-oceian.jpg',
-	fblorrainenord=> 'https://www.radiofrance.fr/s3/cruiser-production-eu3/2025/01/eafc9a23-a5c8-4988-bbf8-c473f70a04f2/sc_logo-lorraine.jpg',
-	fbmaine=> 'https://www.radiofrance.fr/s3/cruiser-production-eu3/2024/11/ea9da570-4e6e-4212-b5fa-2bcd1bdb1e3a/sc_logo-maine.jpg',
-	fbmayenne=> 'https://www.radiofrance.fr/s3/cruiser-production-eu3/2024/11/655cca16-52bf-4eb1-aea7-2114bb6a2b46/sc_logo-mayenne.jpg',
-	fbnord=> 'https://www.radiofrance.fr/s3/cruiser-production-eu3/2024/11/26b3d826-f907-4c0c-bdc9-08115c3d4152/sc_logo-nord.jpg',
-	fbbassenormandie=> 'https://www.radiofrance.fr/s3/cruiser-production-eu3/2024/11/4b1a9d2d-30d6-4dd7-aacf-a5679ddf65f7/sc_logo-normandie.jpg',
-	fbhautenormandie=> 'https://www.radiofrance.fr/s3/cruiser-production-eu3/2024/11/4b1a9d2d-30d6-4dd7-aacf-a5679ddf65f7/sc_logo-normandie.jpg',
-	fbtoulouse=> 'https://www.radiofrance.fr/s3/cruiser-production-eu3/2024/11/84e39c1c-1ade-430d-ba5e-a2cb35a76771/sc_logo-occitanie.jpg',
-	fborleans=> 'https://www.radiofrance.fr/s3/cruiser-production-eu3/2024/11/6ba4f915-c15b-4b75-bbff-00264c473c75/sc_logo-orleians.jpg',
-	fbparis=> 'https://www.radiofrance.fr/s3/cruiser-production-eu3/2024/11/aa396eeb-f9fa-4b9d-84fd-a56f2efeb296/sc_logo-paris.jpg',
-	fbpaysbasque=> 'https://www.radiofrance.fr/s3/cruiser-production-eu3/2024/11/0d62617b-681e-4232-a903-ecdd0a997f3b/sc_logo-pays-basque.jpg',
-	fbpaysdauvergne=> 'https://www.radiofrance.fr/s3/cruiser-production-eu3/2024/11/64d1fb99-9fd7-439b-a1b4-62697ea9e7ff/sc_logo-pays-dauvergne.jpg',
-	fbpaysdesavoie=> 'https://www.radiofrance.fr/s3/cruiser-production-eu3/2024/11/ef0c5a84-ac12-4f70-acd0-5f3b3ad2be4b/sc_logo-pays-de-savoie.jpg',
-	fbperigord=> 'https://www.radiofrance.fr/s3/cruiser-production-eu3/2024/11/b168c741-cd3c-442b-9e2a-bc2095bd4419/sc_logo-peirigord.jpg',
-	fbpicardie=> 'https://www.radiofrance.fr/s3/cruiser-production-eu3/2024/11/8e2f0a62-a424-4f47-aa94-0f1574b005ff/sc_logo-picardie.jpg',
-	fbpoitou=> 'https://www.radiofrance.fr/s3/cruiser-production-eu3/2024/11/2ef2cf02-387b-4bfb-8a92-87cde963efd9/sc_logo-poitou.jpg',
-	fbprovence=> 'https://www.radiofrance.fr/s3/cruiser-production-eu3/2024/11/2e36ab01-c5d5-4c20-9cc3-eebeb9c29d5b/sc_logo-provence.jpg',
-	fbrcfm=> 'https://www.radiofrance.fr/s3/cruiser-production-eu3/2024/11/3398334a-8666-4cb2-978a-4853ec7d2583/sc_logo-rvfm.jpg',
-	fbroussillon=> 'https://www.radiofrance.fr/s3/cruiser-production-eu3/2024/11/a735ac1b-f89f-471b-b3ee-551b6946c2e2/sc_logo-roussillon.jpg',
-	fbsaintetienneloire=> 'https://www.radiofrance.fr/s3/cruiser-production-eu3/2024/11/17f5ec94-e96a-442f-9bf8-6f8c3798605c/sc_logo-saint-etienne-loire.jpg',
-	fbsudlorraine=> 'https://www.radiofrance.fr/s3/cruiser-production-eu3/2024/11/d0448ffa-9420-4c1f-8fef-21e0d9f208ab/sc_logo-sud-lorraine.jpg',
-	fbtouraine=> 'https://www.radiofrance.fr/s3/cruiser-production-eu3/2024/11/8bb007f4-d458-4dad-a18c-1902679a5d9a/sc_logo-tourraine.jpg',
-	fbvaucluse=> 'https://www.radiofrance.fr/s3/cruiser-production-eu3/2024/11/68c80936-8244-4806-bce2-52a17536fb56/sc_logo-vaucluse.jpg',
+	fbalsace => 'https://www.radiofrance.fr/pikapi/images/c57f3937-c855-4c37-bf3d-80dae44fb502/600x600?webp=false',
+	fbarmorique => 'https://www.radiofrance.fr/pikapi/images/99ac5a26-e5f0-490e-b513-38ee148c7e5a/600x600?webp=false',
+	fbauxerre => 'https://www.radiofrance.fr/pikapi/images/e2026fb2-4cab-4137-bf1e-0b5324ec2ca4/600x600?webp=false',
+	fbazur => 'https://www.radiofrance.fr/pikapi/images/06460fe8-13db-4ec0-b98b-741c56a146d6/600x600?webp=false',
+	fbbearn => 'https://www.radiofrance.fr/pikapi/images/ba415434-04bc-4c30-b350-7dcca070b935/600x600?webp=false',
+	fbbelfort => 'https://www.radiofrance.fr/pikapi/images/f3238cc6-2f8a-4565-aa8a-d970bfac7d0a/600x600?webp=false',
+	fbberry => 'https://www.radiofrance.fr/pikapi/images/06bb2775-63d9-433b-af7b-f8f62f021203/600x600?webp=false',
+	fbbesancon => 'https://www.radiofrance.fr/pikapi/images/e14152d8-168d-4b44-82e5-86c9c48176aa/600x600?webp=false',
+	fbbourgogne => 'https://www.radiofrance.fr/pikapi/images/4650a9b3-4395-4be8-a89d-73f61806a806/600x600?webp=false',
+	fbbreizhizel => 'https://www.radiofrance.fr/pikapi/images/269593ab-0229-4dc1-8625-cd19943a299d/600x600?webp=false',
+	fbchampagne => 'https://www.radiofrance.fr/pikapi/images/b011edaa-d3f5-4489-9a57-eaded51894f9/600x600?webp=false',
+	fbcotentin => 'https://www.radiofrance.fr/pikapi/images/f6ec610c-4ae9-4128-86a5-12ad3f874636/600x600?webp=false',
+	fbcreuse => 'https://www.radiofrance.fr/pikapi/images/4a6c076b-2049-4744-a211-bf5d811a4fe9/600x600?webp=false',
+	fbdromeardeche => 'https://www.radiofrance.fr/pikapi/images/044ffe9e-28d7-4dd3-960f-299a704ff71b/600x600?webp=false',
+	fbelsass => 'https://www.radiofrance.fr/pikapi/images/303be539-4fe2-4c8c-9b48-f5d0bc7b637f/600x600?webp=false',
+	fbgardlozere => 'https://www.radiofrance.fr/pikapi/images/06266b7e-38a5-458f-9926-3c3d8db11e4a/600x600?webp=false',
+	fbgascogne => 'https://www.radiofrance.fr/pikapi/images/be86fb63-ff3e-4d57-b8e5-e131e05c51d6/600x600?webp=false',
+	fbgironde => 'https://www.radiofrance.fr/pikapi/images/e3a6cf54-c830-4466-bf6b-913d9b37322d/600x600?webp=false',
+	fbherault => 'https://www.radiofrance.fr/pikapi/images/536dcf8e-86ac-482a-9a95-8bfa16203a5b/600x600?webp=false',
+	fbisere => 'https://www.radiofrance.fr/pikapi/images/b862114b-7b80-4f69-9b88-e73a442522ff/600x600?webp=false',
+	fblarochelle => 'https://www.radiofrance.fr/pikapi/images/3094e84d-6b04-478f-be04-73969274e488/600x600?webp=false',
+	fblimousin => 'https://www.radiofrance.fr/pikapi/images/ff4d3086-9902-44ac-98c7-649ae310ad59/600x600?webp=false',
+	fbloireocean => 'https://www.radiofrance.fr/pikapi/images/54bfa2c2-55e6-4a32-bc8a-c891a08f0626/600x600?webp=false',
+	fblorrainenord => 'https://www.radiofrance.fr/pikapi/images/eafc9a23-a5c8-4988-bbf8-c473f70a04f2/600x600?webp=false',
+	fbmaine => 'https://www.radiofrance.fr/pikapi/images/ea9da570-4e6e-4212-b5fa-2bcd1bdb1e3a/600x600?webp=false',
+	fbmayenne => 'https://www.radiofrance.fr/pikapi/images/655cca16-52bf-4eb1-aea7-2114bb6a2b46/600x600?webp=false',
+	fbnord => 'https://www.radiofrance.fr/pikapi/images/26b3d826-f907-4c0c-bdc9-08115c3d4152/600x600?webp=false',
+	fbbassenormandie => 'https://www.radiofrance.fr/pikapi/images/4b1a9d2d-30d6-4dd7-aacf-a5679ddf65f7/600x600?webp=false',
+	fbhautenormandie => 'https://www.radiofrance.fr/pikapi/images/4b1a9d2d-30d6-4dd7-aacf-a5679ddf65f7/600x600?webp=false',
+	fbtoulouse => 'https://www.radiofrance.fr/pikapi/images/84e39c1c-1ade-430d-ba5e-a2cb35a76771/600x600?webp=false',
+	fborleans => 'https://www.radiofrance.fr/pikapi/images/6ba4f915-c15b-4b75-bbff-00264c473c75/600x600?webp=false',
+	fbparis => 'https://www.radiofrance.fr/pikapi/images/aa396eeb-f9fa-4b9d-84fd-a56f2efeb296/600x600?webp=false',
+	fbpaysbasque => 'https://www.radiofrance.fr/pikapi/images/0d62617b-681e-4232-a903-ecdd0a997f3b/600x600?webp=false',
+	fbpaysdauvergne => 'https://www.radiofrance.fr/pikapi/images/64d1fb99-9fd7-439b-a1b4-62697ea9e7ff/600x600?webp=false',
+	fbpaysdesavoie => 'https://www.radiofrance.fr/pikapi/images/ef0c5a84-ac12-4f70-acd0-5f3b3ad2be4b/600x600?webp=false',
+	fbperigord => 'https://www.radiofrance.fr/pikapi/images/b168c741-cd3c-442b-9e2a-bc2095bd4419/600x600?webp=false',
+	fbpicardie => 'https://www.radiofrance.fr/pikapi/images/8e2f0a62-a424-4f47-aa94-0f1574b005ff/600x600?webp=false',
+	fbpoitou => 'https://www.radiofrance.fr/pikapi/images/2ef2cf02-387b-4bfb-8a92-87cde963efd9/600x600?webp=false',
+	fbprovence => 'https://www.radiofrance.fr/pikapi/images/2e36ab01-c5d5-4c20-9cc3-eebeb9c29d5b/600x600?webp=false',
+	fbrcfm => 'https://www.radiofrance.fr/pikapi/images/3398334a-8666-4cb2-978a-4853ec7d2583/600x600?webp=false',
+	fbroussillon => 'https://www.radiofrance.fr/pikapi/images/a735ac1b-f89f-471b-b3ee-551b6946c2e2/600x600?webp=false',
+	fbsaintetienneloire => 'https://www.radiofrance.fr/pikapi/images/17f5ec94-e96a-442f-9bf8-6f8c3798605c/600x600?webp=false',
+	fbsudlorraine => 'https://www.radiofrance.fr/pikapi/images/d0448ffa-9420-4c1f-8fef-21e0d9f208ab/600x600?webp=false',
+	fbtouraine => 'https://www.radiofrance.fr/pikapi/images/8bb007f4-d458-4dad-a18c-1902679a5d9a/600x600?webp=false',
+	fbvaucluse => 'https://www.radiofrance.fr/pikapi/images/68c80936-8244-4806-bce2-52a17536fb56/600x600?webp=false',
 
 };
 
@@ -763,30 +793,31 @@ foreach my $metakey (keys(%$stationSet)){
 
 
 my $iconsIgnoreRegex = {
-	fipradio => '(31d1838e-da34-4579-878b-0fb1027378b1|a0773022-c452-4206-9b16-76fe7147fec9|fond_titres_diffuses_degrade.png|direct_default_cover_medium.png|_visual-fip.jpg)',
-	fipbordeaux => '(31d1838e-da34-4579-878b-0fb1027378b1|a0773022-c452-4206-9b16-76fe7147fec9|fond_titres_diffuses_degrade.png|direct_default_cover_medium.png|_visual-fip.jpg)',
-	fipnantes => '(31d1838e-da34-4579-878b-0fb1027378b1|a0773022-c452-4206-9b16-76fe7147fec9|fond_titres_diffuses_degrade.png|direct_default_cover_medium.png|_visual-fip.jpg)',
-	fipstrasbourg => '(31d1838e-da34-4579-878b-0fb1027378b1|a0773022-c452-4206-9b16-76fe7147fec9|fond_titres_diffuses_degrade.png|direct_default_cover_medium.png|_visual-fip.jpg)',
-	fiprock => '(31d1838e-da34-4579-878b-0fb1027378b1|a0773022-c452-4206-9b16-76fe7147fec9|fond_titres_diffuses_degrade.png|direct_default_cover_medium.png|_visual-fip.jpg)',
-	fipjazz => '(31d1838e-da34-4579-878b-0fb1027378b1|a0773022-c452-4206-9b16-76fe7147fec9|fond_titres_diffuses_degrade.png|direct_default_cover_medium.png|_visual-fip.jpg)',
-	fipgroove => '(31d1838e-da34-4579-878b-0fb1027378b1|a0773022-c452-4206-9b16-76fe7147fec9|fond_titres_diffuses_degrade.png|direct_default_cover_medium.png|_visual-fip.jpg)',
-	fipmonde => '(31d1838e-da34-4579-878b-0fb1027378b1|a0773022-c452-4206-9b16-76fe7147fec9|fond_titres_diffuses_degrade.png|direct_default_cover_medium.png|_visual-fip.jpg)',
-	fipnouveau => '(31d1838e-da34-4579-878b-0fb1027378b1|a0773022-c452-4206-9b16-76fe7147fec9|fond_titres_diffuses_degrade.png|direct_default_cover_medium.png|_visual-fip.jpg)',
-	fipreggae => '(31d1838e-da34-4579-878b-0fb1027378b1|a0773022-c452-4206-9b16-76fe7147fec9|fond_titres_diffuses_degrade.png|direct_default_cover_medium.png|_visual-fip.jpg)',
-	fipelectro => '(31d1838e-da34-4579-878b-0fb1027378b1|a0773022-c452-4206-9b16-76fe7147fec9|fond_titres_diffuses_degrade.png|direct_default_cover_medium.png|_visual-fip.jpg)',
-	fipmetal => '(31d1838e-da34-4579-878b-0fb1027378b1|a0773022-c452-4206-9b16-76fe7147fec9|fond_titres_diffuses_degrade.png|direct_default_cover_medium.png|_visual-fip.jpg)',
-	fippop => '(31d1838e-da34-4579-878b-0fb1027378b1|a0773022-c452-4206-9b16-76fe7147fec9|fond_titres_diffuses_degrade.png|direct_default_cover_medium.png|_visual-fip.jpg)',
-	fiphiphop => '(31d1838e-da34-4579-878b-0fb1027378b1|a0773022-c452-4206-9b16-76fe7147fec9|fond_titres_diffuses_degrade.png|direct_default_cover_medium.png|_visual-fip.jpg)',
-	fipsacre => '(31d1838e-da34-4579-878b-0fb1027378b1|a0773022-c452-4206-9b16-76fe7147fec9|fond_titres_diffuses_degrade.png|direct_default_cover_medium.png|_visual-fip.jpg)',
+	fipradio => '(7eee98cb-3f59-4a3b-b921-6a4be85af542|31d1838e-da34-4579-878b-0fb1027378b1|a0773022-c452-4206-9b16-76fe7147fec9|fond_titres_diffuses_degrade.png|direct_default_cover_medium.png|_visual-fip.jpg)',
+	fipbordeaux => '(7eee98cb-3f59-4a3b-b921-6a4be85af542|31d1838e-da34-4579-878b-0fb1027378b1|a0773022-c452-4206-9b16-76fe7147fec9|fond_titres_diffuses_degrade.png|direct_default_cover_medium.png|_visual-fip.jpg)',
+	fipnantes => '(7eee98cb-3f59-4a3b-b921-6a4be85af542|31d1838e-da34-4579-878b-0fb1027378b1|a0773022-c452-4206-9b16-76fe7147fec9|fond_titres_diffuses_degrade.png|direct_default_cover_medium.png|_visual-fip.jpg)',
+	fipstrasbourg => '(7eee98cb-3f59-4a3b-b921-6a4be85af542|31d1838e-da34-4579-878b-0fb1027378b1|a0773022-c452-4206-9b16-76fe7147fec9|fond_titres_diffuses_degrade.png|direct_default_cover_medium.png|_visual-fip.jpg)',
+	fiprock => '(7eee98cb-3f59-4a3b-b921-6a4be85af542|31d1838e-da34-4579-878b-0fb1027378b1|a0773022-c452-4206-9b16-76fe7147fec9|fond_titres_diffuses_degrade.png|direct_default_cover_medium.png|_visual-fip.jpg)',
+	fipjazz => '(7eee98cb-3f59-4a3b-b921-6a4be85af542|31d1838e-da34-4579-878b-0fb1027378b1|a0773022-c452-4206-9b16-76fe7147fec9|fond_titres_diffuses_degrade.png|direct_default_cover_medium.png|_visual-fip.jpg)',
+	fipgroove => '(7eee98cb-3f59-4a3b-b921-6a4be85af542|31d1838e-da34-4579-878b-0fb1027378b1|a0773022-c452-4206-9b16-76fe7147fec9|fond_titres_diffuses_degrade.png|direct_default_cover_medium.png|_visual-fip.jpg)',
+	fipmonde => '(7eee98cb-3f59-4a3b-b921-6a4be85af542|31d1838e-da34-4579-878b-0fb1027378b1|a0773022-c452-4206-9b16-76fe7147fec9|fond_titres_diffuses_degrade.png|direct_default_cover_medium.png|_visual-fip.jpg)',
+	fipnouveau => '(7eee98cb-3f59-4a3b-b921-6a4be85af542|31d1838e-da34-4579-878b-0fb1027378b1|a0773022-c452-4206-9b16-76fe7147fec9|fond_titres_diffuses_degrade.png|direct_default_cover_medium.png|_visual-fip.jpg)',
+	fipreggae => '(7eee98cb-3f59-4a3b-b921-6a4be85af542|31d1838e-da34-4579-878b-0fb1027378b1|a0773022-c452-4206-9b16-76fe7147fec9|fond_titres_diffuses_degrade.png|direct_default_cover_medium.png|_visual-fip.jpg)',
+	fipelectro => '(7eee98cb-3f59-4a3b-b921-6a4be85af542|31d1838e-da34-4579-878b-0fb1027378b1|a0773022-c452-4206-9b16-76fe7147fec9|fond_titres_diffuses_degrade.png|direct_default_cover_medium.png|_visual-fip.jpg)',
+	fipmetal => '(7eee98cb-3f59-4a3b-b921-6a4be85af542|31d1838e-da34-4579-878b-0fb1027378b1|a0773022-c452-4206-9b16-76fe7147fec9|fond_titres_diffuses_degrade.png|direct_default_cover_medium.png|_visual-fip.jpg)',
+	fippop => '(7eee98cb-3f59-4a3b-b921-6a4be85af542|31d1838e-da34-4579-878b-0fb1027378b1|a0773022-c452-4206-9b16-76fe7147fec9|fond_titres_diffuses_degrade.png|direct_default_cover_medium.png|_visual-fip.jpg)',
+	fiphiphop => '(7eee98cb-3f59-4a3b-b921-6a4be85af542|31d1838e-da34-4579-878b-0fb1027378b1|a0773022-c452-4206-9b16-76fe7147fec9|fond_titres_diffuses_degrade.png|direct_default_cover_medium.png|_visual-fip.jpg)',
+	fipsacre => '(7eee98cb-3f59-4a3b-b921-6a4be85af542|31d1838e-da34-4579-878b-0fb1027378b1|a0773022-c452-4206-9b16-76fe7147fec9|fond_titres_diffuses_degrade.png|direct_default_cover_medium.png|_visual-fip.jpg)',
+	fipcultes => '(7eee98cb-3f59-4a3b-b921-6a4be85af542|d16aab34-0e5c-439f-a364-31f7e0ac4abb)',
 	mouv => '(31d1838e-da34-4579-878b-0fb1027378b1|a0773022-c452-4206-9b16-76fe7147fec9|image_default_player.jpg)',
-	mouvxtra => '(31d1838e-da34-4579-878b-0fb1027378b1|a0773022-c452-4206-9b16-76fe7147fec9|image_default_player.jpg)',
-	mouvclassics => '(31d1838e-da34-4579-878b-0fb1027378b1|a0773022-c452-4206-9b16-76fe7147fec9|image_default_player.jpg)',
-	mouvdancehall => '(31d1838e-da34-4579-878b-0fb1027378b1|a0773022-c452-4206-9b16-76fe7147fec9|image_default_player.jpg)',
-	mouvrnb => '(31d1838e-da34-4579-878b-0fb1027378b1|a0773022-c452-4206-9b16-76fe7147fec9|image_default_player.jpg)',
-	mouvrapus => '(31d1838e-da34-4579-878b-0fb1027378b1|a0773022-c452-4206-9b16-76fe7147fec9|image_default_player.jpg)',
-	mouvrapfr => '(31d1838e-da34-4579-878b-0fb1027378b1|a0773022-c452-4206-9b16-76fe7147fec9|image_default_player.jpg)',
-	mouv100mix => '(31d1838e-da34-4579-878b-0fb1027378b1|a0773022-c452-4206-9b16-76fe7147fec9|image_default_player.jpg)',
-	mouvsansblabla => '(31d1838e-da34-4579-878b-0fb1027378b1|a0773022-c452-4206-9b16-76fe7147fec9|image_default_player.jpg)',
+# finished late 2025 - 	mouvxtra => '(31d1838e-da34-4579-878b-0fb1027378b1|a0773022-c452-4206-9b16-76fe7147fec9|image_default_player.jpg)',
+# finished late 2025 - 	mouvclassics => '(31d1838e-da34-4579-878b-0fb1027378b1|a0773022-c452-4206-9b16-76fe7147fec9|image_default_player.jpg)',
+# finished late 2025 - 	mouvdancehall => '(31d1838e-da34-4579-878b-0fb1027378b1|a0773022-c452-4206-9b16-76fe7147fec9|image_default_player.jpg)',
+# finished late 2025 - 	mouvrnb => '(31d1838e-da34-4579-878b-0fb1027378b1|a0773022-c452-4206-9b16-76fe7147fec9|image_default_player.jpg)',
+# finished late 2025 - 	mouvrapus => '(31d1838e-da34-4579-878b-0fb1027378b1|a0773022-c452-4206-9b16-76fe7147fec9|image_default_player.jpg)',
+# finished late 2025 - 	mouvrapfr => '(31d1838e-da34-4579-878b-0fb1027378b1|a0773022-c452-4206-9b16-76fe7147fec9|image_default_player.jpg)',
+# finished late 2025 - 	mouv100mix => '(31d1838e-da34-4579-878b-0fb1027378b1|a0773022-c452-4206-9b16-76fe7147fec9|image_default_player.jpg)',
+# finished late 2025 - 	mouvsansblabla => '(31d1838e-da34-4579-878b-0fb1027378b1|a0773022-c452-4206-9b16-76fe7147fec9|image_default_player.jpg)',
 };
 
 foreach my $metakey (keys(%$stationSet)){
@@ -863,8 +894,10 @@ foreach my $metakey (keys(%$stationSet)){
 # [ { "name": "banner", "visual_uuid": "4256a1da-f202-4cfa-8c0b-db0fb846da66" },
 #   { "name": "concept_visual", "visual_uuid": "aeb5db31-ea32-4149-8106-bc66c3ab26b7" } ]
 
-my @coverFieldsArr = ( 'cover|src', 'cover', 'visual', 'xxxcoverUuid', 'visualBanner', 'cover_main', 'mainImage', 'cover_square', '@name|square_banner|visual_uuid',
-					   '@name|banner|visual_uuid', '@name|concept_visual|visual_uuid', 'src', 'cardVisual|src', 'visuals|player|src' );
+# Order is significant - first match wins
+# Moved 'cover_square' towards the front because for FranceMusique with 2 sources there was a flip/flop between different images - and 'cover' in one seems to be same as 'cover_square' in the other
+my @coverFieldsArr = ( 'cover|src', 'cover_square', 'cover', 'visual', 'songvisual', 'xxxcoverUuid', 'visualBanner', 'cover_main', 'mainImage', '@name|square_banner|visual_uuid',
+		       '@name|banner|visual_uuid', '@name|concept_visual|visual_uuid', 'src', 'cardVisual|src', 'visuals|player|src' );
 
 
 # $myClientInfo holds data about the clients/devices using this plugin - used to schedule next poll
@@ -1239,8 +1272,8 @@ sub getcover {
 				last;
 			}
 		} elsif ( !defined $field3 ) {
-			if ( ref($playinginfo) ne "ARRAY" && exists $playinginfo->{$field1} && defined($playinginfo->{$field1}) && $playinginfo->{$field1} ne '' && 
-			     ref($playinginfo->{$field1}) eq 'HASH' && exists $playinginfo->{$field1}->{$field2} && defined($playinginfo->{$field1}->{$field2}) && ref($playinginfo->{$field1}->{$field2}) ne 'HASH' && 
+			if ( ref($playinginfo) ne "ARRAY" && exists $playinginfo->{$field1} && defined($playinginfo->{$field1}) && ref($playinginfo->{$field1}) eq 'HASH' && $playinginfo->{$field1} ne '' && 
+			     exists $playinginfo->{$field1}->{$field2} && defined($playinginfo->{$field1}->{$field2}) && ref($playinginfo->{$field1}->{$field2}) ne 'HASH' && 
 				 $playinginfo->{$field1}->{$field2} ne ''){
 				$thisartwork = $playinginfo->{$field1}->{$field2};
 				last;
@@ -1975,7 +2008,7 @@ sub parseContent {
 		# $dumped =~ s/\n {44}/\n/g;   
 		# print $dumped;
 		
-		if (ref($perl_data) ne "ARRAY" && 
+		if (ref($perl_data) ne "ARRAY" && exists $perl_data->{'current'} && ref($perl_data->{'current'}) eq 'HASH' && 
 		   (exists $perl_data->{'current'}->{'song'} || exists $perl_data->{'current'}->{'emission'})){
 			# FIP type
 			# Get the data from FIP-style json
@@ -2860,8 +2893,9 @@ sub parseContent {
 			#$dumped =~ s/\n {44}/\n/g;   
 			#main::DEBUGLOG && $log->is_debug && $log->debug("Type $dataType:$dumped");
 		
-		} elsif ( ref($perl_data) ne "ARRAY" && ( exists $perl_data->{'next'} && exists $perl_data->{'now'} && exists $perl_data->{'now'}->{'firstLine'}) ) {
-			
+		} elsif ( ref($perl_data) ne "ARRAY" && 
+			  ( exists $perl_data->{'next'} && exists $perl_data->{'now'} && 
+			    ref($perl_data->{'now'}) eq 'HASH' && exists $perl_data->{'now'}->{'firstLine'}) ) {
 			# {
 				# "prev": [
 					# {
@@ -2905,6 +2939,89 @@ sub parseContent {
 				# "delayToRefresh": 1248000
 			# }
 			
+			
+			# or ... 2026/03 webrf_musique_player format
+			# {
+			  # "prev": [
+			    # {
+			      # "firstLine": "Le direct",
+			      # "firstLineUuid": null,
+			      # "firstLinePath": null,
+			      # "secondLine": "Ce monde a besoin de musique",
+			      # "secondLineUuid": null,
+			      # "secondLinePath": null,
+			      # "thirdLine": null,
+			      # "thirdLineUuid": null,
+			      # "producers": null,
+			      # "cover_banner": null,
+			      # "cover_square": "df8d1b79-8823-4421-a694-2b7561430b79",
+			      # "cover_main": "f09aeb9c-256c-40c5-982f-7170323bdfc3",
+			      # "cover": null,
+			      # "startTime": null,
+			      # "endTime": null
+			    # }
+			  # ],
+			  # "now": {
+			    # "firstLine": "Stars du classique",
+			    # "firstLinePath": "francemusique/podcasts/stars-du-classique",
+			    # "firstLineUuid": "26113a83-467a-40ee-bde9-33635e3e749c",
+			    # "firstLineExpressionUuid": "22670cd5-306a-4b98-b056-0a1aa6cea30f",
+			    # "firstLineUuidPath": "francemusique/podcasts/stars-du-classique",
+			    # "firstLineUuidUuid": "26113a83-467a-40ee-bde9-33635e3e749c",
+			    # "firstLineUuidConceptUuid": "26113a83-467a-40ee-bde9-33635e3e749c",
+			    # "firstLinePathPath": "francemusique/podcasts/stars-du-classique",
+			    # "firstLinePathUuid": "26113a83-467a-40ee-bde9-33635e3e749c",
+			    # "firstLinePathConceptUuid": "26113a83-467a-40ee-bde9-33635e3e749c",
+			    # "secondLine": "Une heure et plus, un compositeur : Sir William Walton",
+			    # "secondLinePath": "francemusique/podcasts/stars-du-classique/une-heure-et-plus-un-compositeur-sir-william-walton-6728849",
+			    # "secondLineUuid": "22670cd5-306a-4b98-b056-0a1aa6cea30f",
+			    # "secondLineExpressionUuid": "22670cd5-306a-4b98-b056-0a1aa6cea30f",
+			    # "secondLineUuidPath": "francemusique/podcasts/stars-du-classique/une-heure-et-plus-un-compositeur-sir-william-walton-6728849",
+			    # "secondLineUuidUuid": "22670cd5-306a-4b98-b056-0a1aa6cea30f",
+			    # "secondLineUuidExpressionUuid": "22670cd5-306a-4b98-b056-0a1aa6cea30f",
+			    # "secondLinePathPath": "francemusique/podcasts/stars-du-classique/une-heure-et-plus-un-compositeur-sir-william-walton-6728849",
+			    # "secondLinePathUuid": "22670cd5-306a-4b98-b056-0a1aa6cea30f",
+			    # "secondLinePathExpressionUuid": "22670cd5-306a-4b98-b056-0a1aa6cea30f",
+			    # "thirdLine": "William Walton • Sonate pour violon et piano : 1. Allegro tranquillo",
+			    # "thirdLineSongUuid": "86117151-ec37-4266-83ca-62ca12e0bc75",
+			    # "thirdLineUuid": "22670cd5-306a-4b98-b056-0a1aa6cea30f",
+			    # "thirdLineUuidPath": "francemusique/podcasts/stars-du-classique/une-heure-et-plus-un-compositeur-sir-william-walton-6728849",
+			    # "thirdLineUuidUuid": "22670cd5-306a-4b98-b056-0a1aa6cea30f",
+			    # "thirdLineUuidExpressionUuid": "22670cd5-306a-4b98-b056-0a1aa6cea30f",
+			    # "producers": "Aurélie Moreau",
+			    # "producersPath": "personnes/aurelie-moreau",
+			    # "producersUuid": "0498ac93-2258-4a1c-85aa-b94fbc4e4950",
+			    # "cover_banner": "4cf05439-33ea-45ae-86c9-ecbffb0d9f82",
+			    # "cover_square": "32b1410d-8937-4208-858a-7ffcbd6d686d",
+			    # "cover_main": "679a61d4-ca21-49b7-be0e-03e2495eba48",
+			    # "cover": "4cf05439-33ea-45ae-86c9-ecbffb0d9f82",
+			    # "startTime": 1774020600,
+			    # "endTime": 1774025910
+			  # },
+			  # "next": [
+			    # {
+			      # "firstLine": "Stars du classique",
+			      # "firstLinePath": "francemusique/podcasts/stars-du-classique",
+			      # "firstLineUuid": "26113a83-467a-40ee-bde9-33635e3e749c",
+			      # "firstLineConceptUuid": "26113a83-467a-40ee-bde9-33635e3e749c",
+			      # "secondLine": "Une heure et plus, un compositeur : Sir William Walton",
+			      # "secondLinePath": "francemusique/podcasts/stars-du-classique/une-heure-et-plus-un-compositeur-sir-william-walton-6728849",
+			      # "secondLineUuid": "22670cd5-306a-4b98-b056-0a1aa6cea30f",
+			      # "secondLineExpressionUuid": "22670cd5-306a-4b98-b056-0a1aa6cea30f",
+			      # "thirdLine": "Une heure et plus, un compositeur : Sir William Walton",
+			      # "thirdLinePath": "francemusique/podcasts/stars-du-classique/une-heure-et-plus-un-compositeur-sir-william-walton-6728849",
+			      # "thirdLineUuid": "22670cd5-306a-4b98-b056-0a1aa6cea30f",
+			      # "thirdLineExpressionUuid": "22670cd5-306a-4b98-b056-0a1aa6cea30f",
+			      # "producers": "Aurélie Moreau",
+			      # "producersPath": "personnes/aurelie-moreau",
+			      # "producersUuid": "0498ac93-2258-4a1c-85aa-b94fbc4e4950",
+			      # "cover": "32b1410d-8937-4208-858a-7ffcbd6d686d",
+			      # "startTime": 1774020600,
+			      # "endTime": 1774025910
+			    # }
+			  # ],
+			  # "delayToRefresh": 200000
+			# }
 			$dataType = 'rf4';
 			my $nowplaying;
 			my $thisItem;
@@ -2932,16 +3049,28 @@ sub parseContent {
 				( $thisItem->{'endTime'} >= $hiResTime || $thisItem->{'endTime'} == 0 )) {
 				# This is in range (special case with 0 end_time)
 				# main::DEBUGLOG && $log->is_debug && $log->debug("Current playing $thisItem");
+				
+				my $guessLine;
+				if ( $guesssong ){
+					for my $tryLine ( 'secondLine', 'thirdLine'){
+						if ( exists $thisItem->{$tryLine} && defined($thisItem->{$tryLine}) && ref($thisItem->{$tryLine}) eq '' && $thisItem->{$tryLine} ne ''){
+							# example - JULIEN CLERC \x{2022} This melody
+							if ( $thisItem->{$tryLine} =~ / \x{2022} / ){
+								$guessLine = $thisItem->{$tryLine};
+							}
+						}
+					}
+				}
 
 				if ( exists $thisItem->{'song'} && $thisItem->{'song'} ){
 					$nowplaying = $thisItem;
 					$songItem = $thisItem->{'song'};
 					$info->{isSong} = true;
-				} elsif ( $guesssong && exists $thisItem->{'secondLine'} && defined($thisItem->{'secondLine'}) && ref($thisItem->{'secondLine'}) eq '' && $thisItem->{'secondLine'} ne '' ){
+				} elsif ( $guesssong && $guessLine ){
 					# example - JULIEN CLERC \x{2022} This melody
-					if ( $thisItem->{'secondLine'} =~ / \x{2022} / ){
+					if ( $guessLine =~ / \x{2022} / ){
 						# Looks like this is really a song ... so take it and fake the data for later processing
-						$thisItem->{'secondLine'} =~ m/^(?<artist>.*?) \x{2022} (?<title>.*)$/ms;
+						$guessLine =~ m/^(?<artist>.*?) \x{2022} (?<title>.*)$/ms;
 						
 						if ( defined $+{'artist'} && $+{'artist'} ne '' && defined $+{'title'} && $+{'title'} ne '' ){
 
@@ -3062,23 +3191,30 @@ sub parseContent {
 					
 					if ( $expectedEndTime > $hiResTime-30 ){
 						# If looks like this should not have already finished (allowing for some leniency for clock drift and other delays) then get the details
-						# This requires that the time on the machine running LMS should be accurate - and timezone set correctly
-
-						if (exists $nowplaying->{'secondLine'} && defined($nowplaying->{'secondLine'}) && $nowplaying->{'secondLine'} ne '') {
+						# This requires that the time on the machine running LMS should be accurate - and timezone set correctly						
+						
+						if ( $songItem && exists($songItem->{'interpreters'}) && ref($songItem->{'interpreters'}) eq "ARRAY" && $songItem->{'interpreters'}[0] ne '' ) {
+							$calculatedPlaying->{$station}->{'songartist'} = _trim($songItem->{'interpreters'}[0]);
+						} elsif (exists $nowplaying->{'secondLine'} && defined($nowplaying->{'secondLine'}) && $nowplaying->{'secondLine'} ne '') {
 							if ( ref($nowplaying->{'secondLine'}) eq 'HASH' && exists $nowplaying->{'secondLine'}->{'title'} && $nowplaying->{'secondLine'}->{'title'} ne '' ){
-								$calculatedPlaying->{$station}->{'songartist'} = _lowercase($nowplaying->{'secondLine'}->{'title'});
+								$calculatedPlaying->{$station}->{'songartist'} = _trim($nowplaying->{'secondLine'}->{'title'});
 							} else {
-								$calculatedPlaying->{$station}->{'songartist'} = _lowercase($nowplaying->{'secondLine'});
+								$calculatedPlaying->{$station}->{'songartist'} = _trim($nowplaying->{'secondLine'});
 							}
 						}
 
-						if (exists $nowplaying->{'firstLine'} && defined($nowplaying->{'firstLine'}) && $nowplaying->{'firstLine'} ne '') {
+						if ( $guesssong && $calculatedPlaying->{$station}->{'songartist'} && $thisItem->{'secondLine'} && ref($thisItem->{'secondLine'}) eq 'HASH' && exists $thisItem->{'secondLine'}->{'title'} && _beginswith($thisItem->{'secondLine'}->{'title'}, $calculatedPlaying->{$station}->{'songartist'}.' - ') ) {
+							$calculatedPlaying->{$station}->{'songtitle'} = _trim( substr( $thisItem->{'secondLine'}->{'title'}, length( $calculatedPlaying->{$station}->{'songartist'} ) + 3 ) );
+						} elsif (exists $nowplaying->{'firstLine'} && defined($nowplaying->{'firstLine'}) && $nowplaying->{'firstLine'} ne '') {
 							if ( ref($nowplaying->{'firstLine'}) eq 'HASH' && $nowplaying->{'firstLine'}->{'title'} && $nowplaying->{'firstLine'}->{'title'} ne '' ){
 								$calculatedPlaying->{$station}->{'songtitle'} = $nowplaying->{'firstLine'}->{'title'}
 							} else {
-								$calculatedPlaying->{$station}->{'songtitle'} = _lowercase($nowplaying->{'firstLine'});
+								$calculatedPlaying->{$station}->{'songtitle'} = _trim($nowplaying->{'firstLine'});
 							}
 						}
+
+						$calculatedPlaying->{$station}->{'songtitle'} = _lowercase( $calculatedPlaying->{$station}->{'songtitle'} );
+						$calculatedPlaying->{$station}->{'songartist'} = _lowercase( $calculatedPlaying->{$station}->{'songartist'} );
 
 						$calculatedPlaying->{$station}->{'songyear'} = '';
 						if (exists $nowplaying->{'year'} && defined($nowplaying->{'year'}) ) {
@@ -3649,7 +3785,6 @@ sub parseContent {
 			#main::DEBUGLOG && $log->is_debug && $log->debug("Type $dataType:$dumped");
 
 		} elsif ( ref($perl_data) ne "ARRAY" && ( exists $perl_data->{'now'} && exists $perl_data->{'media'} && exists $perl_data->{'slug'}) ) {
-			
 			# {
 				# "now": {
 					# "firstLine": "All things",
@@ -3928,6 +4063,142 @@ sub parseContent {
 				# main::DEBUGLOG && $log->is_debug && $log->debug("$station - Show Duration $progDuration");
 				
 				if ( $progDuration > 0 ) {$calculatedPlaying->{$station}->{'proglth'} = $progDuration};
+			}
+			
+			#$dumped =  Dumper $calculatedPlaying->{$station};
+			#$dumped =~ s/\n {44}/\n/g;   
+			#main::DEBUGLOG && $log->is_debug && $log->debug("Type $dataType:$dumped");
+		} elsif ( ref($perl_data) ne "ARRAY" && ( exists $perl_data->{'now'} && 
+		          exists $perl_data->{'now'}->{'title'} && defined $perl_data->{'now'}->{'title'} && $perl_data->{'now'}->{'title'} ne '' && 
+			  exists $perl_data->{'now'}->{'interpreters'} && ref($perl_data->{'now'}->{'interpreters'}) eq '' && defined $perl_data->{'now'}->{'interpreters'} && $perl_data->{'now'}->{'interpreters'} ne '' ) ) {
+			# {
+			  # "prev": [
+			    # {
+			      # "title": "Le direct",
+			      # "interpreters": null,
+			      # "album": null,
+			      # "label": null,
+			      # "cover": null,
+			      # "musicalKind": null,
+			      # "startTime": null,
+			      # "endTime": null
+			    # }
+			  # ],
+			  # "now": {
+			    # "title": "Superpower",
+			    # "interpreters": "Black Sea Dahu",
+			    # "album": "Everything",
+			    # "label": "MOUTHWATERING",
+			    # "cover": "2391f259-220b-4713-8efb-a3091341294b",
+			    # "musicalKind": "Folk / Folk rock ",
+			    # "startTime": 1773998728,
+			    # "endTime": 1773999013
+			  # },
+			  # "next": [
+			    # {
+			      # "title": "Tropical bird",
+			      # "interpreters": "Theodor",
+			      # "album": "Holocene",
+			      # "label": "BROC RECORDZ",
+			      # "cover": "30b05a18-4d18-4d30-99fa-a7febeebb5a1",
+			      # "musicalKind": "Pop / pop rock ",
+			      # "startTime": 1773999012,
+			      # "endTime": 1773999161
+			    # }
+			  # ],
+			  # "delayToRefresh": 180000
+			# }
+			
+			$dataType = 'rf8';
+			my $nowplaying;
+			my $thisItem;
+			my $songItem;
+			
+			$thisItem = $perl_data;
+			
+			if ( exists($thisItem->{'now'} ) ){
+				$songItem = $thisItem->{'now'};
+				
+				if (exists($songItem->{'title'}) && defined($songItem->{'title'}) && $songItem->{'title'} ne '' &&
+				    exists($songItem->{'interpreters'}) && defined($songItem->{'interpreters'}) && $songItem->{'interpreters'} ne '' ){
+					$info->{isSong} = true;
+					$nowplaying = $thisItem->{'now'};
+				}
+			}
+			
+			if ( $info->{isSong} ) {
+			
+				# $dumped =  Dumper $nowplaying;
+				# $dumped =~ s/\n {44}/\n/g;   
+				# main::DEBUGLOG && $log->is_debug && $log->debug($dumped);
+
+				# main::DEBUGLOG && $log->is_debug && $log->debug("Time: ".time." Ends: ".$nowplaying->{'endTime'});
+				# main::DEBUGLOG && $log->is_debug && $log->debug("Current artist: ".$nowplaying->{'interpreters'}." song: ".$nowplaying->{'title'});
+				# main::DEBUGLOG && $log->is_debug && $log->debug("Image: ".$nowplaying->{'cover'});
+				
+				if (exists $nowplaying->{'startTime'}){ $calculatedPlaying->{$station}->{'songstart'} = $nowplaying->{'startTime'}};
+				
+				my $expectedEndTime = $hiResTime;
+				
+				if ( exists $nowplaying->{'endTime'} && $nowplaying->{'endTime'} > 0 ){ $expectedEndTime = $nowplaying->{'endTime'}};
+				
+				if ( $expectedEndTime > $hiResTime-30 ){
+					# If looks like this should not have already finished (allowing for some leniency for clock drift and other delays) then get the details
+					# This requires that the time on the machine running LMS should be accurate - and timezone set correctly
+					$calculatedPlaying->{$station}->{'songartist'} = _lowercase($songItem->{'interpreters'});
+
+					if (exists $songItem->{'title'} && defined($songItem->{'title'}) && $songItem->{'title'} ne '') {
+						$calculatedPlaying->{$station}->{'songtitle'} = _lowercase($songItem->{'title'});
+					}
+
+					$calculatedPlaying->{$station}->{'songyear'} = '';
+					if (exists $nowplaying->{'year'} && defined($nowplaying->{'year'}) ) {
+						$calculatedPlaying->{$station}->{'songyear'} = $nowplaying->{'year'};
+					}
+
+					# Take year if it is present and have seen times when not present above
+					if ( exists $songItem->{'year'} && defined($songItem->{'year'}) ) {$calculatedPlaying->{$station}->{'songyear'} = $songItem->{'year'}};
+					
+					$calculatedPlaying->{$station}->{'songlabel'} = '';
+					if ( exists $songItem->{'label'} && defined( $songItem->{'label'} ) && $songItem->{'label'} ne '' ) {$calculatedPlaying->{$station}->{'songlabel'} = _lowercase($songItem->{'label'})};
+					
+					$calculatedPlaying->{$station}->{'songalbum'} = '';
+					if (exists $songItem->{'album'} && defined( $songItem->{'album'} ) && $songItem->{'album'} ne '' ) {$calculatedPlaying->{$station}->{'songalbum'} = _lowercase($songItem->{'album'})};
+					
+					# Artwork - only include if not one of the defaults - to give chance for something else to add it
+					# Regex check to see if present using $iconsIgnoreRegex
+					my $thisartwork = '';
+					
+					if ( $thisartwork eq '' && exists $nowplaying->{'cover'} ){
+						# Try to get it from the now playing
+						$thisartwork = getcover($nowplaying, $station, $info);
+					}
+
+					if ($thisartwork ne ''){
+						$calculatedPlaying->{$station}->{'songcover'} = $thisartwork;
+					}
+					
+					if ( exists $nowplaying->{'endTime'} && exists $nowplaying->{'startTime'} ){
+						# Work out song duration and return if plausible
+						$songDuration = $nowplaying->{'endTime'} - $nowplaying->{'startTime'};
+						
+						# main::DEBUGLOG && $log->is_debug && $log->debug("$station - Duration $songDuration");
+						
+						if ($songDuration > 0) {$calculatedPlaying->{$station}->{'songlth'} = $songDuration};
+					}
+					
+					# Try to update the predicted end time to give better chance for timely display of next song
+					$calculatedPlaying->{$station}->{'songend'} = $expectedEndTime;
+					
+				} else {
+					# This song that is playing should have already finished so returning largely blank data should reset what is displayed
+					main::DEBUGLOG && $log->is_debug && $log->debug("$station - Song already finished - expected end $expectedEndTime and now $hiResTime");
+				}
+
+			} else {
+
+				main::DEBUGLOG && $log->is_debug && $log->debug("$station ($dataType) - Did not find Current Song in retrieved data");
+
 			}
 			
 			#$dumped =  Dumper $calculatedPlaying->{$station};
@@ -5248,7 +5519,57 @@ sub toplevel {
 								on_select	=> 'play'
 							}
 						]
-					}
+					},
+					{
+						name	=> 'Mon petit France Inter',
+						image	=> $icons->{franceintermonpetit},
+						items	=> [
+							{
+								name	=> 'Mon petit France Inter (HLS)',
+								type	=> 'audio',
+								icon	=> $icons->{franceintermonpetit},
+								url	=> 'https://stream.radiofrance.fr/monpetitfranceinter/monpetitfranceinter.m3u8',
+								on_select	=> 'play'
+							},{
+								name	=> 'Mon petit France Inter (AAC)',
+								type	=> 'audio',
+								icon	=> $icons->{franceintermonpetit},
+								url	=> 'http://icecast.radiofrance.fr/monpetitfranceinter-hifi.aac',
+								on_select	=> 'play'
+							},{
+								name	=> 'Mon petit France Inter (MP3)',
+								type	=> 'audio',
+								icon	=> $icons->{franceintermonpetit},
+								url	=> 'http://icecast.radiofrance.fr/monpetitfranceinter-midfi.mp3',
+								on_select	=> 'play'
+							},
+						],
+					},
+					{
+						name	=> 'Mon tout petit France Inter',
+						image	=> $icons->{franceintermontoutpetit},
+						items	=> [
+							{
+								name	=> 'Mon tout petit France Inter (HLS)',
+								type	=> 'audio',
+								icon	=> $icons->{franceintermontoutpetit},
+								url	=> 'https://stream.radiofrance.fr/montoutpetitfranceinter/montoutpetitfranceinter.m3u8',
+								on_select	=> 'play'
+							},{
+								name	=> 'Mon tout petit France Inter (AAC)',
+								type	=> 'audio',
+								icon	=> $icons->{franceintermontoutpetit},
+								url	=> 'http://icecast.radiofrance.fr/montoutpetitfranceinter-hifi.aac',
+								on_select	=> 'play'
+							},{
+								name	=> 'Mon tout petit France Inter (MP3)',
+								type	=> 'audio',
+								icon	=> $icons->{franceintermontoutpetit},
+								url	=> 'http://icecast.radiofrance.fr/montoutpetitfranceinter-midfi.mp3',
+								on_select	=> 'play'
+							},
+						],
+					},
 				]
 			},{
 					name => 'FIP',
@@ -5544,6 +5865,30 @@ sub toplevel {
 									on_select	=> 'play'
 								},
 							]
+						},{
+							name	=> 'Cultes',
+							image	=> $icons->{fipcultes},
+							items	=> [
+								{
+									name	=> 'FIP Cultes (HLS)',
+									type	=> 'audio',
+									icon	=> $icons->{fipcultes},
+									url	=> 'https://stream.radiofrance.fr/fipcultes/fipcultes.m3u8',
+									on_select	=> 'play'
+								},{
+									name	=> 'FIP Cultes (AAC)',
+									type	=> 'audio',
+									icon	=> $icons->{fipcultes},
+									url	=> 'http://icecast.radiofrance.fr/fipcultes-hifi.aac',
+									on_select	=> 'play'
+								},{
+									name	=> 'FIP Cultes (MP3)',
+									type	=> 'audio',
+									icon	=> $icons->{fipcultes},
+									url	=> 'http://icecast.radiofrance.fr/fipcultes-midfi.mp3',
+									on_select	=> 'play'
+								},
+							]
 						}
 				]
 			},{
@@ -5598,7 +5943,33 @@ sub toplevel {
 								on_select	=> 'play'
 							},
 						]
-					},{
+					},
+					{
+						name	=> 'Classique Love',
+						image	=> $icons->{fmclassiquelove},
+						items	=> [
+							{
+								name	=> 'France Musique Classique Love (HLS)',
+								type	=> 'audio',
+								icon	=> $icons->{fmclassiquelove},
+								url	=> 'https://stream.radiofrance.fr/francemusiqueclassiquelove/francemusiqueclassiquelove.m3u8',
+								on_select	=> 'play'
+							},{
+								name	=> 'France Musique Classique Love (AAC)',
+								type	=> 'audio',
+								icon	=> $icons->{fmclassiquelove},
+								url	=> 'http://icecast.radiofrance.fr/francemusiqueclassiquelove-hifi.aac',
+								on_select	=> 'play'
+							},{
+								name	=> 'France Musique Classique Love (MP3)',
+								type	=> 'audio',
+								icon	=> $icons->{fmclassiquelove},
+								url	=> 'http://icecast.radiofrance.fr/francemusiqueclassiquelove-midfi.mp3',
+								on_select	=> 'play'
+							},
+						]
+					},
+					{
 						name	=> 'Opéra',
 						image	=> $icons->{fmopera},
 						items	=> [
@@ -5821,223 +6192,25 @@ sub toplevel {
 				image	=> $icons->{mouv},
 				items	=> [
 					{
-						name	=> 'Mouv\'',
+						name	=> 'Mouv\' (HLS)',
+						type	=> 'audio',
 						icon	=> $icons->{mouv},
-						items	=> [
-							{
-								name	=> 'Mouv\' (HLS)',
-								type	=> 'audio',
-								icon	=> $icons->{mouv},
-								url	=> 'https://stream.radiofrance.fr/mouv/mouv.m3u8',
-								on_select	=> 'play'
-							},{
-								name	=> 'Mouv\' (AAC)',
-								type	=> 'audio',
-								icon	=> $icons->{mouv},
-								url	=> 'http://icecast.radiofrance.fr/mouv-hifi.aac',
-								on_select	=> 'play'
-							},{
-								name	=> 'Mouv\' (MP3)',
-								type	=> 'audio',
-								icon	=> $icons->{mouv},
-								url	=> 'http://icecast.radiofrance.fr/mouv-midfi.mp3',
-								on_select	=> 'play'
-							},
-						]
+						url	=> 'https://stream.radiofrance.fr/mouv/mouv.m3u8',
+						on_select	=> 'play'
 					},{
-						name	=> 'Rap Français',
-						image	=> $icons->{mouvrapfr},
-						items	=> [
-							{
-								name	=> 'Mouv\' Rap Français (HLS)',
-								type	=> 'audio',
-								icon	=> $icons->{mouvrapfr},
-								url	=> 'https://stream.radiofrance.fr/mouvrapfr/mouvrapfr.m3u8',
-								on_select	=> 'play'
-							},{
-								name	=> 'Mouv\' Rap Français (AAC)',
-								type	=> 'audio',
-								icon	=> $icons->{mouvrapfr},
-								url	=> 'http://icecast.radiofrance.fr/mouvrapfr-hifi.aac',
-								on_select	=> 'play'
-							},{
-								name	=> 'Mouv\' Rap Français (MP3)',
-								type	=> 'audio',
-								icon	=> $icons->{mouvrapfr},
-								url	=> 'http://icecast.radiofrance.fr/mouvrapfr-midfi.mp3',
-								on_select	=> 'play'
-							},
-						]
+						name	=> 'Mouv\' (AAC)',
+						type	=> 'audio',
+						icon	=> $icons->{mouv},
+						url	=> 'http://icecast.radiofrance.fr/mouv-hifi.aac',
+						on_select	=> 'play'
 					},{
-						name	=> '100%Mix',
-						image	=> $icons->{mouv100mix},
-						items	=> [
-							{
-								name	=> '100%Mix (HLS)',
-								type	=> 'audio',
-								icon	=> $icons->{mouv100mix},
-								url	=> 'https://stream.radiofrance.fr/mouv100p100mix/mouv100p100mix.m3u8',
-								on_select	=> 'play'
-							},{
-								name	=> '100%Mix (AAC)',
-								type	=> 'audio',
-								icon	=> $icons->{mouv100mix},
-								url	=> 'http://icecast.radiofrance.fr/mouv100p100mix-hifi.aac',
-								on_select	=> 'play'
-							},{
-								name	=> '100%Mix (MP3)',
-								type	=> 'audio',
-								icon	=> $icons->{mouv100mix},
-								url	=> 'http://icecast.radiofrance.fr/mouv100p100mix-midfi.mp3',
-								on_select	=> 'play'
-							},
-						]
-					},{
-						name	=> 'Classics',
-						image	=> $icons->{mouvclassics},
-						items	=> [
-							{
-								name	=> 'Mouv\' Classics (HLS)',
-								type	=> 'audio',
-								icon	=> $icons->{mouvclassics},
-								url	=> 'https://stream.radiofrance.fr/mouvclassics/mouvclassics.m3u8',
-								on_select	=> 'play'
-							},{
-								name	=> 'Mouv\' Classics (AAC)',
-								type	=> 'audio',
-								icon	=> $icons->{mouvclassics},
-								url	=> 'http://icecast.radiofrance.fr/mouvclassics-hifi.aac',
-								on_select	=> 'play'
-							},{
-								name	=> 'Mouv\' Classics (MP3)',
-								type	=> 'audio',
-								icon	=> $icons->{mouvclassics},
-								url	=> 'http://icecast.radiofrance.fr/mouvclassics-midfi.mp3',
-								on_select	=> 'play'
-							},
-						]
-					},{
-						name	=> 'Kids\'n Family',
-						image	=> $icons->{mouvkidsnfamily},
-						items	=> [
-							{
-								name	=> 'Mouv\' Kids\'n Family (HLS)',
-								type	=> 'audio',
-								icon	=> $icons->{mouvkidsnfamily},
-								url	=> 'https://stream.radiofrance.fr/mouvkidsnfamily/mouvkidsnfamily.m3u8',
-								on_select	=> 'play'
-							},{
-								name	=> 'Mouv\' Kids\'n Family (AAC)',
-								type	=> 'audio',
-								icon	=> $icons->{mouvkidsnfamily},
-								url	=> 'http://icecast.radiofrance.fr/mouvkidsnfamily-hifi.aac',
-								on_select	=> 'play'
-							},{
-								name	=> 'Mouv\' Kids\'n Family (MP3)',
-								type	=> 'audio',
-								icon	=> $icons->{mouvkidsnfamily},
-								url	=> 'http://icecast.radiofrance.fr/mouvkidsnfamily-midfi.mp3',
-								on_select	=> 'play'
-							},
-						]
-					},{
-						name	=> 'Rap US',
-						image	=> $icons->{mouvrapus},
-						items	=> [
-							{
-								name	=> 'Mouv\' Rap US (HLS)',
-								type	=> 'audio',
-								icon	=> $icons->{mouvrapus},
-								url	=> 'https://stream.radiofrance.fr/mouvrapus/mouvrapus.m3u8',
-								on_select	=> 'play'
-							},{
-								name	=> 'Mouv\' Rap US (AAC)',
-								type	=> 'audio',
-								icon	=> $icons->{mouvrapus},
-								url	=> 'http://icecast.radiofrance.fr/mouvrapus-hifi.aac',
-								on_select	=> 'play'
-							},{
-								name	=> 'Mouv\' Rap US (MP3)',
-								type	=> 'audio',
-								icon	=> $icons->{mouvrapus},
-								url	=> 'http://icecast.radiofrance.fr/mouvrapus-midfi.mp3',
-								on_select	=> 'play'
-							},
-						]
-					},{
-						name	=> 'R\'n\'B',
-						image	=> $icons->{mouvrnb},
-						items	=> [
-							{
-								name	=> 'Mouv\' R\'n\'B (HLS)',
-								type	=> 'audio',
-								icon	=> $icons->{mouvrnb},
-								url	=> 'https://stream.radiofrance.fr/mouvrnb/mouvrnb.m3u8',
-								on_select	=> 'play'
-							},{
-								name	=> 'Mouv\' R\'n\'B (AAC)',
-								type	=> 'audio',
-								icon	=> $icons->{mouvrnb},
-								url	=> 'http://icecast.radiofrance.fr/mouvrnb-hifi.aac',
-								on_select	=> 'play'
-							},{
-								name	=> 'Mouv\' R\'n\'B (MP3)',
-								type	=> 'audio',
-								icon	=> $icons->{mouvrnb},
-								url	=> 'http://icecast.radiofrance.fr/mouvrnb-midfi.mp3',
-								on_select	=> 'play'
-							},
-						]
-					},{
-						name	=> 'Dancehall',
-						image	=> $icons->{mouvdancehall},
-						items	=> [
-							{
-								name	=> 'Mouv\' Dancehall (HLS)',
-								type	=> 'audio',
-								icon	=> $icons->{mouvdancehall},
-								url	=> 'https://stream.radiofrance.fr/mouvdancehall/mouvdancehall.m3u8',
-								on_select	=> 'play'
-							},{
-								name	=> 'Mouv\' Dancehall (AAC)',
-								type	=> 'audio',
-								icon	=> $icons->{mouvdancehall},
-								url	=> 'http://icecast.radiofrance.fr/mouvdancehall-hifi.aac',
-								on_select	=> 'play'
-							},{
-								name	=> 'Mouv\' Dancehall (MP3)',
-								type	=> 'audio',
-								icon	=> $icons->{mouvdancehall},
-								url	=> 'http://icecast.radiofrance.fr/mouvdancehall-midfi.mp3',
-								on_select	=> 'play'
-							},
-						]
-					},{
-						name	=> 'Sans Blabla',
-						image	=> $icons->{mouvsansblabla},
-						items	=> [
-							{
-								name	=> 'Mouv\' Sans Blabla (HLS)',
-								type	=> 'audio',
-								icon	=> $icons->{mouvsansblabla},
-								url	=> 'https://stream.radiofrance.fr/mouvsansblabla/mouvsansblabla.m3u8',
-								on_select	=> 'play'
-							},{
-								name	=> 'Mouv\' Sans Blabla (AAC)',
-								type	=> 'audio',
-								icon	=> $icons->{mouvsansblabla},
-								url	=> 'http://icecast.radiofrance.fr/mouvsansblabla-hifi.aac',
-								on_select	=> 'play'
-							},{
-								name	=> 'Mouv\' Sans Blabla (MP3)',
-								type	=> 'audio',
-								icon	=> $icons->{mouvsansblabla},
-								url	=> 'http://icecast.radiofrance.fr/mouvsansblabla-midfi.mp3',
-								on_select	=> 'play'
-							},
-						]
-					}
-					]
+						name	=> 'Mouv\' (MP3)',
+						type	=> 'audio',
+						icon	=> $icons->{mouv},
+						url	=> 'http://icecast.radiofrance.fr/mouv-midfi.mp3',
+						on_select	=> 'play'
+					},
+				]
 			},{
 			
 				name	=> 'franceinfo',
@@ -6090,7 +6263,8 @@ sub toplevel {
 			},{
 				name	=> 'ici',
 				#image	=> 'https://mediateur.radiofrance.fr/wp-content/themes/radiofrance/img/france-bleu.png',
-				image	=> 'https://www.radiofrance.fr/client/immutable/assets/francebleu-seosquare.CfwKvmMQ.png',
+				#image	=> 'https://www.radiofrance.fr/client/immutable/assets/francebleu-seosquare.CfwKvmMQ.png',
+				image   => $icons->{francebleu},
 				items	=> [
 					{
 						name	=> '100% Chanson Française',
@@ -6102,7 +6276,7 @@ sub toplevel {
 								name	=> 'ici 100% Chanson Française (HLS)',
 								type	=> 'audio',
 								icon	=> $icons->{fb100chanson},
-								url	=> 'https://stream.radiofrance.fr/fbchansonfrancaise/fbchansonfrancaise_lofi.m3u8',
+								url	=> 'https://stream.radiofrance.fr/fbchansonfrancaise/fbchansonfrancaise.m3u8',
 								on_select	=> 'play'
 							},
 							{
@@ -6112,6 +6286,29 @@ sub toplevel {
 								type	=> 'audio',
 								icon	=> $icons->{fb100chanson},
 								url	=> 'http://icecast.radiofrance.fr/fbchansonfrancaise-midfi.mp3',
+								on_select	=> 'play'
+							},
+						]
+					},{
+						name	=> '100% années 80',
+						icon	=> $icons->{fbannees80},
+						items	=> [
+							{
+							name	=> '100% années 80',
+							icon	=> $icons->{fbannees80},
+								name	=> 'ici 100% années 80 (HLS)',
+								type	=> 'audio',
+								icon	=> $icons->{fbannees80},
+								url	=> 'https://stream.radiofrance.fr/fb100pour100annees80/fb100pour100annees80.m3u8',
+								on_select	=> 'play'
+							},
+							{
+							name	=> '100% années 80',
+							icon	=> $icons->{fbannees80},
+								name	=> 'ici 100% années 80 (MP3)',
+								type	=> 'audio',
+								icon	=> $icons->{fbannees80},
+								url	=> 'http://icecast.radiofrance.fr/fb100pour100annees80-midfi.mp3',
 								on_select	=> 'play'
 							},
 						]
@@ -6190,17 +6387,17 @@ sub toplevel {
 							},
 						]
 					},{
-						name	=> 'Béarn',
+						name	=> 'Béarn Bigorre',
 						image	=> $icons->{fbbearn},
 						items	=> [
 							{
-								name	=> 'ici Béarn (HLS)',
+								name	=> 'ici Béarn Bigorre (HLS)',
 								type	=> 'audio',
 								icon	=> $icons->{fbbearn},
 								url	=> 'https://stream.radiofrance.fr/fbbearn/fbbearn.m3u8',
 								on_select	=> 'play'
 							},{
-								name	=> 'ici Béarn (MP3)',
+								name	=> 'ici Béarn Bigorre (MP3)',
 								type	=> 'audio',
 								icon	=> $icons->{fbbearn},
 								url	=> 'http://direct.francebleu.fr/live/fbbearn-midfi.mp3',
@@ -6534,17 +6731,17 @@ sub toplevel {
 							},
 						]
 					},{
-						name	=> 'Lorraine Nord',
+						name	=> 'Lorraine (Moselle et Pays Haut)',
 						image	=> $icons->{fblorrainenord},
 						items	=> [
 							{
-								name	=> 'ici Lorraine Nord (HLS)',
+								name	=> 'ici Lorraine (Moselle et Pays Haut) (HLS)',
 								type	=> 'audio',
 								icon	=> $icons->{fblorrainenord},
 								url	=> 'https://stream.radiofrance.fr/fblorrainenord/fblorrainenord.m3u8',
 								on_select	=> 'play'
 							},{
-								name	=> 'ici Lorraine Nord (MP3)',
+								name	=> 'ici Lorraine (Moselle et Pays Haut) (MP3)',
 								type	=> 'audio',
 								icon	=> $icons->{fblorrainenord},
 								url	=> 'http://direct.francebleu.fr/live/fblorrainenord-midfi.mp3',
@@ -6681,17 +6878,17 @@ sub toplevel {
 						]
 						# Special case - 107-1 = Paris
 					},{
-						name	=> 'Paris',
+						name	=> 'Paris Île-de-France',
 						image	=> $icons->{fbparis},
 						items	=> [
 							{
-								name	=> 'ici Paris (HLS)',
+								name	=> 'ici Paris Île-de-France (HLS)',
 								type	=> 'audio',
 								icon	=> $icons->{fbparis},
 								url	=> 'https://stream.radiofrance.fr/fb1071/fb1071.m3u8',
 								on_select	=> 'play'
 							},{
-								name	=> 'ici Paris (MP3)',
+								name	=> 'ici Paris Île-de-France (MP3)',
 								type	=> 'audio',
 								icon	=> $icons->{fbparis},
 								url	=> 'http://direct.francebleu.fr/live/fb1071-midfi.mp3',
@@ -6880,17 +7077,17 @@ sub toplevel {
 							},
 						]
 					},{
-						name	=> 'Sud Lorraine',
+						name	=> 'Lorraine (Meurthe-et-Moselle et Vosges)',
 						image	=> $icons->{fbsudlorraine},
 						items	=> [
 							{
-								name	=> 'ici Sud Lorraine (HLS)',
+								name	=> 'ici Lorraine (Meurthe-et-Moselle et Vosges) (HLS)',
 								type	=> 'audio',
 								icon	=> $icons->{fbsudlorraine},
 								url	=> 'https://stream.radiofrance.fr/fbsudlorraine/fbsudlorraine.m3u8',
 								on_select	=> 'play'
 							},{
-								name	=> 'ici Sud Lorraine (MP3)',
+								name	=> 'ici Lorraine (Meurthe-et-Moselle et Vosges) (MP3)',
 								type	=> 'audio',
 								icon	=> $icons->{fbsudlorraine},
 								url	=> 'http://direct.francebleu.fr/live/fbsudlorraine-midfi.mp3',
@@ -7010,7 +7207,8 @@ sub toplevel {
 				{
 					name	=> 'ici',
 					# until Jan-2025 image	=> 'https://mediateur.radiofrance.fr/wp-content/themes/radiofrance/img/france-bleu.png',
-					image	=> 'https://www.radiofrance.fr/client/immutable/assets/francebleu-seosquare.CfwKvmMQ.png',
+					# until Feb-2026 image	=> 'https://www.radiofrance.fr/client/immutable/assets/francebleu-seosquare.CfwKvmMQ.png',
+					image	=> $icons->{francebleu},
 					items	=> [
 					{
 						name	=> 'Alsace',
@@ -7053,7 +7251,7 @@ sub toplevel {
 							},
 						]
 					},{
-						name	=> 'Béarn',
+						name	=> 'Béarn Bigorre',
 						type	=> 'link',
 						url	=> \&getDayMenu,
 						image	=> $icons->{fbbearn},
@@ -7243,7 +7441,7 @@ sub toplevel {
 							},
 						]
 					},{
-						name	=> 'Lorraine Nord',
+						name	=> 'Lorraine (Moselle et Pays Haut)',
 						type	=> 'link',
 						url	=> \&getDayMenu,
 						image	=> $icons->{fblorrainenord},
@@ -7323,7 +7521,7 @@ sub toplevel {
 							},
 						]
 					},{
-						name	=> 'Paris',
+						name	=> 'Paris Île-de-France',
 						type	=> 'link',
 						url	=> \&getDayMenu,
 						image	=> $icons->{fbparis},
@@ -7433,7 +7631,7 @@ sub toplevel {
 							},
 						]
 					},{
-						name	=> 'Sud Lorraine',
+						name	=> 'Lorraine (Meurthe-et-Moselle et Vosges)',
 						type	=> 'link',
 						url	=> \&getDayMenu,
 						image	=> $icons->{fbsudlorraine},
@@ -7518,6 +7716,12 @@ sub getConfig {
 
 # Return string with leading and trailing whitespace removed
 sub _trim { my $s = shift; $s =~ s/^\s+|\s+$//g; return $s };
+
+sub _beginswith
+{
+	main::DEBUGLOG && $log->is_debug && $log->debug("Comparing: $_[0] with: $_[1]");	
+	return substr($_[0], 0, length($_[1])) eq $_[1];
+}
 
 sub _lowercase {
 	my $s = shift;

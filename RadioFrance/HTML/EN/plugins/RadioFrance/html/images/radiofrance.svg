@@ -1,64 +1,25 @@
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>
+
 <svg
-   xmlns:dc="http://purl.org/dc/elements/1.1/"
-   xmlns:cc="http://creativecommons.org/ns#"
-   xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
-   xmlns:svg="http://www.w3.org/2000/svg"
-   xmlns="http://www.w3.org/2000/svg"
-   xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
-   xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
-   width="460"
-   height="460"
-   viewBox="0 0 460 460"
    version="1.1"
    id="svg2"
-   inkscape:version="1.0.2-2 (e86c870879, 2021-01-15)"
-   sodipodi:docname="radiofrance-alternative.svg"
-   inkscape:export-filename="radiofrance-alternative_svg.png"
-   inkscape:export-xdpi="90"
-   inkscape:export-ydpi="90">
-  <sodipodi:namedview
-     pagecolor="#ffffff"
-     bordercolor="#666666"
-     borderopacity="1"
-     objecttolerance="10"
-     gridtolerance="10"
-     guidetolerance="10"
-     inkscape:pageopacity="0"
-     inkscape:pageshadow="2"
-     inkscape:window-width="1066"
-     inkscape:window-height="792"
-     id="namedview9"
-     showgrid="false"
-     inkscape:zoom="1.5978261"
-     inkscape:cx="249.71429"
-     inkscape:cy="230"
-     inkscape:window-x="168"
-     inkscape:window-y="256"
-     inkscape:window-maximized="0"
-     inkscape:current-layer="svg2" />
-  <metadata
-     id="metadata17">
-    <rdf:RDF>
-      <cc:Work
-         rdf:about="">
-        <dc:format>image/svg+xml</dc:format>
-        <dc:type
-           rdf:resource="http://purl.org/dc/dcmitype/StillImage" />
-        <dc:title>AVATARS_FM rond</dc:title>
-      </cc:Work>
-    </rdf:RDF>
-  </metadata>
-  <!-- Generator: Sketch 43.2 (39069) - http://www.bohemiancoding.com/sketch -->
-  <title
-     id="title4">AVATARS_RF</title>
-  <desc
-     id="desc6">Created with Sketch.</desc>
-  <defs
-     id="defs8" />
-  <path
-     inkscape:connector-curvature="0"
-     style="fill:#000;stroke-width:1"
-     id="path2999"
-     d="m 254.2056,87.545 -65.46066,5.02725 0.90555,130.12856 c 0,0 78.78288,4.06047 97.38372,5.22062 18.55894,1.19235 38.37794,1.57906 44.30753,23.97614 6.41297,24.29839 -22.23594,42.08715 -31.93597,42.08715 29.32566,0 22.75156,-0.0966 44.72968,-0.0966 17.91765,-3.28706 38.22003,-24.78179 35.64194,-56.87886 -3.38372,-42.40941 -35.93198,-52.49614 -70.57492,-52.49614 H 254.2056 Z M 98.914981,210.61606 C 87.020373,225.02108 75.190217,246.96699 81.996347,271.52319 102.35674,340.26123 211.7253,370.61811 257.73113,372.455 l -5.43975,-80.4683 c 0,0 -74.63863,9.86115 -112.38816,-29.71237 -16.02275,-16.75752 -12.86461,-34.38514 -0.80565,-49.66026 -14.12464,-0.64452 -30.68557,-1.57908 -40.182589,-1.99801 z" />
-</svg>
+   xml:space="preserve"
+   width="500"
+   height="500"
+   viewBox="0 0 499.99999 500"
+   xmlns="http://www.w3.org/2000/svg"
+   xmlns:svg="http://www.w3.org/2000/svg"><defs
+     id="defs6"><clipPath
+       clipPathUnits="userSpaceOnUse"
+       id="clipPath18"><path
+         d="M 0,720 H 1280 V 0 H 0 Z"
+         id="path16" /></clipPath><clipPath
+       clipPathUnits="userSpaceOnUse"
+       id="clipPath40"><path
+         d="m 687.732,461.852 h 54.12 v -61.248 h -54.12 z"
+         id="path38" /></clipPath></defs>/>
+	 <g id="g8"
+     transform="matrix(1.3333333,0,0,-1.3333333,-693.84154,641.48076)"><path
+       id="path868"
+       style="fill:#000;fill-opacity:1;fill-rule:nonzero;stroke:none;stroke-width:0.544676"
+       d="m 707.88392,126.80904 c -81.4018,0 -147.38928,62.61049 -147.38928,139.84008 0,9.47737 1.00221,18.73142 2.89768,27.68043 h 83.24827 c -4.21581,-8.38799 -6.57969,-17.76731 -6.57969,-27.68043 0,-35.54011 30.36566,-64.348 67.82302,-64.348 8.34442,0 16.34028,1.43796 23.72606,4.05239 v -77.73068 c -7.72346,-1.1874 -15.64849,-1.81379 -23.72607,-1.81379 M 851.81456,236.4523 h -84.03265 c 5.05458,9.00351 7.91958,19.28154 7.91958,30.19682 0,35.5401 -30.36019,64.348 -67.81758,64.348 -7.00997,0 -13.7694,-1.00761 -20.13121,-2.88131 v 132.2963 h 72.97567 v -63.19329 c 55.29005,-20.15846 94.53934,-71.0094 94.53934,-130.5697 0,-10.37063 -1.19826,-20.46891 -3.45315,-30.19682" /></g></svg>
